@@ -518,7 +518,7 @@
 <body>
 
 <div id="loading" class="loading-screen">
-  <div class="seal-lg">SR</div>
+  <div class="seal-lg">SP</div>
   <p>Loading your saved reviews…</p>
 </div>
 
@@ -526,8 +526,8 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="mark">
-        <div class="seal">SR</div>
-        <h1>SEQAS REVIEW</h1>
+        <div class="seal">SP</div>
+        <h1>Support Performance</h1>
       </div>
       <div class="tagline">Evaluation &amp; Coaching Ledger</div>
       <div class="mode-toggle" id="modeToggle">
@@ -767,8 +767,10 @@ let STATE = {
   agentReviews: [],
   viewerSupportId: null,
   personalTargets: {},
-  attendance: {}
+  attendance: {},
+  agentReviewDeletionCounts: {}
 };
+const AGENT_REVIEW_DELETE_LIMIT = 2;
 let appMode = 'support'; // 'support' | 'supervisor'
 let supervisorUnlocked = false;
 const SUPERVISOR_PASSWORD = 'Verifone123';
@@ -836,6 +838,7 @@ async function loadState(){
       STATE.viewerSupportId = parsed.viewerSupportId || null;
       STATE.personalTargets = parsed.personalTargets || {};
       STATE.attendance = parsed.attendance || {};
+      STATE.agentReviewDeletionCounts = parsed.agentReviewDeletionCounts || {};
       setSaveStatus(null, 'All changes saved');
       return true;
     }catch(e){
@@ -890,7 +893,8 @@ function seedState(){
     agentReviews: [],
     viewerSupportId: null,
     personalTargets: {},
-    attendance: {}
+    attendance: {},
+    agentReviewDeletionCounts: {}
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -999,7 +1003,7 @@ function personalTargetKey(supportId, month){ return `${supportId}:${month}`; }
 function getPersonalTarget(supportId, month){
   const key = personalTargetKey(supportId, month);
   if(STATE.personalTargets[key] !== undefined && STATE.personalTargets[key] !== null && STATE.personalTargets[key] !== '') return Number(STATE.personalTargets[key]);
-  return getTarget(month);
+  return null;
 }
 function getAttendance(supportId, month){
   const key = personalTargetKey(supportId, month);
@@ -1017,6 +1021,7 @@ function getWorkingDaysInMonth(month){
 }
 function getAdjustedTarget(supportId, month){
   const base = getPersonalTarget(supportId, month);
+  if(base===null) return null;
   const att = getAttendance(supportId, month);
   const leaveDays = (Number(att.absent)||0) + (Number(att.vl)||0) + (Number(att.ml)||0) + (Number(att.el)||0);
   const workingDays = getWorkingDaysInMonth(month);
@@ -1195,6 +1200,7 @@ let editingAgentReviewId = null;
 function setView(view, opts={}){
   currentView = view;
   if(!opts.keepEditing) editingRecordId = null;
+  if(view !== 'agentReviews') editingAgentReviewId = null;
   renderNav();
   const meta = PAGE_META[view];
   document.getElementById('pageTitle').textContent = meta[0];
@@ -1228,7 +1234,7 @@ const NAV_SUPERVISOR = [
 ];
 const NAV_SUPPORT = [
   { group:'My Overview', items:[
-    { view:'myDashboard', label:'Support Performance', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
+    { view:'myDashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
   ]},
   { group:'My Cases', items:[
     { view:'myRecords', label:'SEQAS Records', icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>' },
@@ -1736,7 +1742,7 @@ function renderMyDashboard(){
   const att = getAttendance(viewerId, currentMonth);
   const leaveDays = (Number(att.absent)||0)+(Number(att.vl)||0)+(Number(att.ml)||0)+(Number(att.el)||0);
   const adjustedTarget = getAdjustedTarget(viewerId, currentMonth);
-  const completionRate = adjustedTarget>0 ? thisMonthRecs.length/adjustedTarget : null;
+  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? thisMonthRecs.length/adjustedTarget : null;
 
   const myAgentAll = STATE.agentReviews.filter(a=>a.supportId===viewerId);
   const myAgentThisMonth = myAgentAll.filter(a=>a.date && a.date.slice(0,7)===currentMonth);
@@ -1750,6 +1756,10 @@ function renderMyDashboard(){
       <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
       <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
       <td>${esc(a.category)||'\u2014'}</td>
+      <td style="text-align:right; white-space:nowrap;">
+        <button class="icon-btn" title="Edit" data-ar-edit="${a.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+      </td>
     </tr>`).join('');
 
   return `
@@ -1778,8 +1788,13 @@ function renderMyDashboard(){
     </div>
     <div class="stat-card">
       <div class="label">${monthLabel(currentMonth)} Target Progress</div>
-      <div class="value">${completionRate===null ? '\u2014' : Math.round(completionRate*100)+'%'}</div>
-      <div class="delta">${thisMonthRecs.length} of ${adjustedTarget}${leaveDays>0?` (adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}</div>
+      <div class="value" style="color:${completionRate===null?'inherit':(completionRate>=1?'var(--green)':'var(--ink)')}; ${adjustedTarget===null?'font-size:15px;':''}">${adjustedTarget===null ? 'No target set' : (completionRate===null ? '\u2014' : Math.round(completionRate*100)+'%')}</div>
+      <div class="delta">
+        ${adjustedTarget===null
+          ? 'Ask your supervisor to set your monthly target'
+          : `${thisMonthRecs.length} of ${adjustedTarget}${leaveDays>0?` (adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}`}
+        ${completionRate!==null && completionRate>=1 ? '<span class="badge green" style="margin-left:6px;">Target reached</span>' : ''}
+      </div>
     </div>
   </div>
 
@@ -1823,7 +1838,7 @@ function renderMyDashboard(){
   <div class="card" style="margin-bottom:20px;">
     <div class="card-header"><h3>Recent Agent Entries</h3></div>
     <div class="card-body" style="overflow-x:auto;">
-      ${recentAgentRows ? `<table><thead><tr><th>Date</th><th>Agent</th><th>Entry</th><th>Category</th></tr></thead><tbody>${recentAgentRows}</tbody></table>` : emptyState('No agent entries yet', 'Log your first review or commendation from the Agent Review tab.', 'agentReviews', 'Go to Agent Review')}
+      ${recentAgentRows ? `<table><thead><tr><th>Date</th><th>Agent</th><th>Entry</th><th>Category</th><th style="text-align:right;">Actions</th></tr></thead><tbody>${recentAgentRows}</tbody></table>` : emptyState('No agent entries yet', 'Log your first review or commendation from the Agent Review tab.', 'agentReviews', 'Go to Agent Review')}
     </div>
   </div>
 
@@ -1837,7 +1852,7 @@ function renderMyDashboard(){
         <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">EL</label><input type="number" min="0" id="att_el" value="${att.el||0}"></div>
         <button type="submit" class="btn brass sm">Save</button>
       </form>
-      <p class="field-hint" style="margin:10px 0 0 0;">Base target this month: <strong>${thisMonthTarget}</strong>. Days off reduce it proportionally.</p>
+      <p class="field-hint" style="margin:10px 0 0 0;">${thisMonthTarget===null ? 'No monthly target has been set for you yet \u2014 attendance will apply once your supervisor sets one.' : `Base target this month: <strong>${thisMonthTarget}</strong>. Days off reduce it proportionally.`}</p>
     </div>
   </div>
   `;
@@ -1847,9 +1862,13 @@ function renderMyDashboard(){
    MY RECORDS (Support View, read-only + searchable)
    ====================================================================== */
 function renderMyRecords(){
+  const options = sortedSupports().map(s=>`<option value="${s.id}" ${s.id===STATE.viewerSupportId?'selected':''}>${esc(s.name)}</option>`).join('');
   return `
   <div class="filter-bar">
-    <input type="text" id="mySearchInput" placeholder="Search by case number or agent name" style="flex:1; max-width:320px;">
+    <div class="month-select">
+      <label>Support</label>
+      <select id="myRecordsSupportFilter">${options}</select>
+    </div>
   </div>
   <div class="card">
     <div class="card-body" id="myRecordsTableWrap" style="overflow-x:auto;"></div>
@@ -1858,13 +1877,11 @@ function renderMyRecords(){
 }
 function renderMyRecordsTable(){
   const viewerId = ensureViewerSupport();
-  const q = (document.getElementById('mySearchInput')?.value || '').trim().toLowerCase();
   let recs = STATE.records.filter(r=>r.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  if(q) recs = recs.filter(r=> String(r.caseNumber).toLowerCase().includes(q) || (r.agentName||'').toLowerCase().includes(q));
   const wrap = document.getElementById('myRecordsTableWrap');
   if(!wrap) return;
   if(!recs.length){
-    wrap.innerHTML = emptyState('No evaluations found', q ? 'Try a different search.' : 'Your evaluations will show up here once logged.', null, null);
+    wrap.innerHTML = emptyState('No evaluations found', 'Your evaluations will show up here once logged.', null, null);
     return;
   }
   wrap.innerHTML = `
@@ -1877,14 +1894,16 @@ function renderMyRecordsTable(){
             <td class="agent-name">${esc(r.agentName)}</td>
             <td class="num">${esc(r.caseNumber)}</td>
             <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
-            <td style="text-align:right;">
-              <button class="icon-btn" title="Export" data-my-export="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M6 9l6 6 6-6"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></button>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="icon-btn" title="View" data-my-view="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="icon-btn" title="Download PDF" data-my-download="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M6 9l6 6 6-6"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></button>
             </td>
           </tr>`).join('')}
       </tbody>
     </table>
   `;
-  wrap.querySelectorAll('[data-my-export]').forEach(b=>b.addEventListener('click', ()=>openExportModal(b.dataset.myExport)));
+  wrap.querySelectorAll('[data-my-view]').forEach(b=>b.addEventListener('click', ()=>openExportModal(b.dataset.myView)));
+  wrap.querySelectorAll('[data-my-download]').forEach(b=>b.addEventListener('click', ()=>downloadRecordPdf(b.dataset.myDownload)));
 }
 
 /* ======================================================================
@@ -1894,17 +1913,19 @@ function renderAgentReviews(){
   if(appMode==='support'){
     const viewerId = ensureViewerSupport();
     const viewer = STATE.supports.find(s=>s.id===viewerId);
+    const editingEntry = editingAgentReviewId ? STATE.agentReviews.find(a=>a.id===editingAgentReviewId) : null;
     const issueOptions = AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
     const categoryOptions = AGENT_COMMENDATION_CATEGORIES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
     const severityOptions = SEVERITY_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
     const impactOptions = IMPACT_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    const kind = editingEntry ? editingEntry.mode : 'review';
     return `
     <div class="card">
       <div class="card-header">
-        <h3>Log an Agent Entry</h3>
+        <h3>${editingEntry?'Edit Agent Entry':'Log an Agent Entry'}</h3>
         <div class="mode-toggle" id="arKindToggle" style="margin:0; background:var(--paper-deep); border-color:var(--rule);">
-          <button type="button" data-ar-kind="review" class="active" style="color:var(--slate);">Agent Review</button>
-          <button type="button" data-ar-kind="commendation" style="color:var(--slate);">Agent Commendation</button>
+          <button type="button" data-ar-kind="review" class="${kind==='review'?'active':''}" style="color:var(--slate);">Agent Review</button>
+          <button type="button" data-ar-kind="commendation" class="${kind==='commendation'?'active':''}" style="color:var(--slate);">Agent Commendation</button>
         </div>
       </div>
       <div class="card-body">
@@ -1916,66 +1937,67 @@ function renderAgentReviews(){
           <div class="field-grid">
             <div class="field">
               <label class="field-label">Agent Name</label>
-              <input type="text" id="ar_agent" placeholder="e.g. Dean Clemente">
+              <input type="text" id="ar_agent" placeholder="e.g. Dean Clemente" value="${editingEntry?esc(editingEntry.agentName):''}">
             </div>
             <div class="field">
               <label class="field-label">Case Number</label>
-              <input type="text" id="ar_case" placeholder="e.g. 13872622">
+              <input type="text" id="ar_case" placeholder="e.g. 13872622" value="${editingEntry?esc(editingEntry.caseNumber):''}">
             </div>
             <div class="field">
               <label class="field-label" id="ar_categoryLabel">Type of Issue</label>
-              <select id="ar_category">${issueOptions}</select>
+              <select id="ar_category">${(kind==='review'?issueOptions:categoryOptions)}</select>
             </div>
             <div class="field">
               <label class="field-label" id="ar_levelLabel">Severity / Impact</label>
-              <select id="ar_level">${severityOptions}</select>
+              <select id="ar_level">${(kind==='review'?severityOptions:impactOptions)}</select>
             </div>
           </div>
 
-          <div id="ar_reviewSections">
+          <div id="ar_reviewSections" style="${kind!=='review'?'display:none;':''}">
             <div class="field">
               <label class="field-label">1. Interaction Summary <span style="color:var(--brass);">*</span></label>
               <div class="field-hint" style="margin:0 0 6px 0;">What happened \u2014 brief summary of the interaction</div>
-              <textarea id="ar_s1" placeholder="Describe the interaction and reason for review..."></textarea>
+              <textarea id="ar_s1" placeholder="Describe the interaction and reason for review...">${kind==='review'&&editingEntry?esc(editingEntry.section1):''}</textarea>
             </div>
             <div class="field">
               <label class="field-label">2. Gap Identified <span style="color:var(--brass);">*</span></label>
               <div class="field-hint" style="margin:0 0 6px 0;">What was missed \u2014 policy, KB, or steps not followed</div>
-              <textarea id="ar_s2" placeholder="Outline the gap clearly..."></textarea>
+              <textarea id="ar_s2" placeholder="Outline the gap clearly...">${kind==='review'&&editingEntry?esc(editingEntry.section2):''}</textarea>
             </div>
             <div class="field">
               <label class="field-label">3. Opportunities &amp; Recommended Actions <span style="color:var(--brass);">*</span></label>
               <div class="field-hint" style="margin:0 0 6px 0;">Next steps \u2014 coaching points and expected actions</div>
-              <textarea id="ar_s3" placeholder="State coaching points and recommendations..."></textarea>
+              <textarea id="ar_s3" placeholder="State coaching points and recommendations...">${kind==='review'&&editingEntry?esc(editingEntry.section3):''}</textarea>
             </div>
             <div class="field">
               <label class="field-label">4. Positive Observations <span style="color:var(--slate-soft); text-transform:none; font-weight:400;">(recommended)</span></label>
               <div class="field-hint" style="margin:0 0 6px 0;">What the agent did well \u2014 strengths to reinforce</div>
-              <textarea id="ar_s4" placeholder="Acknowledge strengths and positive behaviors..."></textarea>
+              <textarea id="ar_s4" placeholder="Acknowledge strengths and positive behaviors...">${kind==='review'&&editingEntry?esc(editingEntry.section4):''}</textarea>
             </div>
           </div>
 
-          <div id="ar_commendationSections" style="display:none;">
+          <div id="ar_commendationSections" style="${kind==='review'?'display:none;':''}">
             <div class="field">
               <label class="field-label">1. What Went Well <span style="color:var(--green);">*</span></label>
               <div class="field-hint" style="margin:0 0 6px 0;">Interaction summary \u2014 how the agent effectively handled it</div>
-              <textarea id="ar_c1" placeholder="Summarize the interaction and positive outcome..."></textarea>
+              <textarea id="ar_c1" placeholder="Summarize the interaction and positive outcome...">${kind==='commendation'&&editingEntry?esc(editingEntry.section1):''}</textarea>
             </div>
             <div class="field">
               <label class="field-label">2. Key Strengths Displayed <span style="color:var(--green);">*</span></label>
               <div class="field-hint" style="margin:0 0 6px 0;">Behaviors / KB adherence \u2014 specific strengths demonstrated</div>
-              <textarea id="ar_c2" placeholder="Recognize specific behaviors, processes, or KB articles..."></textarea>
+              <textarea id="ar_c2" placeholder="Recognize specific behaviors, processes, or KB articles...">${kind==='commendation'&&editingEntry?esc(editingEntry.section2):''}</textarea>
             </div>
             <div class="field">
               <label class="field-label">3. Business Impact &amp; Recognition <span style="color:var(--green);">*</span></label>
               <div class="field-hint" style="margin:0 0 6px 0;">Value / next steps \u2014 impact on CX, efficiency, or business goals</div>
-              <textarea id="ar_c3" placeholder="Explain the positive impact and encourage continued excellence..."></textarea>
+              <textarea id="ar_c3" placeholder="Explain the positive impact and encourage continued excellence...">${kind==='commendation'&&editingEntry?esc(editingEntry.section3):''}</textarea>
             </div>
           </div>
 
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="button" class="btn ghost" id="ar_previewBtn">Generate Preview</button>
-            <button type="submit" class="btn brass" id="ar_saveBtn">Save Entry</button>
+            <button type="submit" class="btn brass" id="ar_saveBtn">${editingEntry?'Save Changes':'Save Entry'}</button>
+            ${editingEntry?'<button type="button" class="btn ghost" id="ar_cancelEditBtn">Cancel</button>':''}
           </div>
         </form>
       </div>
@@ -2119,10 +2141,12 @@ function renderMyAgentReviewsTable(){
   if(!wrap) return;
   const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
   const entries = all.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const deletionsUsed = STATE.agentReviewDeletionCounts[viewerId] || 0;
+  const deletionsLeft = Math.max(0, AGENT_REVIEW_DELETE_LIMIT - deletionsUsed);
   if(chip){
     const rc = all.filter(a=>a.mode==='review').length;
     const cc = all.filter(a=>a.mode==='commendation').length;
-    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'}`;
+    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'} \u00b7 ${deletionsLeft} deletion${deletionsLeft===1?'':'s'} left`;
   }
   if(!entries.length){
     wrap.innerHTML = emptyState('No entries yet', 'Add your first agent review or commendation using the form above.', null, null);
@@ -2140,20 +2164,36 @@ function renderMyAgentReviewsTable(){
             <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
             <td>${esc(a.category)||'\u2014'}</td>
             <td style="max-width:260px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
-            <td style="text-align:right;"><button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button></td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="icon-btn" title="Edit" data-ar-edit="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              <button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+            </td>
           </tr>`).join('')}
       </tbody>
     </table>
   `;
-  wrap.querySelectorAll('[data-ar-delete]').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      if(!confirm('Delete this entry?')) return;
-      STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==b.dataset.arDelete);
-      await saveState();
-      renderMyAgentReviewsTable();
-      toast('Entry deleted');
-    });
+  wrap.querySelectorAll('[data-ar-edit]').forEach(b=>{
+    b.addEventListener('click', ()=>{ editingAgentReviewId = b.dataset.arEdit; setView('agentReviews'); });
   });
+  wrap.querySelectorAll('[data-ar-delete]').forEach(b=>{
+    b.addEventListener('click', ()=>deleteAgentReviewEntry(b.dataset.arDelete, renderMyAgentReviewsTable));
+  });
+}
+async function deleteAgentReviewEntry(id, refreshFn){
+  const entry = STATE.agentReviews.find(a=>a.id===id);
+  if(!entry) return;
+  const used = STATE.agentReviewDeletionCounts[entry.supportId] || 0;
+  if(used >= AGENT_REVIEW_DELETE_LIMIT){
+    toast(`You've used all ${AGENT_REVIEW_DELETE_LIMIT} of your entry deletions. Contact your supervisor if you need this one removed.`, true);
+    return;
+  }
+  const remaining = AGENT_REVIEW_DELETE_LIMIT - used;
+  if(!confirm(`Delete this entry? You have ${remaining} deletion${remaining===1?'':'s'} left, and this will use one.`)) return;
+  STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==id);
+  STATE.agentReviewDeletionCounts[entry.supportId] = used + 1;
+  await saveState();
+  if(refreshFn) refreshFn();
+  toast('Entry deleted');
 }
 function renderAllAgentReviewsTable(){
   const wrap = document.getElementById('allAgentReviewsWrap');
@@ -2374,17 +2414,36 @@ function attachViewHandlers(){
         toast('Attendance saved');
       });
     }
+    document.querySelectorAll('[data-ar-edit]').forEach(b=>{
+      b.addEventListener('click', ()=>{ editingAgentReviewId = b.dataset.arEdit; setView('agentReviews'); });
+    });
+    document.querySelectorAll('[data-ar-delete]').forEach(b=>{
+      b.addEventListener('click', ()=>deleteAgentReviewEntry(b.dataset.arDelete, render));
+    });
   }
 
   if(currentView==='myRecords'){
     renderMyRecordsTable();
-    document.getElementById('mySearchInput').addEventListener('input', renderMyRecordsTable);
+    const sel = document.getElementById('myRecordsSupportFilter');
+    if(sel){
+      sel.addEventListener('change', async ()=>{
+        STATE.viewerSupportId = sel.value;
+        await saveState();
+        renderViewerPicker();
+        renderMyRecordsTable();
+      });
+    }
   }
 
   if(currentView==='agentReviews'){
     if(appMode==='support'){
-      agentReviewKind = 'review';
+      const editingEntry = editingAgentReviewId ? STATE.agentReviews.find(a=>a.id===editingAgentReviewId) : null;
+      agentReviewKind = editingEntry ? editingEntry.mode : 'review';
       updateAgentReviewModeUI();
+      if(editingEntry){
+        document.getElementById('ar_category').value = editingEntry.category || '';
+        document.getElementById('ar_level').value = editingEntry.level || '';
+      }
       renderMyAgentReviewsTable();
       document.querySelectorAll('#arKindToggle [data-ar-kind]').forEach(btn=>{
         btn.addEventListener('click', ()=>{
@@ -2403,19 +2462,30 @@ function attachViewHandlers(){
         const d = readAgentReviewForm();
         navigator.clipboard.writeText(buildAgentEntryText(d)).then(()=>toast('Copied to clipboard')).catch(()=>toast('Could not copy \u2014 select and copy manually.', true));
       });
+      const cancelBtn = document.getElementById('ar_cancelEditBtn');
+      if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingAgentReviewId = null; setView('agentReviews'); });
       document.getElementById('agentReviewForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
         const d = readAgentReviewForm();
         const missing = validateAgentReviewForm(d);
         if(missing.length){ toast('Please complete: ' + missing.join(', '), true); return; }
-        const entry = { id: uid('ar'), date: new Date().toISOString().slice(0,10), createdAt: Date.now(), ...d };
-        STATE.agentReviews.push(entry);
-        await saveState();
-        e.target.reset();
-        agentReviewKind = 'review';
-        updateAgentReviewModeUI();
-        renderMyAgentReviewsTable();
-        toast(entry.mode==='commendation' ? 'Commendation added' : 'Review added');
+        if(editingAgentReviewId){
+          const idx = STATE.agentReviews.findIndex(a=>a.id===editingAgentReviewId);
+          if(idx>-1) STATE.agentReviews[idx] = { ...STATE.agentReviews[idx], ...d };
+          await saveState();
+          editingAgentReviewId = null;
+          toast('Entry updated');
+          setView('agentReviews');
+        } else {
+          const entry = { id: uid('ar'), date: new Date().toISOString().slice(0,10), createdAt: Date.now(), ...d };
+          STATE.agentReviews.push(entry);
+          await saveState();
+          e.target.reset();
+          agentReviewKind = 'review';
+          updateAgentReviewModeUI();
+          renderMyAgentReviewsTable();
+          toast(entry.mode==='commendation' ? 'Commendation added' : 'Review added');
+        }
       });
     } else {
       renderAllAgentReviewsTable();
@@ -2530,6 +2600,12 @@ async function confirmDeleteRecord(id){
 /* ======================================================================
    EXPORT MODAL (email preview + PDF)
    ====================================================================== */
+function downloadRecordPdf(recordId){
+  const r = STATE.records.find(x=>x.id===recordId);
+  if(!r) return;
+  const subject = `SEQAS REVIEW - ${r.supportName} | ${monthShort(r.month)}`;
+  generatePdf(r, subject);
+}
 function openExportModal(recordId){
   const r = STATE.records.find(x=>x.id===recordId);
   if(!r) return;
