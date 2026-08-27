@@ -510,7 +510,9 @@
 <script>
 /* =========================================================================
    SUPPORT_REVIEW — SEQAS evaluation tracker
-   Persistence via window.storage (personal, not shared)
+   Persistence via localStorage (this runs as a standalone downloaded file,
+   opened directly in the browser — not inside Claude's live artifact panel —
+   so localStorage is the correct, reliable storage for this app).
    ========================================================================= */
 
 const CRITERIA = [
@@ -721,6 +723,8 @@ function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&am
 function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return iso; return d.toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'}); }
 
 /* ---------------------- PERSISTENCE ---------------------- */
+const STORAGE_KEY = 'seqas-review-app-data';
+
 function setSaveStatus(state, text){
   const wrap = document.getElementById('saveStatus');
   const label = document.getElementById('saveStatusText');
@@ -730,49 +734,37 @@ function setSaveStatus(state, text){
   label.textContent = text;
 }
 function isStorageReady(){
-  return typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function';
-}
-async function waitForStorage(timeoutMs=5000){
-  const step = 150;
-  let waited = 0;
-  while(!isStorageReady() && waited < timeoutMs){
-    await new Promise(r=>setTimeout(r, step));
-    waited += step;
+  try{
+    const testKey = '__seqas_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  }catch(e){
+    return false;
   }
-  return isStorageReady();
 }
 let loadFailed = false;
 let lastLoadError = null;
 let lastRawValue = null;
-async function loadState(attempt=1){
-  const ready = await waitForStorage(attempt===1 ? 5000 : 1500);
-  if(!ready){
-    console.error('window.storage never became available (attempt '+attempt+')');
-    if(attempt < 3){
-      await new Promise(r=>setTimeout(r, 700*attempt));
-      return loadState(attempt+1);
-    }
+
+async function loadState(){
+  if(!isStorageReady()){
     loadFailed = true;
-    lastLoadError = { type:'unavailable', message:'window.storage is not available in this view.' };
+    lastLoadError = { type:'unavailable', message:'localStorage is blocked or unavailable in this browser (private/incognito mode sometimes disables it).' };
     return false;
   }
-  let res;
+  let raw;
   try{
-    res = await window.storage.get('app-data', false);
+    raw = localStorage.getItem(STORAGE_KEY);
   }catch(e){
-    console.error('Fetch error (attempt '+attempt+')', e);
-    if(attempt < 4){
-      await new Promise(r=>setTimeout(r, 500*attempt));
-      return loadState(attempt+1);
-    }
     loadFailed = true;
     lastLoadError = { type:'fetch', message: e && e.message ? e.message : String(e) };
     return false;
   }
-  if(res && res.value){
-    lastRawValue = res.value;
+  if(raw){
+    lastRawValue = raw;
     try{
-      const parsed = JSON.parse(res.value);
+      const parsed = JSON.parse(raw);
       STATE.supports = parsed.supports || [];
       STATE.targets = parsed.targets || {};
       STATE.records = parsed.records || [];
@@ -782,55 +774,37 @@ async function loadState(attempt=1){
       setSaveStatus(null, 'All changes saved');
       return true;
     }catch(e){
-      // Retrying won't fix this — the stored value itself can't be parsed.
       console.error('Parse error', e);
       loadFailed = true;
       lastLoadError = { type:'parse', message: e && e.message ? e.message : String(e) };
       return false;
     }
   } else {
-    // Storage genuinely has nothing yet (brand new, first-ever run) — safe to seed.
+    // Nothing saved yet on this browser (first-ever run here) — safe to seed.
     STATE = seedState();
     await saveState();
     return true;
   }
 }
-let backgroundRetryTimer = null;
+
 let hasUnsavedFailure = false;
 
-async function saveState(attempt=1){
-  setSaveStatus('saving', attempt>1 ? `Saving… (retry ${attempt-1})` : 'Saving…');
+async function saveState(){
+  setSaveStatus('saving', 'Saving…');
   try{
-    const ready = await waitForStorage(2000);
-    if(!ready) throw new Error('window.storage is not available in this view.');
-    const result = await window.storage.set('app-data', JSON.stringify(STATE), false);
-    if(!result){
-      throw new Error('Storage returned no result');
-    }
+    if(!isStorageReady()) throw new Error('localStorage is blocked or unavailable in this browser.');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
     hasUnsavedFailure = false;
-    if(backgroundRetryTimer){ clearInterval(backgroundRetryTimer); backgroundRetryTimer = null; }
     const stamp = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     setSaveStatus(null, `Saved at ${stamp}`);
     return true;
   }catch(e){
-    console.error('Storage error (attempt '+attempt+')', e);
-    if(attempt < 5){
-      await new Promise(res=>setTimeout(res, Math.min(400*attempt, 2000)));
-      return saveState(attempt+1);
-    }
+    console.error('Storage error', e);
     hasUnsavedFailure = true;
     setSaveStatus('error', 'Not saved — tap to retry');
     toastRetry('Could not save your last change. Tap here to try again.');
-    startBackgroundRetry();
     return false;
   }
-}
-function startBackgroundRetry(){
-  if(backgroundRetryTimer) return;
-  backgroundRetryTimer = setInterval(()=>{
-    if(!hasUnsavedFailure){ clearInterval(backgroundRetryTimer); backgroundRetryTimer = null; return; }
-    saveState();
-  }, 8000);
 }
 window.addEventListener('beforeunload', (e)=>{
   if(hasUnsavedFailure){
@@ -1840,7 +1814,7 @@ function renderLoadFailureScreen(){
     <div class="seal-lg" style="border-color:var(--red); color:var(--red);">!</div>
     <p style="max-width:340px; text-align:center; margin-bottom:2px;">
       ${isUnavailable
-        ? 'This app can\u2019t reach its saving feature right now. If you downloaded this file and opened it directly in a browser, saving only works while it\u2019s running inside your Claude conversation \u2014 reopen it from there. If you\u2019re already in Claude, try reloading.'
+        ? 'This browser is blocking local storage, so nothing can be saved here. This usually happens in private/incognito windows, or if a browser setting has storage turned off for this file. Try opening this file in a normal browser window.'
         : isParseError
         ? 'Your saved data came back, but it could not be read \u2014 it may be corrupted. Retrying won\u2019t fix this on its own.'
         : 'Couldn\u2019t reach your saved data. Refreshing now could risk overwriting it, so nothing has loaded yet.'}
