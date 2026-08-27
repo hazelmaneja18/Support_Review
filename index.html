@@ -729,10 +729,33 @@ function setSaveStatus(state, text){
   if(state) wrap.classList.add(state);
   label.textContent = text;
 }
+function isStorageReady(){
+  return typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function';
+}
+async function waitForStorage(timeoutMs=5000){
+  const step = 150;
+  let waited = 0;
+  while(!isStorageReady() && waited < timeoutMs){
+    await new Promise(r=>setTimeout(r, step));
+    waited += step;
+  }
+  return isStorageReady();
+}
 let loadFailed = false;
 let lastLoadError = null;
 let lastRawValue = null;
 async function loadState(attempt=1){
+  const ready = await waitForStorage(attempt===1 ? 5000 : 1500);
+  if(!ready){
+    console.error('window.storage never became available (attempt '+attempt+')');
+    if(attempt < 3){
+      await new Promise(r=>setTimeout(r, 700*attempt));
+      return loadState(attempt+1);
+    }
+    loadFailed = true;
+    lastLoadError = { type:'unavailable', message:'window.storage is not available in this view.' };
+    return false;
+  }
   let res;
   try{
     res = await window.storage.get('app-data', false);
@@ -778,6 +801,8 @@ let hasUnsavedFailure = false;
 async function saveState(attempt=1){
   setSaveStatus('saving', attempt>1 ? `Saving… (retry ${attempt-1})` : 'Saving…');
   try{
+    const ready = await waitForStorage(2000);
+    if(!ready) throw new Error('window.storage is not available in this view.');
     const result = await window.storage.set('app-data', JSON.stringify(STATE), false);
     if(!result){
       throw new Error('Storage returned no result');
@@ -1809,11 +1834,14 @@ function generatePdf(r, subject){
    ====================================================================== */
 function renderLoadFailureScreen(){
   const isParseError = lastLoadError && lastLoadError.type === 'parse';
+  const isUnavailable = lastLoadError && lastLoadError.type === 'unavailable';
   const wrap = document.getElementById('loading');
   wrap.innerHTML = `
     <div class="seal-lg" style="border-color:var(--red); color:var(--red);">!</div>
     <p style="max-width:340px; text-align:center; margin-bottom:2px;">
-      ${isParseError
+      ${isUnavailable
+        ? 'This app can\u2019t reach its saving feature right now. If you downloaded this file and opened it directly in a browser, saving only works while it\u2019s running inside your Claude conversation \u2014 reopen it from there. If you\u2019re already in Claude, try reloading.'
+        : isParseError
         ? 'Your saved data came back, but it could not be read \u2014 it may be corrupted. Retrying won\u2019t fix this on its own.'
         : 'Couldn\u2019t reach your saved data. Refreshing now could risk overwriting it, so nothing has loaded yet.'}
     </p>
