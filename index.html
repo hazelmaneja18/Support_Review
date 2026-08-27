@@ -111,19 +111,35 @@
   }
   .mode-toggle button.active{ background:var(--pal-mint); color:var(--pal-navy); }
   .mode-toggle button svg{ flex-shrink:0; }
-  .viewer-picker{ margin-bottom:2px; }
+  .viewer-picker{ margin-top:14px; }
   .viewer-picker label{
-    font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px;
+    font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px; font-weight:700;
   }
   .viewer-picker select{
-    width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); color:#f2fbf8;
-    font-size:12.5px; padding:7px 9px; border-radius:var(--radius-sm);
+    width:100%; background:var(--pal-mint); border:1px solid var(--pal-mint); color:var(--pal-navy);
+    font-size:13px; font-weight:700; padding:9px 10px; border-radius:var(--radius-sm); cursor:pointer;
   }
   .type-badge{
     display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px;
     background:var(--brass-tint); color:var(--brass-dark); white-space:nowrap;
   }
   .type-badge.commendation{ background:var(--green-bg); color:var(--green); }
+  .kind-tabs{ display:inline-flex; gap:4px; padding:4px; background:var(--paper-deep); border:1px solid var(--rule); border-radius:24px; margin-bottom:20px; }
+  .kind-tabs button{
+    display:flex; align-items:center; gap:7px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--slate); padding:9px 18px; border-radius:20px;
+    transition:background 0.15s, color 0.15s;
+  }
+  .kind-tabs button.active[data-kind="review"]{ background:var(--amber-bg); color:var(--amber); }
+  .kind-tabs button.active[data-kind="commendation"]{ background:var(--green-bg); color:var(--green); }
+  .kind-count-row{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .kind-count-pill{
+    display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--rule-soft);
+    border-radius:var(--radius); padding:12px 18px; box-shadow:var(--shadow);
+  }
+  .kind-count-pill .num{ font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:700; color:var(--ink-text); }
+  .kind-count-pill .lbl{ font-size:11.5px; color:var(--slate-soft); }
+  .section-hint{ font-size:11.5px; color:var(--slate-soft); font-weight:400; text-transform:none; letter-spacing:0; display:block; margin-top:2px; }
   nav.navlist{
     padding:16px 12px;
     flex:1;
@@ -501,10 +517,10 @@
         <button type="button" data-mode="support"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Support View</button>
         <button type="button" data-mode="supervisor"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg>Supervisor</button>
       </div>
+      <div id="viewerPickerWrap"></div>
     </div>
     <nav class="navlist" id="navlist"></nav>
     <div class="sidebar-foot">
-      <div id="viewerPickerWrap"></div>
       <div class="save-status" id="saveStatus"><span class="dot"></span><span id="saveStatusText">All changes saved</span></div>
       <div class="month-chip" id="sidebarMonthChip">—</div>
     </div>
@@ -732,7 +748,9 @@ let STATE = {
   deletedCaseNumbers: [],
   augustAccuracyApplied: false,
   agentReviews: [],
-  viewerSupportId: null
+  viewerSupportId: null,
+  personalTargets: {},
+  attendance: {}
 };
 let appMode = 'support'; // 'support' | 'supervisor'
 let supervisorUnlocked = false;
@@ -799,6 +817,8 @@ async function loadState(){
       STATE.augustAccuracyApplied = !!parsed.augustAccuracyApplied;
       STATE.agentReviews = parsed.agentReviews || [];
       STATE.viewerSupportId = parsed.viewerSupportId || null;
+      STATE.personalTargets = parsed.personalTargets || {};
+      STATE.attendance = parsed.attendance || {};
       setSaveStatus(null, 'All changes saved');
       return true;
     }catch(e){
@@ -851,7 +871,9 @@ function seedState(){
     deletedCaseNumbers: [],
     augustAccuracyApplied: false,
     agentReviews: [],
-    viewerSupportId: null
+    viewerSupportId: null,
+    personalTargets: {},
+    attendance: {}
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -955,6 +977,35 @@ function sortedSupports(){
 function getTarget(month){
   if(STATE.targets[month] !== undefined) return STATE.targets[month];
   return 16;
+}
+function personalTargetKey(supportId, month){ return `${supportId}:${month}`; }
+function getPersonalTarget(supportId, month){
+  const key = personalTargetKey(supportId, month);
+  if(STATE.personalTargets[key] !== undefined && STATE.personalTargets[key] !== null && STATE.personalTargets[key] !== '') return Number(STATE.personalTargets[key]);
+  return getTarget(month);
+}
+function getAttendance(supportId, month){
+  const key = personalTargetKey(supportId, month);
+  return STATE.attendance[key] || { absent:0, vl:0, ml:0, el:0 };
+}
+function getWorkingDaysInMonth(month){
+  const [y,m] = month.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  let count = 0;
+  for(let d=1; d<=daysInMonth; d++){
+    const day = new Date(y, m-1, d).getDay();
+    if(day !== 0 && day !== 6) count++;
+  }
+  return count;
+}
+function getAdjustedTarget(supportId, month){
+  const base = getPersonalTarget(supportId, month);
+  const att = getAttendance(supportId, month);
+  const leaveDays = (Number(att.absent)||0) + (Number(att.vl)||0) + (Number(att.ml)||0) + (Number(att.el)||0);
+  const workingDays = getWorkingDaysInMonth(month);
+  if(leaveDays<=0 || workingDays<=0) return base;
+  const factor = Math.max(0, (workingDays - leaveDays) / workingDays);
+  return Math.max(0, Math.round(base * factor));
 }
 function scoreBadgeClass(pct){
   if(pct===null || pct===undefined) return 'neutral';
@@ -1117,7 +1168,12 @@ const PAGE_META = {
   agentReviews: ['Agent Review', 'Log commendations and feedback from agents you\u2019ve helped'],
 };
 
-const AGENT_REVIEW_TYPES = ['Commendation','Behaviour','Call Handling: Process Related','Knowledge Gap','Procedural','Technical'];
+const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
+const AGENT_COMMENDATION_CATEGORIES = ['Exceptional Customer Service','Technical Excellence','Process & Policy Adherence','Efficiency & Productivity','Team Collaboration','Going Above & Beyond'];
+const SEVERITY_LEVELS = ['Low','Medium','High','Critical'];
+const IMPACT_LEVELS = ['Low','Medium','High','Significant'];
+let agentReviewKind = 'review';
+let editingAgentReviewId = null;
 
 function setView(view, opts={}){
   currentView = view;
@@ -1333,6 +1389,25 @@ function renderCounts(){
     return `<td class="num"><span class="badge ${rate===null?'neutral':(rate>=1?'green':'red')}">${rate===null?'—':Math.round(rate*100)+'%'}</span></td>`;
   }).join('');
 
+  const personalTargetRows = sortedSupports().map(sup=>{
+    const cells = months.map(m=>{
+      const key = personalTargetKey(sup.id, m);
+      const stored = STATE.personalTargets[key];
+      const val = (stored===undefined||stored===null||stored==='') ? '' : stored;
+      return `<td class="num"><input type="number" min="0" class="target-input" placeholder="${getTarget(m)}" data-personal-target-support="${sup.id}" data-personal-target-month="${m}" value="${val}"></td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;">${esc(sup.name)}</td>${cells}</tr>`;
+  }).join('');
+
+  const attendanceRows = sortedSupports().map(sup=>{
+    const cells = months.map(m=>{
+      const att = getAttendance(sup.id, m);
+      const total = (Number(att.absent)||0)+(Number(att.vl)||0)+(Number(att.ml)||0)+(Number(att.el)||0);
+      return `<td class="num">${total ? `A:${att.absent||0} VL:${att.vl||0} ML:${att.ml||0} EL:${att.el||0}` : '<span style="color:var(--slate-soft);">\u2014</span>'}</td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;">${esc(sup.name)}</td>${cells}</tr>`;
+  }).join('');
+
   return `
   <div class="card">
     <div class="card-header">
@@ -1352,7 +1427,35 @@ function renderCounts(){
       </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin tracking.', 'supports','Add supports')}
     </div>
   </div>
-  <p class="field-hint" style="margin-top:14px;">The monthly target is a team-wide goal (e.g. 8 or 16 total evaluations). Change any number above and it saves automatically.</p>
+  <p class="field-hint" style="margin-top:14px;">The monthly target above is a team-wide goal (e.g. 8 or 16 total evaluations). Change any number above and it saves automatically.</p>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Personal Targets</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Overrides each support's own target \u2014 leave blank to use the team target above</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${STATE.supports.length ? `
+      <table class="count-table">
+        <thead><tr><th>Support</th>${months.map(m=>`<th>${monthLabel(m).slice(0,3).toUpperCase()} '${m.slice(2,4)}</th>`).join('')}</tr></thead>
+        <tbody>${personalTargetRows}</tbody>
+      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin tracking.', 'supports','Add supports')}
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Attendance on File</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Read-only \u2014 supports log this from their own dashboard</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${STATE.supports.length ? `
+      <table class="count-table">
+        <thead><tr><th>Support</th>${months.map(m=>`<th>${monthLabel(m).slice(0,3).toUpperCase()} '${m.slice(2,4)}</th>`).join('')}</tr></thead>
+        <tbody>${attendanceRows}</tbody>
+      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin tracking.', 'supports','Add supports')}
+    </div>
+  </div>
   `;
 }
 
@@ -1612,6 +1715,12 @@ function renderMyDashboard(){
       <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
     </tr>`).join('');
 
+  const thisMonthTarget = getPersonalTarget(viewerId, currentMonth);
+  const att = getAttendance(viewerId, currentMonth);
+  const leaveDays = (Number(att.absent)||0)+(Number(att.vl)||0)+(Number(att.ml)||0)+(Number(att.el)||0);
+  const adjustedTarget = getAdjustedTarget(viewerId, currentMonth);
+  const completionRate = adjustedTarget>0 ? thisMonthRecs.length/adjustedTarget : null;
+
   return `
   <div class="card" style="margin-bottom:20px;">
     <div class="card-body" style="display:flex; align-items:center; gap:14px;">
@@ -1635,9 +1744,25 @@ function renderMyDashboard(){
       <div class="delta">${thisMonthRecs.length} evaluation${thisMonthRecs.length===1?'':'s'} this month</div>
     </div>
     <div class="stat-card">
-      <div class="label">Total Evaluations</div>
-      <div class="value">${myAll.length}</div>
-      <div class="delta">since your first review</div>
+      <div class="label">${monthLabel(currentMonth)} Target Progress</div>
+      <div class="value">${completionRate===null ? '\u2014' : Math.round(completionRate*100)+'%'}</div>
+      <div class="delta">${thisMonthRecs.length} of ${adjustedTarget} ${leaveDays>0?`(adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>Attendance This Month</h3><span style="font-size:11.5px; color:var(--slate-soft);">${monthLabel(currentMonth)} \u2014 affects your target progress above</span></div>
+    <div class="card-body">
+      <p class="field-hint" style="margin:0 0 14px 0;">Base target for this month: <strong>${thisMonthTarget}</strong>. Days off reduce your target proportionally, so your progress reflects your actual working days.</p>
+      <form id="attendanceForm">
+        <div class="field-grid">
+          <div class="field"><label class="field-label">Absent (days)</label><input type="number" min="0" id="att_absent" value="${att.absent||0}"></div>
+          <div class="field"><label class="field-label">VL (days)</label><input type="number" min="0" id="att_vl" value="${att.vl||0}"></div>
+          <div class="field"><label class="field-label">ML (days)</label><input type="number" min="0" id="att_ml" value="${att.ml||0}"></div>
+          <div class="field"><label class="field-label">EL (days)</label><input type="number" min="0" id="att_el" value="${att.el||0}"></div>
+        </div>
+        <button type="submit" class="btn brass" style="margin-top:4px;">Save Attendance</button>
+      </form>
     </div>
   </div>
 
@@ -1711,48 +1836,134 @@ function renderAgentReviews(){
   if(appMode==='support'){
     const viewerId = ensureViewerSupport();
     const viewer = STATE.supports.find(s=>s.id===viewerId);
+    const issueOptions = AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    const categoryOptions = AGENT_COMMENDATION_CATEGORIES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    const severityOptions = SEVERITY_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    const impactOptions = IMPACT_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
     return `
     <div class="card">
-      <div class="card-header"><h3>Log an Agent Review</h3><span style="font-size:11.5px; color:var(--slate-soft);">Commendations or feedback you received from an agent</span></div>
+      <div class="card-header">
+        <h3>Log an Agent Entry</h3>
+        <div class="mode-toggle" id="arKindToggle" style="margin:0; background:var(--paper-deep); border-color:var(--rule);">
+          <button type="button" data-ar-kind="review" class="active" style="color:var(--slate);">Agent Review</button>
+          <button type="button" data-ar-kind="commendation" style="color:var(--slate);">Agent Commendation</button>
+        </div>
+      </div>
       <div class="card-body">
         <form id="agentReviewForm">
+          <div class="field">
+            <label class="field-label">Support Name</label>
+            <input type="text" value="${esc(viewer ? viewer.name : '')}" disabled>
+          </div>
           <div class="field-grid">
             <div class="field">
-              <label class="field-label">Support Name</label>
-              <input type="text" value="${esc(viewer ? viewer.name : '')}" disabled>
-            </div>
-            <div class="field">
               <label class="field-label">Agent Name</label>
-              <input type="text" id="ar_agent" placeholder="e.g. Dean Clemente" required>
+              <input type="text" id="ar_agent" placeholder="e.g. Dean Clemente">
             </div>
             <div class="field">
               <label class="field-label">Case Number</label>
-              <input type="text" id="ar_case" placeholder="e.g. 13872622" required>
+              <input type="text" id="ar_case" placeholder="e.g. 13872622">
             </div>
             <div class="field">
-              <label class="field-label">Type</label>
-              <select id="ar_type">${AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}</select>
+              <label class="field-label" id="ar_categoryLabel">Type of Issue</label>
+              <select id="ar_category">${issueOptions}</select>
+            </div>
+            <div class="field">
+              <label class="field-label" id="ar_levelLabel">Severity / Impact</label>
+              <select id="ar_level">${severityOptions}</select>
             </div>
           </div>
-          <div class="field" style="margin-bottom:0;">
-            <label class="field-label">Issue / Details</label>
-            <textarea id="ar_issue" placeholder="Optional for commendations \u2014 add details for anything else"></textarea>
+
+          <div id="ar_reviewSections">
+            <div class="field">
+              <label class="field-label">1. Interaction Summary <span style="color:var(--brass);">*</span></label>
+              <div class="field-hint" style="margin:0 0 6px 0;">What happened \u2014 brief summary of the interaction</div>
+              <textarea id="ar_s1" placeholder="Describe the interaction and reason for review..."></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">2. Gap Identified <span style="color:var(--brass);">*</span></label>
+              <div class="field-hint" style="margin:0 0 6px 0;">What was missed \u2014 policy, KB, or steps not followed</div>
+              <textarea id="ar_s2" placeholder="Outline the gap clearly..."></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">3. Opportunities &amp; Recommended Actions <span style="color:var(--brass);">*</span></label>
+              <div class="field-hint" style="margin:0 0 6px 0;">Next steps \u2014 coaching points and expected actions</div>
+              <textarea id="ar_s3" placeholder="State coaching points and recommendations..."></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">4. Positive Observations <span style="color:var(--slate-soft); text-transform:none; font-weight:400;">(recommended)</span></label>
+              <div class="field-hint" style="margin:0 0 6px 0;">What the agent did well \u2014 strengths to reinforce</div>
+              <textarea id="ar_s4" placeholder="Acknowledge strengths and positive behaviors..."></textarea>
+            </div>
           </div>
-          <button type="submit" class="btn brass" style="margin-top:14px;">Add Entry</button>
+
+          <div id="ar_commendationSections" style="display:none;">
+            <div class="field">
+              <label class="field-label">1. What Went Well <span style="color:var(--green);">*</span></label>
+              <div class="field-hint" style="margin:0 0 6px 0;">Interaction summary \u2014 how the agent effectively handled it</div>
+              <textarea id="ar_c1" placeholder="Summarize the interaction and positive outcome..."></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">2. Key Strengths Displayed <span style="color:var(--green);">*</span></label>
+              <div class="field-hint" style="margin:0 0 6px 0;">Behaviors / KB adherence \u2014 specific strengths demonstrated</div>
+              <textarea id="ar_c2" placeholder="Recognize specific behaviors, processes, or KB articles..."></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">3. Business Impact &amp; Recognition <span style="color:var(--green);">*</span></label>
+              <div class="field-hint" style="margin:0 0 6px 0;">Value / next steps \u2014 impact on CX, efficiency, or business goals</div>
+              <textarea id="ar_c3" placeholder="Explain the positive impact and encourage continued excellence..."></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn ghost" id="ar_previewBtn">Generate Preview</button>
+            <button type="submit" class="btn brass" id="ar_saveBtn">Save Entry</button>
+          </div>
         </form>
       </div>
     </div>
+
+    <div class="card" id="ar_previewCard" style="display:none; margin-top:20px;">
+      <div class="card-header"><h3>Formatted Preview</h3><button type="button" class="btn ghost sm" id="ar_copyBtn">Copy to Clipboard</button></div>
+      <div class="card-body"><pre id="ar_previewText" style="white-space:pre-wrap; font-family:inherit; font-size:13px; line-height:1.6; margin:0; color:var(--ink-text);"></pre></div>
+    </div>
+
     <div class="card" style="margin-top:20px;">
-      <div class="card-header"><h3>Your Entries</h3></div>
+      <div class="card-header">
+        <h3>Your Entries</h3>
+        <span id="ar_countChip" style="font-size:11.5px; color:var(--slate-soft);"></span>
+      </div>
       <div class="card-body" id="myAgentReviewsWrap" style="overflow-x:auto;"></div>
     </div>
     `;
   } else {
     const supFilterOptions = sortedSupports().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    const bySupportRows = sortedSupports().map(s=>{
+      const mine = STATE.agentReviews.filter(a=>a.supportId===s.id);
+      const rc = mine.filter(a=>a.mode==='review').length;
+      const cc = mine.filter(a=>a.mode==='commendation').length;
+      return `<tr>
+        <td style="font-weight:600;">${esc(s.name)}</td>
+        <td class="num">${rc}</td>
+        <td class="num">${cc}</td>
+        <td class="num">${rc+cc}</td>
+      </tr>`;
+    }).join('');
     return `
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><h3>By Support</h3><span style="font-size:11.5px; color:var(--slate-soft);">Reviews and commendations submitted by each support</span></div>
+      <div class="card-body" style="overflow-x:auto;">
+        ${STATE.supports.length ? `
+        <table>
+          <thead><tr><th>Support</th><th>Reviews</th><th>Commendations</th><th>Total</th></tr></thead>
+          <tbody>${bySupportRows}</tbody>
+        </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
+      </div>
+    </div>
     <div class="filter-bar">
       <select id="arFilterSupport"><option value="">All supports</option>${supFilterOptions}</select>
-      <select id="arFilterType"><option value="">All types</option>${AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}</select>
+      <select id="arFilterKind"><option value="">All entries</option><option value="review">Agent Reviews</option><option value="commendation">Agent Commendations</option></select>
+      <span id="ar_countChipAll" style="font-size:11.5px; color:var(--slate-soft); margin-left:4px;"></span>
     </div>
     <div class="card">
       <div class="card-body" id="allAgentReviewsWrap" style="overflow-x:auto;"></div>
@@ -1760,26 +1971,117 @@ function renderAgentReviews(){
     `;
   }
 }
+
+function buildAgentEntryText(e){
+  const lines = [];
+  const meta = [];
+  if(e.agentName) meta.push('Agent: '+e.agentName);
+  if(e.caseNumber) meta.push('Case: '+e.caseNumber);
+  if(meta.length){ lines.push(meta.join('   |   ')); lines.push(''); }
+  if(e.mode==='review'){
+    if(e.category) lines.push('Type of Issue: '+e.category);
+    if(e.level) lines.push('Severity: '+e.level);
+    lines.push('');
+    lines.push('1. Interaction Summary'); lines.push(e.section1||'');
+    lines.push('');
+    lines.push('2. Gap Identified'); lines.push(e.section2||'');
+    lines.push('');
+    lines.push('3. Opportunities & Recommended Actions'); lines.push(e.section3||'');
+    if(e.section4){ lines.push(''); lines.push('4. Positive Observations'); lines.push(e.section4); }
+  } else {
+    if(e.category) lines.push('Category: '+e.category);
+    if(e.level) lines.push('Impact Level: '+e.level);
+    lines.push('');
+    lines.push('1. What Went Well'); lines.push(e.section1||'');
+    lines.push('');
+    lines.push('2. Key Strengths Displayed'); lines.push(e.section2||'');
+    lines.push('');
+    lines.push('3. Business Impact & Recognition'); lines.push(e.section3||'');
+  }
+  return lines.join('\n');
+}
+
+function readAgentReviewForm(){
+  const kind = agentReviewKind;
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const base = {
+    mode: kind,
+    supportId: viewerId,
+    supportName: viewer ? viewer.name : '',
+    agentName: document.getElementById('ar_agent').value.trim(),
+    caseNumber: document.getElementById('ar_case').value.trim(),
+    category: document.getElementById('ar_category').value,
+    level: document.getElementById('ar_level').value,
+  };
+  if(kind==='review'){
+    base.section1 = document.getElementById('ar_s1').value.trim();
+    base.section2 = document.getElementById('ar_s2').value.trim();
+    base.section3 = document.getElementById('ar_s3').value.trim();
+    base.section4 = document.getElementById('ar_s4').value.trim();
+  } else {
+    base.section1 = document.getElementById('ar_c1').value.trim();
+    base.section2 = document.getElementById('ar_c2').value.trim();
+    base.section3 = document.getElementById('ar_c3').value.trim();
+    base.section4 = '';
+  }
+  return base;
+}
+function validateAgentReviewForm(d){
+  const missing = [];
+  if(!d.category) missing.push(d.mode==='review' ? 'Type of Issue' : 'Category');
+  if(!d.section1) missing.push(d.mode==='review' ? 'Interaction Summary' : 'What Went Well');
+  if(!d.section2) missing.push(d.mode==='review' ? 'Gap Identified' : 'Key Strengths Displayed');
+  if(!d.section3) missing.push(d.mode==='review' ? 'Opportunities & Recommended Actions' : 'Business Impact & Recognition');
+  return missing;
+}
+function updateAgentReviewModeUI(){
+  document.querySelectorAll('#arKindToggle [data-ar-kind]').forEach(btn=>{
+    const active = btn.dataset.arKind === agentReviewKind;
+    btn.classList.toggle('active', active);
+    btn.style.color = active ? (agentReviewKind==='review' ? 'var(--brass-dark)' : 'var(--green)') : 'var(--slate)';
+    btn.style.background = active ? (agentReviewKind==='review' ? 'var(--brass-tint)' : 'var(--green-bg)') : 'none';
+  });
+  const isReview = agentReviewKind==='review';
+  document.getElementById('ar_reviewSections').style.display = isReview ? 'block' : 'none';
+  document.getElementById('ar_commendationSections').style.display = isReview ? 'none' : 'block';
+  document.getElementById('ar_categoryLabel').textContent = isReview ? 'Type of Issue' : 'Category';
+  document.getElementById('ar_levelLabel').textContent = isReview ? 'Severity' : 'Impact';
+  document.getElementById('ar_category').innerHTML = (isReview ? AGENT_REVIEW_TYPES : AGENT_COMMENDATION_CATEGORIES).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  document.getElementById('ar_level').innerHTML = (isReview ? SEVERITY_LEVELS : IMPACT_LEVELS).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const saveBtn = document.getElementById('ar_saveBtn');
+  if(saveBtn) saveBtn.className = 'btn ' + (isReview ? 'brass' : 'ghost');
+  document.getElementById('ar_previewCard').style.display = 'none';
+}
+
 function renderMyAgentReviewsTable(){
   const viewerId = ensureViewerSupport();
   const wrap = document.getElementById('myAgentReviewsWrap');
+  const chip = document.getElementById('ar_countChip');
   if(!wrap) return;
-  const entries = STATE.agentReviews.filter(a=>a.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+  const entries = all.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(chip){
+    const rc = all.filter(a=>a.mode==='review').length;
+    const cc = all.filter(a=>a.mode==='commendation').length;
+    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'}`;
+  }
   if(!entries.length){
-    wrap.innerHTML = emptyState('No entries yet', 'Add your first agent review using the form above.', null, null);
+    wrap.innerHTML = emptyState('No entries yet', 'Add your first agent review or commendation using the form above.', null, null);
     return;
   }
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Type</th><th>Issue</th><th style="text-align:right;">Actions</th></tr></thead>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th><th style="text-align:right;">Actions</th></tr></thead>
       <tbody>
         ${entries.map(a=>`
           <tr>
             <td class="num">${fmtDate(a.date)}</td>
-            <td class="agent-name">${esc(a.agentName)}</td>
-            <td class="num">${esc(a.caseNumber)}</td>
-            <td><span class="type-badge ${a.type==='Commendation'?'commendation':''}">${esc(a.type)}</span></td>
-            <td style="max-width:280px;">${esc(a.issue)||'<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+            <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
+            <td class="num">${esc(a.caseNumber)||'\u2014'}</td>
+            <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
+            <td>${esc(a.category)||'\u2014'}</td>
+            <td style="max-width:260px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
             <td style="text-align:right;"><button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button></td>
           </tr>`).join('')}
       </tbody>
@@ -1787,7 +2089,7 @@ function renderMyAgentReviewsTable(){
   `;
   wrap.querySelectorAll('[data-ar-delete]').forEach(b=>{
     b.addEventListener('click', async ()=>{
-      if(!confirm('Delete this agent review entry?')) return;
+      if(!confirm('Delete this entry?')) return;
       STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==b.dataset.arDelete);
       await saveState();
       renderMyAgentReviewsTable();
@@ -1799,26 +2101,33 @@ function renderAllAgentReviewsTable(){
   const wrap = document.getElementById('allAgentReviewsWrap');
   if(!wrap) return;
   const supF = document.getElementById('arFilterSupport')?.value || '';
-  const typeF = document.getElementById('arFilterType')?.value || '';
+  const kindF = document.getElementById('arFilterKind')?.value || '';
   let entries = STATE.agentReviews.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const chip = document.getElementById('ar_countChipAll');
+  if(chip){
+    const rc = STATE.agentReviews.filter(a=>a.mode==='review').length;
+    const cc = STATE.agentReviews.filter(a=>a.mode==='commendation').length;
+    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'} total`;
+  }
   if(supF) entries = entries.filter(a=>a.supportId===supF);
-  if(typeF) entries = entries.filter(a=>a.type===typeF);
+  if(kindF) entries = entries.filter(a=>a.mode===kindF);
   if(!entries.length){
     wrap.innerHTML = emptyState('No agent review entries found', 'Try a different filter, or check back once supports have logged some.', null, null);
     return;
   }
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>Date</th><th>Support</th><th>Agent</th><th>Case #</th><th>Type</th><th>Issue</th></tr></thead>
+      <thead><tr><th>Date</th><th>Support</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th></tr></thead>
       <tbody>
         ${entries.map(a=>`
           <tr>
             <td class="num">${fmtDate(a.date)}</td>
             <td style="font-weight:600;">${esc(a.supportName)}</td>
-            <td class="agent-name">${esc(a.agentName)}</td>
-            <td class="num">${esc(a.caseNumber)}</td>
-            <td><span class="type-badge ${a.type==='Commendation'?'commendation':''}">${esc(a.type)}</span></td>
-            <td style="max-width:300px;">${esc(a.issue)||'<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+            <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
+            <td class="num">${esc(a.caseNumber)||'\u2014'}</td>
+            <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
+            <td>${esc(a.category)||'\u2014'}</td>
+            <td style="max-width:280px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
           </tr>`).join('')}
       </tbody>
     </table>
@@ -1850,6 +2159,17 @@ function attachViewHandlers(){
         await saveState();
         render();
         toast('Target updated');
+      });
+    });
+    document.querySelectorAll('[data-personal-target-support]').forEach(inp=>{
+      inp.addEventListener('change', async ()=>{
+        const supId = inp.dataset.personalTargetSupport;
+        const m = inp.dataset.personalTargetMonth;
+        const key = personalTargetKey(supId, m);
+        if(inp.value === ''){ delete STATE.personalTargets[key]; }
+        else { STATE.personalTargets[key] = Math.max(0, parseInt(inp.value)||0); }
+        await saveState();
+        toast('Personal target updated');
       });
     });
   }
@@ -1978,6 +2298,26 @@ function attachViewHandlers(){
     document.getElementById('filterSupport').addEventListener('change', renderRecordsTable);
   }
 
+  if(currentView==='myDashboard'){
+    const form = document.getElementById('attendanceForm');
+    if(form){
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const viewerId = ensureViewerSupport();
+        const key = personalTargetKey(viewerId, currentMonth);
+        STATE.attendance[key] = {
+          absent: Math.max(0, parseInt(document.getElementById('att_absent').value)||0),
+          vl: Math.max(0, parseInt(document.getElementById('att_vl').value)||0),
+          ml: Math.max(0, parseInt(document.getElementById('att_ml').value)||0),
+          el: Math.max(0, parseInt(document.getElementById('att_el').value)||0),
+        };
+        await saveState();
+        render();
+        toast('Attendance saved');
+      });
+    }
+  }
+
   if(currentView==='myRecords'){
     renderMyRecordsTable();
     document.getElementById('mySearchInput').addEventListener('input', renderMyRecordsTable);
@@ -1985,32 +2325,44 @@ function attachViewHandlers(){
 
   if(currentView==='agentReviews'){
     if(appMode==='support'){
+      agentReviewKind = 'review';
+      updateAgentReviewModeUI();
       renderMyAgentReviewsTable();
+      document.querySelectorAll('#arKindToggle [data-ar-kind]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          agentReviewKind = btn.dataset.arKind;
+          updateAgentReviewModeUI();
+        });
+      });
+      document.getElementById('ar_previewBtn').addEventListener('click', ()=>{
+        const d = readAgentReviewForm();
+        const missing = validateAgentReviewForm(d);
+        if(missing.length){ toast('Please complete: ' + missing.join(', '), true); return; }
+        document.getElementById('ar_previewText').textContent = buildAgentEntryText(d);
+        document.getElementById('ar_previewCard').style.display = 'block';
+      });
+      document.getElementById('ar_copyBtn').addEventListener('click', ()=>{
+        const d = readAgentReviewForm();
+        navigator.clipboard.writeText(buildAgentEntryText(d)).then(()=>toast('Copied to clipboard')).catch(()=>toast('Could not copy \u2014 select and copy manually.', true));
+      });
       document.getElementById('agentReviewForm').addEventListener('submit', async (e)=>{
         e.preventDefault();
-        const viewerId = ensureViewerSupport();
-        const viewer = STATE.supports.find(s=>s.id===viewerId);
-        const entry = {
-          id: uid('ar'),
-          date: new Date().toISOString().slice(0,10),
-          supportId: viewerId,
-          supportName: viewer ? viewer.name : '',
-          agentName: document.getElementById('ar_agent').value.trim(),
-          caseNumber: document.getElementById('ar_case').value.trim(),
-          type: document.getElementById('ar_type').value,
-          issue: document.getElementById('ar_issue').value.trim(),
-          createdAt: Date.now()
-        };
+        const d = readAgentReviewForm();
+        const missing = validateAgentReviewForm(d);
+        if(missing.length){ toast('Please complete: ' + missing.join(', '), true); return; }
+        const entry = { id: uid('ar'), date: new Date().toISOString().slice(0,10), createdAt: Date.now(), ...d };
         STATE.agentReviews.push(entry);
         await saveState();
         e.target.reset();
+        agentReviewKind = 'review';
+        updateAgentReviewModeUI();
         renderMyAgentReviewsTable();
-        toast('Entry added');
+        toast(entry.mode==='commendation' ? 'Commendation added' : 'Review added');
       });
     } else {
       renderAllAgentReviewsTable();
       document.getElementById('arFilterSupport').addEventListener('change', renderAllAgentReviewsTable);
-      document.getElementById('arFilterType').addEventListener('change', renderAllAgentReviewsTable);
+      document.getElementById('arFilterKind').addEventListener('change', renderAllAgentReviewsTable);
     }
   }
 
