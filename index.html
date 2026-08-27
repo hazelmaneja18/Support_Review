@@ -1417,7 +1417,7 @@ function renderCounts(){
       const key = personalTargetKey(sup.id, m);
       const stored = STATE.personalTargets[key];
       const val = (stored===undefined||stored===null||stored==='') ? '' : stored;
-      return `<td class="num"><input type="number" min="0" class="target-input" placeholder="${getTarget(m)}" data-personal-target-support="${sup.id}" data-personal-target-month="${m}" value="${val}"></td>`;
+      return `<td class="num"><input type="number" min="0" class="target-input" placeholder="\u2014" data-personal-target-support="${sup.id}" data-personal-target-month="${m}" value="${val}"></td>`;
     }).join('');
     return `<tr><td style="font-weight:600;">${esc(sup.name)}</td>${cells}</tr>`;
   }).join('');
@@ -1455,7 +1455,7 @@ function renderCounts(){
   <div class="card" style="margin-top:20px;">
     <div class="card-header">
       <h3>Personal Targets</h3>
-      <span style="font-size:11.5px; color:var(--slate-soft);">Overrides each support's own target \u2014 leave blank to use the team target above</span>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Each support's monthly Agent Review goal \u2014 shown on their own dashboard, adjusted for attendance</span>
     </div>
     <div class="card-body" style="overflow-x:auto;">
       ${STATE.supports.length ? `
@@ -1742,7 +1742,6 @@ function renderMyDashboard(){
   const att = getAttendance(viewerId, currentMonth);
   const leaveDays = (Number(att.absent)||0)+(Number(att.vl)||0)+(Number(att.ml)||0)+(Number(att.el)||0);
   const adjustedTarget = getAdjustedTarget(viewerId, currentMonth);
-  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? thisMonthRecs.length/adjustedTarget : null;
 
   const myAgentAll = STATE.agentReviews.filter(a=>a.supportId===viewerId);
   const myAgentThisMonth = myAgentAll.filter(a=>a.date && a.date.slice(0,7)===currentMonth);
@@ -1750,6 +1749,7 @@ function renderMyDashboard(){
   const commendationCount = myAgentAll.filter(a=>a.mode==='commendation').length;
   const reviewCountMonth = myAgentThisMonth.filter(a=>a.mode==='review').length;
   const commendationCountMonth = myAgentThisMonth.filter(a=>a.mode==='commendation').length;
+  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
   const recentAgentRows = myAgentAll.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,4).map(a=>`
     <tr>
       <td class="num">${fmtDate(a.date)}</td>
@@ -1775,7 +1775,7 @@ function renderMyDashboard(){
 
   <div class="section-divider"><h3>SEQAS Review</h3></div>
 
-  <div class="stat-row">
+  <div class="stat-row" style="grid-template-columns:repeat(2,1fr);">
     <div class="stat-card">
       <div class="label">Overall Average</div>
       <div class="value">${pctStr(overallAvg)}</div>
@@ -1785,16 +1785,6 @@ function renderMyDashboard(){
       <div class="label">${monthLabel(currentMonth)} Average</div>
       <div class="value">${pctStr(thisMonthAvg)}</div>
       <div class="delta">${thisMonthRecs.length} evaluation${thisMonthRecs.length===1?'':'s'} this month</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">${monthLabel(currentMonth)} Target Progress</div>
-      <div class="value" style="color:${completionRate===null?'inherit':(completionRate>=1?'var(--green)':'var(--ink)')}; ${adjustedTarget===null?'font-size:15px;':''}">${adjustedTarget===null ? 'No target set' : (completionRate===null ? '\u2014' : Math.round(completionRate*100)+'%')}</div>
-      <div class="delta">
-        ${adjustedTarget===null
-          ? 'Ask your supervisor to set your monthly target'
-          : `${thisMonthRecs.length} of ${adjustedTarget}${leaveDays>0?` (adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}`}
-        ${completionRate!==null && completionRate>=1 ? '<span class="badge green" style="margin-left:6px;">Target reached</span>' : ''}
-      </div>
     </div>
   </div>
 
@@ -1819,31 +1809,36 @@ function renderMyDashboard(){
 
   <div class="stat-row">
     <div class="stat-card">
-      <div class="label">Total Reviews Submitted</div>
+      <div class="label">${monthLabel(currentMonth)} Target Progress</div>
+      <div class="value" style="color:${completionRate===null?'inherit':(completionRate>=1?'var(--green)':'var(--ink)')}; ${adjustedTarget===null?'font-size:15px;':''}">${adjustedTarget===null ? 'No target set' : (completionRate===null ? '\u2014' : Math.round(completionRate*100)+'%')}</div>
+      <div class="delta">
+        ${adjustedTarget===null
+          ? 'Ask your supervisor to set your monthly target'
+          : `${myAgentThisMonth.length} of ${adjustedTarget}${leaveDays>0?` (adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}`}
+        ${completionRate!==null && completionRate>=1 ? '<span class="badge green" style="margin-left:6px;">Target reached</span>' : ''}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Reviews Submitted</div>
       <div class="value">${reviewCount}</div>
       <div class="delta">${reviewCountMonth} this month</div>
     </div>
     <div class="stat-card">
-      <div class="label">Total Commendations Submitted</div>
+      <div class="label">Commendations Submitted</div>
       <div class="value">${commendationCount}</div>
       <div class="delta">${commendationCountMonth} this month</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Total Agent Entries</div>
-      <div class="value">${myAgentAll.length}</div>
-      <div class="delta"><button class="btn ghost sm" data-goto="agentReviews" style="margin-top:2px;">Log a new entry</button></div>
     </div>
   </div>
 
   <div class="card" style="margin-bottom:20px;">
-    <div class="card-header"><h3>Recent Agent Entries</h3></div>
+    <div class="card-header"><h3>Recent Agent Entries</h3><button class="btn ghost sm" data-goto="agentReviews">Log a new entry</button></div>
     <div class="card-body" style="overflow-x:auto;">
       ${recentAgentRows ? `<table><thead><tr><th>Date</th><th>Agent</th><th>Entry</th><th>Category</th><th style="text-align:right;">Actions</th></tr></thead><tbody>${recentAgentRows}</tbody></table>` : emptyState('No agent entries yet', 'Log your first review or commendation from the Agent Review tab.', 'agentReviews', 'Go to Agent Review')}
     </div>
   </div>
 
   <div class="card attendance-compact">
-    <div class="card-header"><h3>Attendance</h3><span style="font-size:11px; color:var(--slate-soft);">${monthLabel(currentMonth)} \u2014 adjusts your SEQAS target above</span></div>
+    <div class="card-header"><h3>Attendance</h3><span style="font-size:11px; color:var(--slate-soft);">${monthLabel(currentMonth)} \u2014 adjusts your Agent Review target above</span></div>
     <div class="card-body">
       <form id="attendanceForm" style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
         <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">Absent</label><input type="number" min="0" id="att_absent" value="${att.absent||0}"></div>
@@ -2022,20 +2017,28 @@ function renderAgentReviews(){
       const mine = STATE.agentReviews.filter(a=>a.supportId===s.id);
       const rc = mine.filter(a=>a.mode==='review').length;
       const cc = mine.filter(a=>a.mode==='commendation').length;
+      const monthCount = mine.filter(a=>a.date && a.date.slice(0,7)===currentMonth).length;
+      const target = getPersonalTarget(s.id, currentMonth);
+      const adjusted = getAdjustedTarget(s.id, currentMonth);
+      const rate = (adjusted!==null && adjusted>0) ? monthCount/adjusted : null;
+      const targetVal = (target===null) ? '' : target;
       return `<tr>
         <td style="font-weight:600;">${esc(s.name)}</td>
         <td class="num">${rc}</td>
         <td class="num">${cc}</td>
         <td class="num">${rc+cc}</td>
+        <td class="num">${monthCount}</td>
+        <td class="num"><input type="number" min="0" class="target-input" placeholder="\u2014" data-personal-target-support="${s.id}" data-personal-target-month="${currentMonth}" value="${targetVal}"></td>
+        <td class="num">${rate===null ? '<span style="color:var(--slate-soft);">No target set</span>' : `<span class="badge ${rate>=1?'green':'neutral'}">${Math.round(rate*100)}%</span>`}</td>
       </tr>`;
     }).join('');
     return `
     <div class="card" style="margin-bottom:20px;">
-      <div class="card-header"><h3>By Support</h3><span style="font-size:11.5px; color:var(--slate-soft);">Reviews and commendations submitted by each support</span></div>
+      <div class="card-header"><h3>By Support</h3><span style="font-size:11.5px; color:var(--slate-soft);">Reviews and commendations submitted by each support \u2014 target &amp; progress for ${monthLabel(currentMonth)}</span></div>
       <div class="card-body" style="overflow-x:auto;">
         ${STATE.supports.length ? `
         <table>
-          <thead><tr><th>Support</th><th>Reviews</th><th>Commendations</th><th>Total</th></tr></thead>
+          <thead><tr><th>Support</th><th>Reviews</th><th>Commendations</th><th>Total</th><th>This Month</th><th>Target</th><th>Progress</th></tr></thead>
           <tbody>${bySupportRows}</tbody>
         </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
       </div>
@@ -2491,6 +2494,18 @@ function attachViewHandlers(){
       renderAllAgentReviewsTable();
       document.getElementById('arFilterSupport').addEventListener('change', renderAllAgentReviewsTable);
       document.getElementById('arFilterKind').addEventListener('change', renderAllAgentReviewsTable);
+      document.querySelectorAll('[data-personal-target-support]').forEach(inp=>{
+        inp.addEventListener('change', async ()=>{
+          const supId = inp.dataset.personalTargetSupport;
+          const m = inp.dataset.personalTargetMonth;
+          const key = personalTargetKey(supId, m);
+          if(inp.value === ''){ delete STATE.personalTargets[key]; }
+          else { STATE.personalTargets[key] = Math.max(0, parseInt(inp.value)||0); }
+          await saveState();
+          render();
+          toast('Target updated');
+        });
+      });
     }
   }
 
