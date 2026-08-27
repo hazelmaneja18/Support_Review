@@ -2091,17 +2091,6 @@ function renderMyDashboard(){
   const reviewCountMonth = myAgentThisMonth.filter(a=>a.mode==='review').length;
   const commendationCountMonth = myAgentThisMonth.filter(a=>a.mode==='commendation').length;
   const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
-  const recentAgentRows = myAgentAll.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,4).map(a=>`
-    <tr>
-      <td class="num">${fmtDate(a.date)}</td>
-      <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
-      <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
-      <td>${esc(a.category)||'\u2014'}</td>
-      <td style="text-align:right; white-space:nowrap;">
-        <button class="icon-btn" title="Edit" data-ar-edit="${a.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-        <button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
-      </td>
-    </tr>`).join('');
 
   return `
   <div class="card" style="margin-bottom:20px;">
@@ -2172,10 +2161,14 @@ function renderMyDashboard(){
   </div>
 
   <div class="card" style="margin-bottom:20px;">
-    <div class="card-header"><h3>Recent Agent Entries</h3><button class="btn ghost sm" data-goto="agentReviews">Log a new entry</button></div>
-    <div class="card-body" style="overflow-x:auto;">
-      ${recentAgentRows ? `<table><thead><tr><th>Date</th><th>Agent</th><th>Entry</th><th>Category</th><th style="text-align:right;">Actions</th></tr></thead><tbody>${recentAgentRows}</tbody></table>` : emptyState('No agent entries yet', 'Log your first review or commendation from the Agent Review tab.', 'agentReviews', 'Go to Agent Review')}
+    <div class="card-header">
+      <h3>Agent Entries</h3>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <select id="dashAgentReviewMonthFilter" style="width:auto; font-size:12.5px; padding:6px 8px;"></select>
+        <button class="btn ghost sm" data-goto="agentReviews">Log a new entry</button>
+      </div>
     </div>
+    <div class="card-body" id="dashAgentEntriesWrap" style="overflow-x:auto;"></div>
   </div>
 
   <div class="card attendance-compact">
@@ -2481,6 +2474,54 @@ function updateAgentReviewModeUI(){
   document.getElementById('ar_previewCard').style.display = 'none';
 }
 
+function renderDashboardAgentEntriesTable(){
+  const viewerId = ensureViewerSupport();
+  const wrap = document.getElementById('dashAgentEntriesWrap');
+  const monthSel = document.getElementById('dashAgentReviewMonthFilter');
+  if(!wrap) return;
+  const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+
+  if(monthSel){
+    const months = Array.from(new Set(all.map(a=>(a.date||'').slice(0,7)).filter(Boolean))).sort().reverse();
+    const prevValue = monthSel.value;
+    monthSel.innerHTML = `<option value="">All months</option>${months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('')}`;
+    if(months.includes(prevValue)) monthSel.value = prevValue;
+  }
+  const monthFilter = monthSel ? monthSel.value : '';
+  const filtered = monthFilter ? all.filter(a=>(a.date||'').slice(0,7)===monthFilter) : all;
+  const entries = filtered.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  if(!entries.length){
+    wrap.innerHTML = emptyState('No agent entries yet', monthFilter ? 'Nothing logged for this month yet.' : 'Log your first review or commendation from the Agent Review tab.', 'agentReviews', 'Go to Agent Review');
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        ${entries.map(a=>`
+          <tr>
+            <td class="num">${fmtDate(a.date)}</td>
+            <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
+            <td class="num">${esc(a.caseNumber)||'\u2014'}</td>
+            <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
+            <td>${esc(a.category)||'\u2014'}</td>
+            <td style="max-width:260px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="icon-btn" title="Edit" data-ar-edit="${a.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              <button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+  wrap.querySelectorAll('[data-ar-edit]').forEach(b=>{
+    b.addEventListener('click', ()=>{ editingAgentReviewId = b.dataset.arEdit; setView('agentReviews'); });
+  });
+  wrap.querySelectorAll('[data-ar-delete]').forEach(b=>{
+    b.addEventListener('click', ()=>deleteAgentReviewEntry(b.dataset.arDelete, renderDashboardAgentEntriesTable));
+  });
+}
 function renderMyAgentReviewsTable(){
   const viewerId = ensureViewerSupport();
   const wrap = document.getElementById('myAgentReviewsWrap');
@@ -2763,12 +2804,9 @@ function attachViewHandlers(){
         toast('Attendance saved');
       });
     }
-    document.querySelectorAll('[data-ar-edit]').forEach(b=>{
-      b.addEventListener('click', ()=>{ editingAgentReviewId = b.dataset.arEdit; setView('agentReviews'); });
-    });
-    document.querySelectorAll('[data-ar-delete]').forEach(b=>{
-      b.addEventListener('click', ()=>deleteAgentReviewEntry(b.dataset.arDelete, render));
-    });
+    renderDashboardAgentEntriesTable();
+    const dashMonthFilterEl = document.getElementById('dashAgentReviewMonthFilter');
+    if(dashMonthFilterEl) dashMonthFilterEl.addEventListener('change', renderDashboardAgentEntriesTable);
   }
 
   if(currentView==='myRecords'){
