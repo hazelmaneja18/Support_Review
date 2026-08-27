@@ -99,6 +99,31 @@
     color:#7fa39b;
     margin-top:3px;
   }
+  .mode-toggle{
+    display:flex; align-items:center; gap:2px; margin-top:14px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:3px;
+    width:fit-content;
+  }
+  .mode-toggle button{
+    display:flex; align-items:center; gap:5px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:11px; font-weight:600; color:#8aa9a3;
+    padding:6px 11px; border-radius:16px; transition:background 0.15s, color 0.15s;
+  }
+  .mode-toggle button.active{ background:var(--pal-mint); color:var(--pal-navy); }
+  .mode-toggle button svg{ flex-shrink:0; }
+  .viewer-picker{ margin-bottom:2px; }
+  .viewer-picker label{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px;
+  }
+  .viewer-picker select{
+    width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); color:#f2fbf8;
+    font-size:12.5px; padding:7px 9px; border-radius:var(--radius-sm);
+  }
+  .type-badge{
+    display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px;
+    background:var(--brass-tint); color:var(--brass-dark); white-space:nowrap;
+  }
+  .type-badge.commendation{ background:var(--green-bg); color:var(--green); }
   nav.navlist{
     padding:16px 12px;
     flex:1;
@@ -472,18 +497,14 @@
         <h1>SEQAS REVIEW</h1>
       </div>
       <div class="tagline">Evaluation &amp; Coaching Ledger</div>
+      <div class="mode-toggle" id="modeToggle">
+        <button type="button" data-mode="support"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Support View</button>
+        <button type="button" data-mode="supervisor"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg>Supervisor</button>
+      </div>
     </div>
-    <nav class="navlist" id="navlist">
-      <div class="navgroup-label">Overview</div>
-      <button data-view="dashboard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</button>
-      <button data-view="counts"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>Review Count &amp; Target</button>
-      <div class="navgroup-label">Evaluations</div>
-      <button data-view="new"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New Feedback</button>
-      <button data-view="records"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>Records</button>
-      <div class="navgroup-label">Admin</div>
-      <button data-view="supports"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Manage Supports</button>
-    </nav>
+    <nav class="navlist" id="navlist"></nav>
     <div class="sidebar-foot">
+      <div id="viewerPickerWrap"></div>
       <div class="save-status" id="saveStatus"><span class="dot"></span><span id="saveStatusText">All changes saved</span></div>
       <div class="month-chip" id="sidebarMonthChip">—</div>
     </div>
@@ -709,9 +730,14 @@ let STATE = {
   records: [],
   seededAugust2026: false,
   deletedCaseNumbers: [],
-  augustAccuracyApplied: false
+  augustAccuracyApplied: false,
+  agentReviews: [],
+  viewerSupportId: null
 };
-let currentView = 'dashboard';
+let appMode = 'support'; // 'support' | 'supervisor'
+let supervisorUnlocked = false;
+const SUPERVISOR_PASSWORD = 'Verifone123';
+let currentView = 'myDashboard';
 let currentMonth = monthKey(new Date());
 let editingRecordId = null;
 
@@ -771,6 +797,8 @@ async function loadState(){
       STATE.seededAugust2026 = !!parsed.seededAugust2026;
       STATE.deletedCaseNumbers = parsed.deletedCaseNumbers || [];
       STATE.augustAccuracyApplied = !!parsed.augustAccuracyApplied;
+      STATE.agentReviews = parsed.agentReviews || [];
+      STATE.viewerSupportId = parsed.viewerSupportId || null;
       setSaveStatus(null, 'All changes saved');
       return true;
     }catch(e){
@@ -821,7 +849,9 @@ function seedState(){
     records: [],
     seededAugust2026: false,
     deletedCaseNumbers: [],
-    augustAccuracyApplied: false
+    augustAccuracyApplied: false,
+    agentReviews: [],
+    viewerSupportId: null
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -951,59 +981,104 @@ function buildSummary(scores, notes){
   });
   const gaps = [...notMet, ...partial];
   const lower = s=>s.charAt(0).toLowerCase()+s.slice(1);
+  const cap = s=>s.charAt(0).toUpperCase()+s.slice(1);
   const list = arr => arr.length<=1 ? (arr[0]||'') : arr.slice(0,-1).join(', ')+' and '+arr[arr.length-1];
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 
-  // -------- SUPPORT ACTION: one plain-language recap paragraph --------
-  let supportAction;
   if(!met.length && !gaps.length){
-    supportAction = 'Score each criterion above, then generate the summary.';
-  } else {
-    const parts = [];
-    if(met.length){
-      parts.push(`Support handled ${list(met.map(m=>lower(m.name)))} well on this case.`);
-      met.filter(m=>m.note).forEach(m=>parts.push(m.note));
-    }
-    if(gaps.length){
-      parts.push(`${met.length ? 'That said, there' : 'There'} ${gaps.length>1?'were':'was'} some gaps around ${list(gaps.map(g=>lower(g.name)))}.`);
-      gaps.forEach(g=>{ if(g.note) parts.push(g.note); });
-    }
-    supportAction = parts.join(' ');
+    return { supportAction:'Score each criterion above, then generate the summary.', commitment:'', additional:'', tlNotes:'' };
   }
 
-  // -------- COMMITMENT / OBSERVATIONS: a short first-person read of the case --------
-  let commitment;
-  if(!gaps.length){
-    commitment = `I didn't see anything that needs to change here. Support covered every part of the process well, so the plan is just to keep this up on similar cases.`;
-  } else {
-    let text = `I noticed ${list(gaps.map(g=>lower(g.name)))} could use some attention. `;
+  // -------- SUPPORT ACTION: one recap paragraph, strengths first --------
+  const saParts = [];
+  if(met.length){
+    saParts.push(pick([
+      `Support ${gaps.length?'demonstrated good':'demonstrated strong'} reasoning by handling ${list(met.map(m=>lower(m.name)))} well on this case.`,
+      `Support showed solid, confident work in ${list(met.map(m=>lower(m.name)))} throughout this interaction.`,
+      `This case highlighted real strength in ${list(met.map(m=>lower(m.name)))}.`,
+      `Support brought good instincts to ${list(met.map(m=>lower(m.name)))} here.`,
+    ]));
+    met.filter(m=>m.note).forEach(m=>saParts.push(m.note));
+  }
+  if(gaps.length){
+    saParts.push(pick([
+      met.length ? `${pick(['That said','On the other hand','Alongside that'])}, there ${gaps.length>1?'were':'was'} a few spots to build on around ${list(gaps.map(g=>lower(g.name)))}.`
+                 : `There ${gaps.length>1?'were':'was'} a few spots to build on around ${list(gaps.map(g=>lower(g.name)))}.`,
+      met.length ? `The main opportunity here is around ${list(gaps.map(g=>lower(g.name)))}.`
+                 : `The main opportunity in this case is around ${list(gaps.map(g=>lower(g.name)))}.`,
+    ]));
+    gaps.forEach(g=>{ if(g.note) saParts.push(g.note); });
+  }
+  const supportAction = saParts.join(' ');
+
+  // -------- COMMITMENT / OBSERVATIONS: two short paragraphs, ownership then opportunity --------
+  const cParts = [];
+  if(met.length){
+    cParts.push(pick([
+      `Support showed good ownership here, staying engaged and handling ${list(met.map(m=>lower(m.name)))} the right way.`,
+      `There was strong follow-through in this case, particularly in ${list(met.map(m=>lower(m.name)))}.`,
+      `Support stayed on top of ${list(met.map(m=>lower(m.name)))}, which reflects well on how this case was handled.`,
+    ]));
+  }
+  if(gaps.length){
+    let p2 = pick([
+      `However, there was an opportunity to strengthen ${list(gaps.map(g=>lower(g.name)))}.`,
+      `That said, ${list(gaps.map(g=>lower(g.name)))} is worth a closer look going forward.`,
+      `Looking ahead, ${list(gaps.map(g=>lower(g.name)))} is where the next bit of growth can happen.`,
+    ]);
     const notedGaps = gaps.filter(g=>g.note).map(g=>g.note);
-    if(notedGaps.length) text += notedGaps.join(' ') + ' ';
-    text += `Going forward, I'd like to see this handled consistently so it doesn't come up again on similar cases.`;
-    if(met.length) text += ` The way support handled ${list(met.map(m=>lower(m.name)))} was solid, so that's worth keeping too.`;
-    commitment = text;
+    if(notedGaps.length) p2 += ' ' + notedGaps.join(' ');
+    p2 += ' ' + pick([
+      `This is a good chance to build a stronger habit here for next time.`,
+      `Keeping an eye on this on the next few cases should help it stick.`,
+      `Nothing dramatic \u2014 just something worth being a little more deliberate about going forward.`,
+    ]);
+    cParts.push(p2);
+  } else {
+    cParts.push(`Nothing else to flag here \u2014 the goal now is just to keep this same level of consistency going.`);
   }
+  const commitment = cParts.join('\n\n');
 
-  // -------- ADDITIONAL ACTIONS: short, concrete list --------
+  // -------- ADDITIONAL ACTIONS: bullet list, one per opportunity --------
   let additional;
   if(!gaps.length){
-    additional = 'Nothing extra needed here. Everything in this case was handled the right way.';
+    additional = pick([
+      'Nothing extra needed here \u2014 everything in this case was handled the right way.',
+      'No additional actions to flag. This is a good one to hold up as an example.',
+    ]);
   } else {
     additional = gaps.map(g=>{
       const base = g.note ? g.note : `Take a closer look at ${lower(g.name)} on the next similar case.`;
-      return `${g.name}: ${base}`;
+      return `* ${base}`;
     }).join('\n\n');
   }
 
-  // -------- TL COMMITMENT: a short coaching plan, written like a person would say it --------
-  let tlNotes;
-  if(!gaps.length){
-    tlNotes = `Nothing to coach on this time. I'll keep recognizing the consistent work support put into this case.`;
+  // -------- TL COMMITMENT: a short, warm coaching paragraph --------
+  const tParts = [];
+  if(gaps.length){
+    tParts.push(pick([
+      `I'll walk through ${list(gaps.map(g=>lower(g.name)))} with support directly, using this case as a real, concrete example rather than a hypothetical.`,
+      `I'll sit down with support and go over ${list(gaps.map(g=>lower(g.name)))} together, so the expectation is clear for next time.`,
+      `I'll take a few minutes with support to talk through ${list(gaps.map(g=>lower(g.name)))}, framing it as a growth area rather than a miss.`,
+    ]));
+    tParts.push(pick([
+      `We'll go over what good looks like here, and I'll check in on the next couple of cases to see how it's landing.`,
+      `The goal is just to build the habit \u2014 I'll keep an eye on upcoming cases and follow up if it's needed.`,
+      `I want this to feel like coaching, not criticism, so I'll frame it around what support can add next time, not what went wrong this time.`,
+    ]));
+    if(met.length){
+      tParts.push(pick([
+        `I'll also make a point of recognizing the strong work in ${list(met.map(m=>lower(m.name)))}, since that's worth reinforcing.`,
+        `Worth calling out too: ${list(met.map(m=>lower(m.name)))} was handled well, and I want support to know that landed.`,
+      ]));
+    }
   } else {
-    let text = `I'll sit down with support and walk through ${list(gaps.map(g=>lower(g.name)))}, using this case as the example. `;
-    text += `We'll go over what the process should look like, and I'll keep an eye on the next few cases to see if it sticks.`;
-    if(met.length) text += ` I'll also call out what went well in ${list(met.map(m=>lower(m.name)))}, since that's worth reinforcing.`;
-    tlNotes = text;
+    tParts.push(pick([
+      `Nothing to coach here \u2014 I'll make sure support hears that this case reflects the standard we want to see more of.`,
+      `No coaching needed this time. I'll recognize the consistent work and use this as a positive example for the team.`,
+    ]));
   }
+  const tlNotes = tParts.join(' ');
 
   return { supportAction: supportAction.trim(), commitment: commitment.trim(), additional: additional.trim(), tlNotes: tlNotes.trim() };
 }
@@ -1037,12 +1112,17 @@ const PAGE_META = {
   new: ['New Feedback', 'Score a SEQAS evaluation and capture coaching notes'],
   records: ['Records', 'Every evaluation on file, filterable by month and support'],
   supports: ['Manage Supports', 'Add or remove people from the active roster'],
+  myDashboard: ['My Dashboard', 'Your scores, review counts, and progress toward target'],
+  myRecords: ['My Records', 'Search your own past evaluations'],
+  agentReviews: ['Agent Review', 'Log commendations and feedback from agents you\u2019ve helped'],
 };
+
+const AGENT_REVIEW_TYPES = ['Commendation','Behaviour','Call Handling: Process Related','Knowledge Gap','Procedural','Technical'];
 
 function setView(view, opts={}){
   currentView = view;
   if(!opts.keepEditing) editingRecordId = null;
-  document.querySelectorAll('.navlist button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  renderNav();
   const meta = PAGE_META[view];
   document.getElementById('pageTitle').textContent = meta[0];
   document.getElementById('pageSub').textContent = meta[1];
@@ -1056,6 +1136,110 @@ function populateGlobalMonth(){
   document.getElementById('sidebarMonthChip').textContent = monthLabel(currentMonth);
 }
 
+/* ---------------------- MODE / NAV ---------------------- */
+const NAV_SUPERVISOR = [
+  { group:'Overview', items:[
+    { view:'dashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
+    { view:'counts', label:'Review Count & Target', icon:'<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>' },
+  ]},
+  { group:'Evaluations', items:[
+    { view:'new', label:'New Feedback', icon:'<path d="M12 5v14M5 12h14"/>' },
+    { view:'records', label:'Records', icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>' },
+  ]},
+  { group:'Feedback', items:[
+    { view:'agentReviews', label:'Agent Reviews', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
+  ]},
+  { group:'Admin', items:[
+    { view:'supports', label:'Manage Supports', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' },
+  ]},
+];
+const NAV_SUPPORT = [
+  { group:'My Overview', items:[
+    { view:'myDashboard', label:'My Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
+  ]},
+  { group:'My Cases', items:[
+    { view:'myRecords', label:'My Records', icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>' },
+    { view:'agentReviews', label:'Agent Review', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
+  ]},
+];
+function renderNav(){
+  const nav = document.getElementById('navlist');
+  const groups = appMode==='supervisor' ? NAV_SUPERVISOR : NAV_SUPPORT;
+  nav.innerHTML = groups.map(g=>`
+    <div class="navgroup-label">${esc(g.group)}</div>
+    ${g.items.map(item=>`<button data-view="${item.view}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>${esc(item.label)}</button>`).join('')}
+  `).join('');
+  nav.querySelectorAll('button[data-view]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view===currentView);
+    b.addEventListener('click', ()=>setView(b.dataset.view));
+  });
+  renderModeToggle();
+  renderViewerPicker();
+}
+function renderModeToggle(){
+  document.querySelectorAll('#modeToggle [data-mode]').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode===appMode);
+  });
+}
+function renderViewerPicker(){
+  const wrap = document.getElementById('viewerPickerWrap');
+  if(appMode!=='support' || !STATE.supports.length){ wrap.innerHTML=''; return; }
+  const options = sortedSupports().map(s=>`<option value="${s.id}" ${s.id===STATE.viewerSupportId?'selected':''}>${esc(s.name)}</option>`).join('');
+  wrap.innerHTML = `
+    <div class="viewer-picker">
+      <label>Viewing as</label>
+      <select id="viewerSelect">${options}</select>
+    </div>`;
+  document.getElementById('viewerSelect').addEventListener('change', async (e)=>{
+    STATE.viewerSupportId = e.target.value;
+    await saveState();
+    render();
+  });
+}
+function ensureViewerSupport(){
+  if(!STATE.supports.length) return null;
+  if(!STATE.viewerSupportId || !STATE.supports.find(s=>s.id===STATE.viewerSupportId)){
+    STATE.viewerSupportId = sortedSupports()[0].id;
+  }
+  return STATE.viewerSupportId;
+}
+function openSupervisorModal(){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-backdrop" id="supervisorBackdrop">
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-head">
+        <h3>Supervisor Access</h3>
+        <button class="icon-btn" id="closeSupervisorModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <form id="supervisorForm">
+          <div class="field" style="margin-bottom:14px;">
+            <label class="field-label">Password</label>
+            <input type="password" id="supervisorPassword" autocomplete="current-password" required autofocus>
+          </div>
+          <button type="submit" class="btn brass" style="width:100%;">Unlock</button>
+        </form>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('closeSupervisorModal').addEventListener('click', ()=>root.innerHTML='');
+  document.getElementById('supervisorBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='supervisorBackdrop') root.innerHTML=''; });
+  document.getElementById('supervisorForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const val = document.getElementById('supervisorPassword').value;
+    if(val === SUPERVISOR_PASSWORD){
+      supervisorUnlocked = true;
+      appMode = 'supervisor';
+      root.innerHTML = '';
+      setView('dashboard');
+      toast('Supervisor access unlocked');
+    } else {
+      toast('Incorrect password', true);
+    }
+  });
+}
+
 /* ---------------------- RENDER ROOT ---------------------- */
 function render(){
   populateGlobalMonth();
@@ -1065,6 +1249,9 @@ function render(){
   else if(currentView==='new') c.innerHTML = renderNewFeedback();
   else if(currentView==='records') c.innerHTML = renderRecords();
   else if(currentView==='supports') c.innerHTML = renderSupports();
+  else if(currentView==='myDashboard') c.innerHTML = renderMyDashboard();
+  else if(currentView==='myRecords') c.innerHTML = renderMyRecords();
+  else if(currentView==='agentReviews') c.innerHTML = renderAgentReviews();
   attachViewHandlers();
 }
 
@@ -1392,6 +1579,252 @@ function renderSupports(){
   `;
 }
 
+/* ======================================================================
+   MY DASHBOARD (Support View)
+   ====================================================================== */
+function renderMyDashboard(){
+  if(!STATE.supports.length){
+    return emptyState('No supports on the roster yet', 'Ask your supervisor to add you to the roster.', null, null);
+  }
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const months = allMonthsUsed();
+  const myAll = STATE.records.filter(r=>r.supportId===viewerId);
+  const overallAvg = avgPercent(myAll);
+  const thisMonthRecs = recordsFor(currentMonth, viewerId);
+  const thisMonthAvg = avgPercent(thisMonthRecs);
+
+  const rows = months.map(m=>{
+    const recs = recordsFor(m, viewerId);
+    const avg = avgPercent(recs);
+    return `<tr>
+      <td style="font-weight:600;">${monthLabel(m)}</td>
+      <td class="num">${recs.length ? `<span class="badge ${scoreBadgeClass(avg)}">${pctStr(avg)}</span>` : '<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+      <td class="num">${recs.length}</td>
+    </tr>`;
+  }).join('');
+
+  const recentRows = myAll.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,5).map(r=>`
+    <tr>
+      <td class="num">${fmtDate(r.dateOfEval)}</td>
+      <td class="agent-name">${esc(r.agentName)}</td>
+      <td class="num">${esc(r.caseNumber)}</td>
+      <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
+    </tr>`).join('');
+
+  return `
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="display:flex; align-items:center; gap:14px;">
+      <div class="seal" style="width:40px;height:40px;font-size:15px;">${esc(viewer.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>
+      <div>
+        <div style="font-weight:700; font-size:16px; color:var(--ink-text);">${esc(viewer.name)}</div>
+        <div style="font-size:12px; color:var(--slate-soft);">${myAll.length} evaluation${myAll.length===1?'':'s'} on file</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="label">Overall Average</div>
+      <div class="value">${pctStr(overallAvg)}</div>
+      <div class="delta">across ${myAll.length} evaluation${myAll.length===1?'':'s'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">${monthLabel(currentMonth)} Average</div>
+      <div class="value">${pctStr(thisMonthAvg)}</div>
+      <div class="delta">${thisMonthRecs.length} evaluation${thisMonthRecs.length===1?'':'s'} this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total Evaluations</div>
+      <div class="value">${myAll.length}</div>
+      <div class="delta">since your first review</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Score by Month</h3></div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Month</th><th>Average</th><th>Reviews</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><h3>Most Recent Evaluations</h3><span style="font-size:11.5px; color:var(--slate-soft);">See My Records for the full list</span></div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${recentRows ? `<table><thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Score</th></tr></thead><tbody>${recentRows}</tbody></table>` : emptyState('No evaluations yet', 'Your evaluations will show up here once your supervisor logs one.', null, null)}
+    </div>
+  </div>
+  `;
+}
+
+/* ======================================================================
+   MY RECORDS (Support View, read-only + searchable)
+   ====================================================================== */
+function renderMyRecords(){
+  return `
+  <div class="filter-bar">
+    <input type="text" id="mySearchInput" placeholder="Search by case number or agent name" style="flex:1; max-width:320px;">
+  </div>
+  <div class="card">
+    <div class="card-body" id="myRecordsTableWrap" style="overflow-x:auto;"></div>
+  </div>
+  `;
+}
+function renderMyRecordsTable(){
+  const viewerId = ensureViewerSupport();
+  const q = (document.getElementById('mySearchInput')?.value || '').trim().toLowerCase();
+  let recs = STATE.records.filter(r=>r.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(q) recs = recs.filter(r=> String(r.caseNumber).toLowerCase().includes(q) || (r.agentName||'').toLowerCase().includes(q));
+  const wrap = document.getElementById('myRecordsTableWrap');
+  if(!wrap) return;
+  if(!recs.length){
+    wrap.innerHTML = emptyState('No evaluations found', q ? 'Try a different search.' : 'Your evaluations will show up here once logged.', null, null);
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Score</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        ${recs.map(r=>`
+          <tr>
+            <td class="num">${fmtDate(r.dateOfEval)}</td>
+            <td class="agent-name">${esc(r.agentName)}</td>
+            <td class="num">${esc(r.caseNumber)}</td>
+            <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
+            <td style="text-align:right;">
+              <button class="icon-btn" title="Export" data-my-export="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M6 9l6 6 6-6"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+  wrap.querySelectorAll('[data-my-export]').forEach(b=>b.addEventListener('click', ()=>openExportModal(b.dataset.myExport)));
+}
+
+/* ======================================================================
+   AGENT REVIEW (Support: add + own list · Supervisor: view all)
+   ====================================================================== */
+function renderAgentReviews(){
+  if(appMode==='support'){
+    const viewerId = ensureViewerSupport();
+    const viewer = STATE.supports.find(s=>s.id===viewerId);
+    return `
+    <div class="card">
+      <div class="card-header"><h3>Log an Agent Review</h3><span style="font-size:11.5px; color:var(--slate-soft);">Commendations or feedback you received from an agent</span></div>
+      <div class="card-body">
+        <form id="agentReviewForm">
+          <div class="field-grid">
+            <div class="field">
+              <label class="field-label">Support Name</label>
+              <input type="text" value="${esc(viewer ? viewer.name : '')}" disabled>
+            </div>
+            <div class="field">
+              <label class="field-label">Agent Name</label>
+              <input type="text" id="ar_agent" placeholder="e.g. Dean Clemente" required>
+            </div>
+            <div class="field">
+              <label class="field-label">Case Number</label>
+              <input type="text" id="ar_case" placeholder="e.g. 13872622" required>
+            </div>
+            <div class="field">
+              <label class="field-label">Type</label>
+              <select id="ar_type">${AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}</select>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Issue / Details</label>
+            <textarea id="ar_issue" placeholder="Optional for commendations \u2014 add details for anything else"></textarea>
+          </div>
+          <button type="submit" class="btn brass" style="margin-top:14px;">Add Entry</button>
+        </form>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><h3>Your Entries</h3></div>
+      <div class="card-body" id="myAgentReviewsWrap" style="overflow-x:auto;"></div>
+    </div>
+    `;
+  } else {
+    const supFilterOptions = sortedSupports().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    return `
+    <div class="filter-bar">
+      <select id="arFilterSupport"><option value="">All supports</option>${supFilterOptions}</select>
+      <select id="arFilterType"><option value="">All types</option>${AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}</select>
+    </div>
+    <div class="card">
+      <div class="card-body" id="allAgentReviewsWrap" style="overflow-x:auto;"></div>
+    </div>
+    `;
+  }
+}
+function renderMyAgentReviewsTable(){
+  const viewerId = ensureViewerSupport();
+  const wrap = document.getElementById('myAgentReviewsWrap');
+  if(!wrap) return;
+  const entries = STATE.agentReviews.filter(a=>a.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(!entries.length){
+    wrap.innerHTML = emptyState('No entries yet', 'Add your first agent review using the form above.', null, null);
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Type</th><th>Issue</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        ${entries.map(a=>`
+          <tr>
+            <td class="num">${fmtDate(a.date)}</td>
+            <td class="agent-name">${esc(a.agentName)}</td>
+            <td class="num">${esc(a.caseNumber)}</td>
+            <td><span class="type-badge ${a.type==='Commendation'?'commendation':''}">${esc(a.type)}</span></td>
+            <td style="max-width:280px;">${esc(a.issue)||'<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+            <td style="text-align:right;"><button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+  wrap.querySelectorAll('[data-ar-delete]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      if(!confirm('Delete this agent review entry?')) return;
+      STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==b.dataset.arDelete);
+      await saveState();
+      renderMyAgentReviewsTable();
+      toast('Entry deleted');
+    });
+  });
+}
+function renderAllAgentReviewsTable(){
+  const wrap = document.getElementById('allAgentReviewsWrap');
+  if(!wrap) return;
+  const supF = document.getElementById('arFilterSupport')?.value || '';
+  const typeF = document.getElementById('arFilterType')?.value || '';
+  let entries = STATE.agentReviews.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(supF) entries = entries.filter(a=>a.supportId===supF);
+  if(typeF) entries = entries.filter(a=>a.type===typeF);
+  if(!entries.length){
+    wrap.innerHTML = emptyState('No agent review entries found', 'Try a different filter, or check back once supports have logged some.', null, null);
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Support</th><th>Agent</th><th>Case #</th><th>Type</th><th>Issue</th></tr></thead>
+      <tbody>
+        ${entries.map(a=>`
+          <tr>
+            <td class="num">${fmtDate(a.date)}</td>
+            <td style="font-weight:600;">${esc(a.supportName)}</td>
+            <td class="agent-name">${esc(a.agentName)}</td>
+            <td class="num">${esc(a.caseNumber)}</td>
+            <td><span class="type-badge ${a.type==='Commendation'?'commendation':''}">${esc(a.type)}</span></td>
+            <td style="max-width:300px;">${esc(a.issue)||'<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
 /* ---------------------- SHARED EMPTY STATE ---------------------- */
 function emptyState(title, sub, gotoView, cta){
   return `<div class="empty-state">
@@ -1543,6 +1976,42 @@ function attachViewHandlers(){
     renderRecordsTable();
     document.getElementById('filterMonth').addEventListener('change', renderRecordsTable);
     document.getElementById('filterSupport').addEventListener('change', renderRecordsTable);
+  }
+
+  if(currentView==='myRecords'){
+    renderMyRecordsTable();
+    document.getElementById('mySearchInput').addEventListener('input', renderMyRecordsTable);
+  }
+
+  if(currentView==='agentReviews'){
+    if(appMode==='support'){
+      renderMyAgentReviewsTable();
+      document.getElementById('agentReviewForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const viewerId = ensureViewerSupport();
+        const viewer = STATE.supports.find(s=>s.id===viewerId);
+        const entry = {
+          id: uid('ar'),
+          date: new Date().toISOString().slice(0,10),
+          supportId: viewerId,
+          supportName: viewer ? viewer.name : '',
+          agentName: document.getElementById('ar_agent').value.trim(),
+          caseNumber: document.getElementById('ar_case').value.trim(),
+          type: document.getElementById('ar_type').value,
+          issue: document.getElementById('ar_issue').value.trim(),
+          createdAt: Date.now()
+        };
+        STATE.agentReviews.push(entry);
+        await saveState();
+        e.target.reset();
+        renderMyAgentReviewsTable();
+        toast('Entry added');
+      });
+    } else {
+      renderAllAgentReviewsTable();
+      document.getElementById('arFilterSupport').addEventListener('change', renderAllAgentReviewsTable);
+      document.getElementById('arFilterType').addEventListener('change', renderAllAgentReviewsTable);
+    }
   }
 
   if(currentView==='supports'){
@@ -1901,13 +2370,26 @@ async function init(){
   await ensureAugustSeed();
   await ensureAugustNotes();
   await ensureAugustAccuracy();
+  ensureViewerSupport();
   document.getElementById('globalMonth').addEventListener('change', (e)=>{ currentMonth = e.target.value; render(); });
-  document.querySelectorAll('.navlist button').forEach(b=>b.addEventListener('click', ()=>setView(b.dataset.view)));
+  document.querySelectorAll('#modeToggle [data-mode]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = btn.dataset.mode;
+      if(target === appMode) return;
+      if(target === 'supervisor'){
+        if(supervisorUnlocked){ appMode='supervisor'; setView('dashboard'); }
+        else openSupervisorModal();
+      } else {
+        appMode = 'support';
+        setView('myDashboard');
+      }
+    });
+  });
   document.getElementById('saveStatus').addEventListener('click', ()=>{
     if(document.getElementById('saveStatus').classList.contains('error')) saveState();
   });
   if(STATE.records.some(r=>r.month==='2026-08')) currentMonth = '2026-08';
-  setView('dashboard');
+  setView('myDashboard');
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='flex';
 }
