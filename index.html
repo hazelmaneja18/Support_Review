@@ -810,7 +810,6 @@ let STATE = {
   agentReviewDeletionCounts: {},
   agentReviewAugust2026Seeded: false
 };
-const AGENT_REVIEW_DELETE_LIMIT = 2;
 let appMode = 'support'; // 'support' | 'supervisor'
 let supervisorUnlocked = false;
 const SUPERVISOR_PASSWORD = 'Verifone123';
@@ -2472,12 +2471,10 @@ function renderMyAgentReviewsTable(){
   if(!wrap) return;
   const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
   const entries = all.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  const deletionsUsed = STATE.agentReviewDeletionCounts[viewerId] || 0;
-  const deletionsLeft = Math.max(0, AGENT_REVIEW_DELETE_LIMIT - deletionsUsed);
   if(chip){
     const rc = all.filter(a=>a.mode==='review').length;
     const cc = all.filter(a=>a.mode==='commendation').length;
-    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'} \u00b7 ${deletionsLeft} deletion${deletionsLeft===1?'':'s'} left`;
+    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'}`;
   }
   if(!entries.length){
     wrap.innerHTML = emptyState('No entries yet', 'Add your first agent review or commendation using the form above.', null, null);
@@ -2513,15 +2510,8 @@ function renderMyAgentReviewsTable(){
 async function deleteAgentReviewEntry(id, refreshFn){
   const entry = STATE.agentReviews.find(a=>a.id===id);
   if(!entry) return;
-  const used = STATE.agentReviewDeletionCounts[entry.supportId] || 0;
-  if(used >= AGENT_REVIEW_DELETE_LIMIT){
-    toast(`You've used all ${AGENT_REVIEW_DELETE_LIMIT} of your entry deletions. Contact your supervisor if you need this one removed.`, true);
-    return;
-  }
-  const remaining = AGENT_REVIEW_DELETE_LIMIT - used;
-  if(!confirm(`Delete this entry? You have ${remaining} deletion${remaining===1?'':'s'} left, and this will use one.`)) return;
+  if(!confirm('Delete this entry? This can\u2019t be undone.')) return;
   STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==id);
-  STATE.agentReviewDeletionCounts[entry.supportId] = used + 1;
   await saveState();
   if(refreshFn) refreshFn();
   toast('Entry deleted');
