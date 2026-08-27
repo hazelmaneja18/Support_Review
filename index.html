@@ -850,6 +850,89 @@ let loadFailed = false;
 let lastLoadError = null;
 let lastRawValue = null;
 
+/* ---------------------- TEAM SYNC (optional, shared) ----------------------
+   If a supervisor sets a Sync URL (a free Firebase Realtime Database),
+   everyone's copy of this file pulls/merges/pushes to that same address,
+   so entries made on different devices become visible to each other. */
+const SYNC_URL_KEY = 'seqas-sync-url';
+let SYNC_URL = '';
+try{ SYNC_URL = localStorage.getItem(SYNC_URL_KEY) || ''; }catch(e){ SYNC_URL = ''; }
+let lastSyncStatus = null; // 'ok' | 'error' | null (never configured/attempted)
+let lastSyncMessage = '';
+
+function syncEndpoint(){
+  return SYNC_URL.replace(/\/$/, '') + '/app-data.json';
+}
+async function pullRemoteState(){
+  if(!SYNC_URL) return undefined;
+  try{
+    const res = await fetch(syncEndpoint(), { cache:'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    lastSyncStatus = 'ok';
+    return data; // null is a valid "nothing there yet" response
+  }catch(e){
+    console.error('Sync pull failed', e);
+    lastSyncStatus = 'error';
+    lastSyncMessage = e && e.message ? e.message : String(e);
+    return NaN; // NaN = distinct "the request itself failed" sentinel
+  }
+}
+async function pushRemoteState(state){
+  if(!SYNC_URL) return true;
+  try{
+    const res = await fetch(syncEndpoint(), {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(state)
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    lastSyncStatus = 'ok';
+    return true;
+  }catch(e){
+    console.error('Sync push failed', e);
+    lastSyncStatus = 'error';
+    lastSyncMessage = e && e.message ? e.message : String(e);
+    return false;
+  }
+}
+function mergeArraysById(a, b){
+  const map = new Map();
+  [...(a||[]), ...(b||[])].forEach(item=>{ if(item && item.id) map.set(item.id, item); });
+  return Array.from(map.values());
+}
+function mergeMaxCounts(a, b){
+  const out = { ...(a||{}) };
+  Object.keys(b||{}).forEach(k=>{ out[k] = Math.max(out[k]||0, b[k]); });
+  return out;
+}
+function mergeStates(local, remote){
+  if(!remote || typeof remote !== 'object') return local;
+  return {
+    supports: mergeArraysById(remote.supports, local.supports),
+    targets: { ...(remote.targets||{}), ...(local.targets||{}) },
+    records: mergeArraysById(remote.records, local.records),
+    seededAugust2026: !!(local.seededAugust2026 || remote.seededAugust2026),
+    deletedCaseNumbers: Array.from(new Set([...(remote.deletedCaseNumbers||[]), ...(local.deletedCaseNumbers||[])])),
+    augustAccuracyApplied: !!(local.augustAccuracyApplied || remote.augustAccuracyApplied),
+    agentReviews: mergeArraysById(remote.agentReviews, local.agentReviews),
+    viewerSupportId: local.viewerSupportId,
+    personalTargets: { ...(remote.personalTargets||{}), ...(local.personalTargets||{}) },
+    attendance: { ...(remote.attendance||{}), ...(local.attendance||{}) },
+    agentReviewDeletionCounts: mergeMaxCounts(remote.agentReviewDeletionCounts, local.agentReviewDeletionCounts),
+    agentReviewAugust2026Seeded: !!(local.agentReviewAugust2026Seeded || remote.agentReviewAugust2026Seeded),
+  };
+}
+async function syncNow(){
+  if(!SYNC_URL) return;
+  const remote = await pullRemoteState();
+  if(remote === undefined) return; // not configured
+  if(Number.isNaN(remote)){ return; } // pull failed, don't risk pushing a stale copy over good remote data
+  STATE = mergeStates(STATE, remote);
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+  await pushRemoteState(STATE);
+}
+
 async function loadState(){
   if(!isStorageReady()){
     loadFailed = true;
@@ -880,6 +963,13 @@ async function loadState(){
       STATE.attendance = parsed.attendance || {};
       STATE.agentReviewDeletionCounts = parsed.agentReviewDeletionCounts || {};
       STATE.agentReviewAugust2026Seeded = !!parsed.agentReviewAugust2026Seeded;
+      if(SYNC_URL){
+        const remote = await pullRemoteState();
+        if(remote !== undefined && !Number.isNaN(remote)){
+          STATE = mergeStates(STATE, remote);
+          try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+        }
+      }
       setSaveStatus(null, 'All changes saved');
       return true;
     }catch(e){
@@ -889,7 +979,16 @@ async function loadState(){
       return false;
     }
   } else {
-    // Nothing saved yet on this browser (first-ever run here) — safe to seed.
+    // Nothing saved yet on this browser (first-ever run here).
+    if(SYNC_URL){
+      const remote = await pullRemoteState();
+      if(remote && typeof remote === 'object'){
+        STATE = mergeStates(seedState(), remote);
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+        setSaveStatus(null, 'All changes saved');
+        return true;
+      }
+    }
     STATE = seedState();
     await saveState();
     return true;
@@ -904,8 +1003,16 @@ async function saveState(){
     if(!isStorageReady()) throw new Error('localStorage is blocked or unavailable in this browser.');
     localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
     hasUnsavedFailure = false;
+    if(SYNC_URL){
+      const remote = await pullRemoteState();
+      if(remote !== undefined && !Number.isNaN(remote)){
+        STATE = mergeStates(STATE, remote);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+      }
+      await pushRemoteState(STATE);
+    }
     const stamp = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-    setSaveStatus(null, `Saved at ${stamp}`);
+    setSaveStatus(null, SYNC_URL ? `Synced at ${stamp}` : `Saved at ${stamp}`);
     return true;
   }catch(e){
     console.error('Storage error', e);
@@ -1771,6 +1878,37 @@ function renderSupports(){
       </div>
     </div>
   </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Team Sync</h3>
+      <span class="type-badge ${SYNC_URL ? (lastSyncStatus==='error'?'':'commendation') : ''}" style="${SYNC_URL?'':'background:var(--paper-deep);color:var(--slate-soft);'}">${SYNC_URL ? (lastSyncStatus==='error'?'Sync error':'Connected') : 'Not connected'}</span>
+    </div>
+    <div class="card-body">
+      <p style="margin:0 0 12px 0; font-size:13px; color:var(--slate);">Send this same file (with the URL below already filled in) to your team, and everyone's entries \u2014 Agent Reviews, commendations, evaluations \u2014 will sync into this one shared address instead of staying stuck on each person's own device.</p>
+      <details style="margin-bottom:14px;">
+        <summary style="cursor:pointer; font-size:12.5px; font-weight:600; color:var(--brass-dark);">How to get a Sync URL (free, ~5 minutes)</summary>
+        <ol style="margin:10px 0 0 0; padding-left:18px; font-size:12.5px; color:var(--slate); line-height:1.7;">
+          <li>Go to <strong>console.firebase.google.com</strong> and create a free project (any name).</li>
+          <li>In the left menu, open <strong>Build \u2192 Realtime Database</strong> and click <strong>Create Database</strong>. Choose <strong>Start in test mode</strong>.</li>
+          <li>Copy the URL shown at the top of that page (it looks like <code>https://your-project-default-rtdb.firebaseio.com</code>) and paste it below.</li>
+          <li>Under the database's <strong>Rules</strong> tab, make sure both <code>.read</code> and <code>.write</code> are set to <code>true</code>, then click Publish. (This keeps things simple, but means anyone with the URL can read or change the data \u2014 don't share it outside your team.)</li>
+        </ol>
+      </details>
+      <div class="field-grid">
+        <div class="field" style="grid-column:1/-1;">
+          <label class="field-label">Sync URL</label>
+          <input type="text" id="syncUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com" value="${esc(SYNC_URL)}">
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button type="button" class="btn brass" id="saveSyncUrlBtn">Save URL</button>
+        <button type="button" class="btn ghost" id="syncNowBtn" ${SYNC_URL?'':'disabled'}>Sync Now</button>
+        ${SYNC_URL ? '<button type="button" class="btn ghost" id="disconnectSyncBtn">Disconnect</button>' : ''}
+      </div>
+      ${lastSyncStatus==='error' ? `<p class="field-hint" style="color:var(--red); margin-top:10px;">Last sync failed: ${esc(lastSyncMessage)}</p>` : ''}
+    </div>
+  </div>
   `;
 }
 
@@ -2607,6 +2745,41 @@ function attachViewHandlers(){
       document.getElementById('restoreFileInput').click();
     });
     document.getElementById('restoreFileInput').addEventListener('change', handleRestoreFile);
+
+    document.getElementById('saveSyncUrlBtn').addEventListener('click', async ()=>{
+      const val = document.getElementById('syncUrlInput').value.trim();
+      SYNC_URL = val;
+      try{ localStorage.setItem(SYNC_URL_KEY, SYNC_URL); }catch(e){}
+      if(SYNC_URL){
+        toast('Sync URL saved \u2014 syncing now\u2026');
+        await syncNow();
+        toast(lastSyncStatus==='error' ? 'Saved, but the first sync failed \u2014 check the URL' : 'Connected and synced');
+      } else {
+        toast('Sync URL cleared');
+      }
+      render();
+    });
+    const syncNowBtn = document.getElementById('syncNowBtn');
+    if(syncNowBtn){
+      syncNowBtn.addEventListener('click', async ()=>{
+        toast('Syncing\u2026');
+        await syncNow();
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+        toast(lastSyncStatus==='error' ? 'Sync failed \u2014 check the URL and your connection' : 'Synced');
+        render();
+      });
+    }
+    const disconnectBtn = document.getElementById('disconnectSyncBtn');
+    if(disconnectBtn){
+      disconnectBtn.addEventListener('click', ()=>{
+        if(!confirm('Disconnect from Team Sync? Your data stays on this device, but you\u2019ll stop sharing with the team until you reconnect.')) return;
+        SYNC_URL = '';
+        try{ localStorage.removeItem(SYNC_URL_KEY); }catch(e){}
+        lastSyncStatus = null;
+        render();
+        toast('Disconnected');
+      });
+    }
   }
 }
 
@@ -2963,6 +3136,19 @@ async function init(){
   setView('myDashboard');
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='flex';
+  startBackgroundSync();
+}
+function startBackgroundSync(){
+  setInterval(async ()=>{
+    if(!SYNC_URL) return;
+    const safeViews = ['myDashboard','myRecords','dashboard','counts','records','supports','agentReviews'];
+    if(!safeViews.includes(currentView)) return;
+    if(currentView==='agentReviews' && appMode==='support') return; // don't disrupt an in-progress form
+    if(currentView==='new') return;
+    const before = JSON.stringify(STATE);
+    await syncNow();
+    if(JSON.stringify(STATE) !== before) render();
+  }, 45000);
 }
 init();
 </script>
