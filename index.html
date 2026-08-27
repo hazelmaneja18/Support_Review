@@ -926,7 +926,7 @@ function mergeStates(local, remote){
     agentReviewDeletionCounts: mergeMaxCounts(remote.agentReviewDeletionCounts, local.agentReviewDeletionCounts),
     agentReviewAugust2026Seeded: !!(local.agentReviewAugust2026Seeded || remote.agentReviewAugust2026Seeded),
   };
-  return dedupeSupports(merged);
+  return reconcileState(merged);
 }
 // Collapses supports that share the same name under different IDs (which could
 // happen if a new device seeded its own fresh roster before this fix existed),
@@ -977,14 +977,54 @@ function dedupeSupports(state){
   if(state.viewerSupportId) state.viewerSupportId = remapId(state.viewerSupportId);
   return state;
 }
+function completenessScore(obj, fields){
+  return fields.reduce((s,f)=> s + (obj[f] ? String(obj[f]).trim().length : 0), 0);
+}
+// Collapses items sharing the same real-world identity (e.g. the same case
+// number) that ended up with different internal IDs — which happens when two
+// devices each seed their own copy of the same data before ever syncing.
+// Keeps whichever copy has more content filled in; items with no usable key
+// (blank case number, etc.) are left untouched since they can't be matched.
+function dedupeByKey(list, keyFn, fields){
+  const groups = new Map();
+  const noKey = [];
+  (list||[]).forEach(item=>{
+    const k = keyFn(item);
+    if(k===null || k===undefined || k===''){ noKey.push(item); return; }
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(item);
+  });
+  const result = [...noKey];
+  groups.forEach(g=>{
+    if(g.length === 1){ result.push(g[0]); return; }
+    g.sort((a,b)=> completenessScore(b,fields)-completenessScore(a,fields) || (b.createdAt||0)-(a.createdAt||0));
+    result.push(g[0]);
+  });
+  return result;
+}
+// Runs every cleanup pass together: duplicate people, duplicate SEQAS
+// records (by case number), and duplicate Agent Review entries (by
+// mode + case number). Safe to call repeatedly — it's a no-op once clean.
+function reconcileState(state){
+  state = dedupeSupports(state);
+  state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
+  state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
+  return state;
+}
 async function syncNow(){
   if(!SYNC_URL) return;
   const remote = await pullRemoteState();
   if(remote === undefined) return; // not configured
-  if(Number.isNaN(remote)){ return; } // pull failed, don't risk pushing a stale copy over good remote data
+  if(Number.isNaN(remote)){
+    setSaveStatus('error', 'Sync failed — tap to retry');
+    return;
+  }
   STATE = mergeStates(STATE, remote);
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
-  await pushRemoteState(STATE);
+  const pushOk = await pushRemoteState(STATE);
+  const stamp = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if(pushOk) setSaveStatus(null, `Synced at ${stamp}`);
+  else setSaveStatus('error', 'Sync failed — tap to retry');
 }
 
 async function loadState(){
@@ -1017,7 +1057,7 @@ async function loadState(){
       STATE.attendance = parsed.attendance || {};
       STATE.agentReviewDeletionCounts = parsed.agentReviewDeletionCounts || {};
       STATE.agentReviewAugust2026Seeded = !!parsed.agentReviewAugust2026Seeded;
-      STATE = dedupeSupports(STATE);
+      STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
         if(remote !== undefined && !Number.isNaN(remote)){
@@ -1055,7 +1095,7 @@ async function loadState(){
           agentReviewDeletionCounts: remote.agentReviewDeletionCounts || {},
           agentReviewAugust2026Seeded: !!remote.agentReviewAugust2026Seeded
         };
-        STATE = dedupeSupports(STATE);
+        STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
         setSaveStatus(null, 'All changes saved');
         return true;
@@ -1075,16 +1115,25 @@ async function saveState(){
     if(!isStorageReady()) throw new Error('localStorage is blocked or unavailable in this browser.');
     localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
     hasUnsavedFailure = false;
+    let syncFailed = false;
     if(SYNC_URL){
       const remote = await pullRemoteState();
       if(remote !== undefined && !Number.isNaN(remote)){
         STATE = mergeStates(STATE, remote);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+      } else if(Number.isNaN(remote)){
+        syncFailed = true;
       }
-      await pushRemoteState(STATE);
+      const pushOk = await pushRemoteState(STATE);
+      if(!pushOk) syncFailed = true;
     }
     const stamp = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-    setSaveStatus(null, SYNC_URL ? `Synced at ${stamp}` : `Saved at ${stamp}`);
+    if(SYNC_URL && syncFailed){
+      setSaveStatus('error', 'Saved on this device — sync failed, tap to retry');
+      toastRetry('Saved here, but couldn\u2019t reach the shared database. Tap to retry syncing.');
+    } else {
+      setSaveStatus(null, SYNC_URL ? `Synced at ${stamp}` : `Saved at ${stamp}`);
+    }
     return true;
   }catch(e){
     console.error('Storage error', e);
