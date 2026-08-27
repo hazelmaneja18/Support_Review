@@ -754,7 +754,45 @@ const AUGUST_2026_SEED = [
     tlCommitment:`Coaching will be provided to reinforce proper diagnostic questioning and KB utilization, especially when multiple issues are reported within the same case. Support will be reminded to fully diagnose each issue before proceeding with a referral or escalation. Support should review KB 000004191 and ensure the reprint receipt troubleshooting process is properly followed. Additional emphasis will be placed on avoiding unnecessary FCC restarts when the issue is isolated to the POS, as this can cause additional downtime and increase handle time. Moving forward, Support is expected to confirm the affected component, ask the appropriate diagnostic questions, utilize the correct KB, and complete the applicable troubleshooting before referring the case to another team.` },
 ];
 
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+/* August 2026 Agent Review entries (commendations + reviews), transcribed
+   from the team's Agent Review spreadsheet. */
+const AGENT_REVIEW_AUGUST_SEED = [
+  // Commendations
+  { mode:'commendation', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Kimberly Torres', caseNumber:'13847946', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-07', supportName:'Judy Tolentino', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13874944', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-12', supportName:'Aj Dela Cruz', aliases:[], agentName:'Roi L.', caseNumber:'13884835', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-12', supportName:'Aj Dela Cruz', aliases:[], agentName:'Dean Clemente', caseNumber:'13880211', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-11', supportName:'Glory Barbacena', aliases:[], agentName:'Sidrick Mondalo', caseNumber:'13888227', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-14', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Madel Negrete', caseNumber:'13897796', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-19', supportName:'Judy Tolentino', aliases:[], agentName:'Bench Manuel', caseNumber:'13918595', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-19', supportName:'Aj Dela Cruz', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13918635', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-21', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Dean Clemente', caseNumber:'13875124', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-21', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Alfredo III. Ce\u00f1o', caseNumber:'13919369', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-21', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Christian Luis Quimno', caseNumber:'13928601', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-24', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Felisha Sy', caseNumber:'13899358', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-26', supportName:'Judy Tolentino', aliases:[], agentName:'Roi Chester Lumtao', caseNumber:'13946883', category:'', section1:'' },
+  // Reviews
+  { mode:'review', date:'2026-08-01', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Daniel Arago', caseNumber:'13846511', category:'Procedural', section1:'DCR#3 Poll error / DCR#3 shows "Please Pay Inside E01"' },
+  { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Sheenam Dhiman', caseNumber:'13812789', category:'Procedural', section1:'Card transaction cashed out without verifying with network' },
+  { mode:'review', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Jayson Camero', caseNumber:'13871724', category:'Behaviour', section1:'Cards not working inside/out' },
+  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'Dean Clemente', caseNumber:'13872622', category:'Knowledge Gap', section1:'Card transaction is not working (inside and outside)' },
+  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'Harold Reyes', caseNumber:'13872127', category:'Knowledge Gap', section1:'Add function keys on screen' },
+  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'', caseNumber:'13867260', category:'Knowledge Gap', section1:'EPS Network Unavailable issue on POS 101' },
+  { mode:'review', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Jayson Camero', caseNumber:'13894723', category:'Call Handling', section1:'FPs 7, 8, 9 and 10 are not working' },
+  { mode:'review', date:'2026-08-01', supportName:'Glory Barbacena', aliases:[], agentName:'Arlenne Labagala', caseNumber:'13850529', category:'Knowledge Gap', section1:'Loyalty prompt not showing on Pinpad' },
+  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'Hazel Mae Bongalos', caseNumber:'13913108', category:'Knowledge Gap', section1:'All DCRs Poll Error' },
+  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'', caseNumber:'13918637', category:'Procedural', section1:'Unable to log in, EPS network error on POS 101' },
+  { mode:'review', date:'2026-08-01', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Sheenam Dhiman', caseNumber:'13923678', category:'Behaviour', section1:'Unable to ping POS 101' },
+  { mode:'review', date:'2026-08-01', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Hazel Mae Bongalos', caseNumber:'13862511', category:'Procedural', section1:'EPS Network Unavailable' },
+  { mode:'review', date:'2026-08-01', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Christian Luis Quimno', caseNumber:'13875158', category:'Knowledge Gap', section1:'All FPs Offline' },
+  { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Boh Brian Daclis', caseNumber:'13919486', category:'Procedural', section1:'Unable to process cards in and out / incorrect time' },
+  { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'', caseNumber:'13924010', category:'Procedural', section1:'PLU not found' },
+  { mode:'review', date:'2026-08-01', supportName:'Glory Barbacena', aliases:[], agentName:'Salvador Rubio Jr', caseNumber:'13906297', category:'Procedural', section1:'Unable to process cards in and out' },
+  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'Supriya Sheety', caseNumber:'13925136', category:'Procedural', section1:'Both pinpads working slow' },
+  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13933369', category:'Knowledge Gap', section1:'EPS Busy' },
+  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'', caseNumber:'13941140', category:'Knowledge Gap', section1:'Unable to process cards in and out' },
+  { mode:'review', date:'2026-08-01', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Sidrick Mondalo', caseNumber:'13930992', category:'Procedural', section1:'' },
+];
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
 let STATE = {
@@ -768,7 +806,8 @@ let STATE = {
   viewerSupportId: null,
   personalTargets: {},
   attendance: {},
-  agentReviewDeletionCounts: {}
+  agentReviewDeletionCounts: {},
+  agentReviewAugust2026Seeded: false
 };
 const AGENT_REVIEW_DELETE_LIMIT = 2;
 let appMode = 'support'; // 'support' | 'supervisor'
@@ -839,6 +878,7 @@ async function loadState(){
       STATE.personalTargets = parsed.personalTargets || {};
       STATE.attendance = parsed.attendance || {};
       STATE.agentReviewDeletionCounts = parsed.agentReviewDeletionCounts || {};
+      STATE.agentReviewAugust2026Seeded = !!parsed.agentReviewAugust2026Seeded;
       setSaveStatus(null, 'All changes saved');
       return true;
     }catch(e){
@@ -894,7 +934,8 @@ function seedState(){
     viewerSupportId: null,
     personalTargets: {},
     attendance: {},
-    agentReviewDeletionCounts: {}
+    agentReviewDeletionCounts: {},
+    agentReviewAugust2026Seeded: false
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -973,6 +1014,33 @@ async function ensureAugustAccuracy(){
     if(entry.agentName) rec.agentName = entry.agentName;
   });
   STATE.augustAccuracyApplied = true;
+  await saveState();
+}
+async function ensureAgentReviewAugustSeed(){
+  if(STATE.agentReviewAugust2026Seeded) return;
+  const existingCases = new Set(STATE.agentReviews.map(a=>`${a.mode}:${String(a.caseNumber)}`));
+  AGENT_REVIEW_AUGUST_SEED.forEach(entry=>{
+    const key = `${entry.mode}:${String(entry.caseNumber)}`;
+    if(existingCases.has(key)) return;
+    const sup = findOrCreateSupport(entry.supportName, entry.aliases);
+    STATE.agentReviews.push({
+      id: uid('ar'),
+      mode: entry.mode,
+      date: entry.date,
+      supportId: sup.id,
+      supportName: sup.name,
+      agentName: entry.agentName || '',
+      caseNumber: entry.caseNumber,
+      category: entry.category || '',
+      level: '',
+      section1: entry.section1 || '',
+      section2: '',
+      section3: '',
+      section4: '',
+      createdAt: Date.now()
+    });
+  });
+  STATE.agentReviewAugust2026Seeded = true;
   await saveState();
 }
 
@@ -2871,6 +2939,7 @@ async function init(){
   await ensureAugustSeed();
   await ensureAugustNotes();
   await ensureAugustAccuracy();
+  await ensureAgentReviewAugustSeed();
   ensureViewerSupport();
   document.getElementById('globalMonth').addEventListener('change', (e)=>{ currentMonth = e.target.value; render(); });
   document.querySelectorAll('#modeToggle [data-mode]').forEach(btn=>{
