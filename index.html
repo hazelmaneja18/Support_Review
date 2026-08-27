@@ -855,8 +855,12 @@ let lastRawValue = null;
    everyone's copy of this file pulls/merges/pushes to that same address,
    so entries made on different devices become visible to each other. */
 const SYNC_URL_KEY = 'seqas-sync-url';
-let SYNC_URL = '';
-try{ SYNC_URL = localStorage.getItem(SYNC_URL_KEY) || ''; }catch(e){ SYNC_URL = ''; }
+const DEFAULT_SYNC_URL = 'https://support-performance-ec0a1-default-rtdb.firebaseio.com';
+let SYNC_URL = DEFAULT_SYNC_URL;
+try{
+  const stored = localStorage.getItem(SYNC_URL_KEY);
+  SYNC_URL = (stored === null) ? DEFAULT_SYNC_URL : stored;
+}catch(e){ SYNC_URL = DEFAULT_SYNC_URL; }
 let lastSyncStatus = null; // 'ok' | 'error' | null (never configured/attempted)
 let lastSyncMessage = '';
 
@@ -908,7 +912,7 @@ function mergeMaxCounts(a, b){
 }
 function mergeStates(local, remote){
   if(!remote || typeof remote !== 'object') return local;
-  return {
+  const merged = {
     supports: mergeArraysById(remote.supports, local.supports),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
     records: mergeArraysById(remote.records, local.records),
@@ -922,6 +926,56 @@ function mergeStates(local, remote){
     agentReviewDeletionCounts: mergeMaxCounts(remote.agentReviewDeletionCounts, local.agentReviewDeletionCounts),
     agentReviewAugust2026Seeded: !!(local.agentReviewAugust2026Seeded || remote.agentReviewAugust2026Seeded),
   };
+  return dedupeSupports(merged);
+}
+// Collapses supports that share the same name under different IDs (which could
+// happen if a new device seeded its own fresh roster before this fix existed),
+// keeping whichever ID has the most history attached and remapping everything
+// else — records, agent reviews, targets, attendance, deletion counts — to it.
+function dedupeSupports(state){
+  const groups = new Map();
+  (state.supports||[]).forEach(s=>{
+    const key = (s.name||'').trim().toLowerCase();
+    if(!key) return;
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  });
+  const remap = {};
+  const cleaned = [];
+  groups.forEach(list=>{
+    if(list.length === 1){ cleaned.push(list[0]); return; }
+    const scored = list.map(s=>({
+      s,
+      score: (state.records||[]).filter(r=>r.supportId===s.id).length + (state.agentReviews||[]).filter(a=>a.supportId===s.id).length
+    })).sort((a,b)=>b.score-a.score);
+    const canonical = scored[0].s;
+    cleaned.push(canonical);
+    list.forEach(s=>{ if(s.id!==canonical.id) remap[s.id] = canonical.id; });
+  });
+  if(Object.keys(remap).length === 0) return state;
+  const remapId = id => remap[id] || id;
+  state.supports = cleaned;
+  (state.records||[]).forEach(r=>{ r.supportId = remapId(r.supportId); });
+  (state.agentReviews||[]).forEach(a=>{ a.supportId = remapId(a.supportId); });
+  ['personalTargets','attendance'].forEach(field=>{
+    const out = {};
+    Object.entries(state[field]||{}).forEach(([key,val])=>{
+      const idx = key.indexOf(':');
+      const sid = idx===-1 ? key : key.slice(0,idx);
+      const rest = idx===-1 ? '' : key.slice(idx);
+      const newKey = remapId(sid) + rest;
+      if(!(newKey in out)) out[newKey] = val;
+    });
+    state[field] = out;
+  });
+  const remappedCounts = {};
+  Object.entries(state.agentReviewDeletionCounts||{}).forEach(([sid,val])=>{
+    const nid = remapId(sid);
+    remappedCounts[nid] = Math.max(remappedCounts[nid]||0, val);
+  });
+  state.agentReviewDeletionCounts = remappedCounts;
+  if(state.viewerSupportId) state.viewerSupportId = remapId(state.viewerSupportId);
+  return state;
 }
 async function syncNow(){
   if(!SYNC_URL) return;
@@ -963,6 +1017,7 @@ async function loadState(){
       STATE.attendance = parsed.attendance || {};
       STATE.agentReviewDeletionCounts = parsed.agentReviewDeletionCounts || {};
       STATE.agentReviewAugust2026Seeded = !!parsed.agentReviewAugust2026Seeded;
+      STATE = dedupeSupports(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
         if(remote !== undefined && !Number.isNaN(remote)){
@@ -982,8 +1037,25 @@ async function loadState(){
     // Nothing saved yet on this browser (first-ever run here).
     if(SYNC_URL){
       const remote = await pullRemoteState();
-      if(remote && typeof remote === 'object'){
-        STATE = mergeStates(seedState(), remote);
+      if(remote && typeof remote === 'object' && Array.isArray(remote.supports) && remote.supports.length){
+        // The shared database already has a real roster — adopt it as-is.
+        // (Merging it against a freshly-seeded local roster would create
+        // duplicate people under new random IDs, since matching is by ID.)
+        STATE = {
+          supports: remote.supports || [],
+          targets: remote.targets || {},
+          records: remote.records || [],
+          seededAugust2026: !!remote.seededAugust2026,
+          deletedCaseNumbers: remote.deletedCaseNumbers || [],
+          augustAccuracyApplied: !!remote.augustAccuracyApplied,
+          agentReviews: remote.agentReviews || [],
+          viewerSupportId: null,
+          personalTargets: remote.personalTargets || {},
+          attendance: remote.attendance || {},
+          agentReviewDeletionCounts: remote.agentReviewDeletionCounts || {},
+          agentReviewAugust2026Seeded: !!remote.agentReviewAugust2026Seeded
+        };
+        STATE = dedupeSupports(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
         setSaveStatus(null, 'All changes saved');
         return true;
@@ -2774,7 +2846,7 @@ function attachViewHandlers(){
       disconnectBtn.addEventListener('click', ()=>{
         if(!confirm('Disconnect from Team Sync? Your data stays on this device, but you\u2019ll stop sharing with the team until you reconnect.')) return;
         SYNC_URL = '';
-        try{ localStorage.removeItem(SYNC_URL_KEY); }catch(e){}
+        try{ localStorage.setItem(SYNC_URL_KEY, ''); }catch(e){}
         lastSyncStatus = null;
         render();
         toast('Disconnected');
