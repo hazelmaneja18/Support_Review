@@ -809,7 +809,8 @@ let STATE = {
   attendance: {},
   agentReviewDeletionCounts: {},
   agentReviewAugust2026Seeded: false,
-  historicalDuplicatesCleaned: false
+  historicalDuplicatesCleaned: false,
+  deletedAgentReviewIds: []
 };
 let appMode = 'support'; // 'support' | 'supervisor'
 let supervisorUnlocked = false;
@@ -912,14 +913,17 @@ function mergeMaxCounts(a, b){
 }
 function mergeStates(local, remote){
   if(!remote || typeof remote !== 'object') return local;
+  const deletedCaseNumbers = Array.from(new Set([...(remote.deletedCaseNumbers||[]), ...(local.deletedCaseNumbers||[])].map(String)));
+  const deletedAgentReviewIds = Array.from(new Set([...(remote.deletedAgentReviewIds||[]), ...(local.deletedAgentReviewIds||[])]));
   const merged = {
     supports: mergeArraysById(remote.supports, local.supports),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
-    records: mergeArraysById(remote.records, local.records),
+    records: mergeArraysById(remote.records, local.records).filter(r=>!deletedCaseNumbers.includes(String(r.caseNumber))),
     seededAugust2026: !!(local.seededAugust2026 || remote.seededAugust2026),
-    deletedCaseNumbers: Array.from(new Set([...(remote.deletedCaseNumbers||[]), ...(local.deletedCaseNumbers||[])])),
+    deletedCaseNumbers,
     augustAccuracyApplied: !!(local.augustAccuracyApplied || remote.augustAccuracyApplied),
-    agentReviews: mergeArraysById(remote.agentReviews, local.agentReviews),
+    agentReviews: mergeArraysById(remote.agentReviews, local.agentReviews).filter(a=>!deletedAgentReviewIds.includes(a.id)),
+    deletedAgentReviewIds,
     viewerSupportId: local.viewerSupportId,
     personalTargets: { ...(remote.personalTargets||{}), ...(local.personalTargets||{}) },
     attendance: { ...(remote.attendance||{}), ...(local.attendance||{}) },
@@ -1068,6 +1072,7 @@ async function loadState(){
       STATE.agentReviewDeletionCounts = parsed.agentReviewDeletionCounts || {};
       STATE.agentReviewAugust2026Seeded = !!parsed.agentReviewAugust2026Seeded;
       STATE.historicalDuplicatesCleaned = !!parsed.historicalDuplicatesCleaned;
+      STATE.deletedAgentReviewIds = parsed.deletedAgentReviewIds || [];
       STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
@@ -1105,7 +1110,8 @@ async function loadState(){
           attendance: remote.attendance || {},
           agentReviewDeletionCounts: remote.agentReviewDeletionCounts || {},
           agentReviewAugust2026Seeded: !!remote.agentReviewAugust2026Seeded,
-          historicalDuplicatesCleaned: !!remote.historicalDuplicatesCleaned
+          historicalDuplicatesCleaned: !!remote.historicalDuplicatesCleaned,
+          deletedAgentReviewIds: remote.deletedAgentReviewIds || []
         };
         STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -1177,7 +1183,8 @@ function seedState(){
     attendance: {},
     agentReviewDeletionCounts: {},
     agentReviewAugust2026Seeded: false,
-    historicalDuplicatesCleaned: false
+    historicalDuplicatesCleaned: false,
+    deletedAgentReviewIds: []
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -2571,9 +2578,15 @@ async function deleteAgentReviewEntry(id, refreshFn){
   if(!entry) return;
   if(!confirm('Delete this entry? This can\u2019t be undone.')) return;
   STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==id);
-  await saveState();
+  STATE.deletedAgentReviewIds = STATE.deletedAgentReviewIds || [];
+  if(!STATE.deletedAgentReviewIds.includes(id)) STATE.deletedAgentReviewIds.push(id);
   if(refreshFn) refreshFn();
-  toast('Entry deleted');
+  const ok = await saveState();
+  if(ok){
+    toast('Entry deleted for good \u2014 it won\u2019t come back on refresh.');
+  } else {
+    toastRetry('Deleted here, but the save failed \u2014 tap to retry so it stays deleted.');
+  }
 }
 function renderAllAgentReviewsTable(){
   const wrap = document.getElementById('allAgentReviewsWrap');
