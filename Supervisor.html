@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SUPPORT PERFORMANCE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --pal-navy:#093C5D;
+    --pal-blue:#3B7597;
+    --pal-teal:#6FD1D7;
+    --pal-mint:#5DF8D8;
+
+    --ink:#093C5D;
+    --ink-2:#3B7597;
+    --ink-soft:#2c5470;
+    --paper:#d9eef0;
+    --paper-deep:#c4e3e6;
+    --card:#f7fdfd;
+    --rule:#b3d8db;
+    --rule-soft:#cbe6e8;
+    --brass:#3B7597;
+    --brass-dark:#26506b;
+    --brass-tint:#d7f2f0;
+    --ink-text:#093C5D;
+    --slate:#365f6e;
+    --slate-soft:#6c959e;
+    --green:#0d6b5c;
+    --green-bg:#8ff0dd;
+    --red:#8f2f2f;
+    --red-bg:#f6c9c9;
+    --amber:#7a5e10;
+    --amber-bg:#f5dd8f;
+    --neutral-ink:#2c5f68;
+    --neutral-bg:#cdeceb;
+    --radius:10px;
+    --radius-sm:6px;
+    --shadow: 0 1px 2px rgba(9,60,93,0.06), 0 4px 16px rgba(9,60,93,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink-text);
+    font-family:'Inter', -apple-system, sans-serif;
+    font-size:14.5px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  ::selection{ background: var(--brass); color:#fff; }
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:242px;
+    flex-shrink:0;
+    background: linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+    border-right:1px solid rgba(255,255,255,0.06);
+    color:#dcefe9;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    padding:26px 22px 18px 22px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .brand .mark{
+    display:flex; align-items:center; gap:10px; margin-bottom:6px;
+  }
+  .brand .seal{
+    width:30px;height:30px;border-radius:50%;
+    background:rgba(93,248,216,0.14);
+    border:1px solid var(--pal-mint);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; color:var(--pal-mint);
+    flex-shrink:0;
+  }
+  .brand h1{
+    font-family:'Inter',sans-serif;
+    font-weight:800;
+    font-size:18px;
+    letter-spacing:-0.01em;
+    margin:0;
+    color:#f2fbf8;
+  }
+  .brand .tagline{
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#7fa39b;
+    margin-top:3px;
+  }
+  .viewer-picker{ margin-top:14px; }
+  .viewer-picker label{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px; font-weight:700;
+  }
+  .viewer-picker select{
+    width:100%; background:#ffffff; border:1px solid rgba(255,255,255,0.5); color:var(--pal-navy);
+    font-size:13px; font-weight:600; padding:9px 30px 9px 11px; border-radius:var(--radius-sm); cursor:pointer;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23093C5D' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 9px center;
+  }
+  .viewer-picker select option{ background:#ffffff; color:var(--pal-navy); }
+  .type-badge{
+    display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px;
+    background:var(--brass-tint); color:var(--brass-dark); white-space:nowrap;
+  }
+  .type-badge.commendation{ background:var(--green-bg); color:var(--green); }
+  .mode-toggle{
+    display:flex; align-items:center; gap:2px; margin-top:14px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:3px;
+    width:fit-content;
+  }
+  .mode-toggle button{
+    display:flex; align-items:center; gap:5px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:11px; font-weight:600; color:#8aa9a3;
+    padding:6px 11px; border-radius:16px; transition:background 0.15s, color 0.15s;
+  }
+  .mode-toggle button.active{ background:var(--pal-mint); color:var(--pal-navy); }
+  .kind-tabs{ display:inline-flex; gap:4px; padding:4px; background:var(--paper-deep); border:1px solid var(--rule); border-radius:24px; margin-bottom:20px; }
+  .kind-tabs button{
+    display:flex; align-items:center; gap:7px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--slate); padding:9px 18px; border-radius:20px;
+    transition:background 0.15s, color 0.15s;
+  }
+  .kind-tabs button.active[data-kind="review"]{ background:var(--amber-bg); color:var(--amber); }
+  .kind-tabs button.active[data-kind="commendation"]{ background:var(--green-bg); color:var(--green); }
+  .kind-count-row{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .kind-count-pill{
+    display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--rule-soft);
+    border-radius:var(--radius); padding:12px 18px; box-shadow:var(--shadow);
+  }
+  .kind-count-pill .num{ font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:700; color:var(--ink-text); }
+  .kind-count-pill .lbl{ font-size:11.5px; color:var(--slate-soft); }
+  
+  nav.navlist{
+    padding:16px 12px;
+    flex:1;
+    overflow-y:auto;
+  }
+  .navlist button{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    background:none;
+    border:none;
+    color:#a9c9c2;
+    text-align:left;
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:500;
+    padding:9px 12px;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    letter-spacing:0.01em;
+    margin-bottom:2px;
+    transition:background 0.15s, color 0.15s;
+  }
+  .navlist button svg{ flex-shrink:0; opacity:0.75; }
+  .navlist button:hover{ background:rgba(255,255,255,0.06); color:#f2fbf8; }
+  .navlist button.active{
+    background:rgba(93,248,216,0.16);
+    color:var(--pal-mint);
+    font-weight:600;
+    box-shadow: inset 2px 0 0 var(--pal-mint);
+  }
+  .navlist button.active svg{ opacity:1; }
+  .navlist .navgroup-label{
+    font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
+    color:#5f7d77; padding:14px 12px 6px 12px; font-weight:600;
+  }
+  .sidebar-foot{
+    padding:14px 22px 18px 22px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    font-size:11.5px;
+    color:#7fa39b;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .sidebar-foot .month-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    padding:5px 10px;border-radius:20px;
+    color:#f2fbf8; font-weight:600; font-size:12px;
+    width:fit-content;
+  }
+  .save-status{
+    display:flex; align-items:center; gap:7px; font-size:11px; color:#7fa39b;
+  }
+  .save-status .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--pal-mint); flex-shrink:0;
+  }
+  .save-status.error{ cursor:pointer; }
+  .save-status.error .dot{ background:#ff9d9d; }
+  .save-status.saving .dot{ background:var(--pal-teal); }
+
+  /* ---------- MAIN ---------- */
+  .main{ flex:1; min-width:0; }
+  .topbar{
+    position:sticky; top:0; z-index:5;
+    background:rgba(220,238,234,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--rule);
+    padding:20px 36px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+  }
+  .topbar h2{
+    font-family:'Inter',serif;
+    font-size:24px; font-weight:700; margin:0; color:var(--ink);
+  }
+  .topbar .sub{ color:var(--slate); font-size:12.5px; margin-top:2px;}
+  .content{ padding:28px 36px 60px 36px; max-width:1180px; }
+
+  .month-select{
+    display:flex; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--rule);
+    border-radius:20px; padding:6px 6px 6px 14px;
+  }
+  .month-select label{ font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate-soft); }
+  .month-select select{
+    border:none; background:none; font-family:'IBM Plex Mono',monospace;
+    font-size:13px; font-weight:600; color:var(--ink); padding:4px 6px; cursor:pointer;
+  }
+
+  /* ---------- CARDS / COMMON ---------- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule-soft);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+  .card-header{
+    padding:16px 20px; border-bottom:1px solid var(--rule-soft);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .card-header h3{ font-family:'Inter',serif; font-size:16.5px; margin:0; font-weight:700; color:var(--ink);}
+  .card-body{ padding:20px; }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;}
+  .section-divider{
+    display:flex; align-items:center; gap:12px; margin:8px 0 16px 0;
+  }
+  .section-divider h3{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--brass-dark); margin:0; white-space:nowrap;
+  }
+  .section-divider::after{
+    content:""; flex:1; height:1px; background:var(--rule);
+  }
+  .attendance-compact .card-header h3{ font-size:14px; }
+  .attendance-compact input[type=number]{ padding:7px 8px; text-align:center; }
+  .attendance-compact .field-label{ font-size:10px; margin-bottom:4px; }
+  .stat-card{
+    background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius);
+    padding:18px 20px; box-shadow:var(--shadow); position:relative; overflow:hidden;
+  }
+  .stat-card::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--brass);
+  }
+  .stat-card .label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--slate-soft); font-weight:600;}
+  .stat-card .value{ font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; color:var(--ink); margin-top:6px;}
+  .stat-card .value small{ font-size:14px; color:var(--slate); font-weight:500;}
+  .stat-card .delta{ font-size:12px; margin-top:4px; color:var(--slate);}
+
+  table{ width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--slate-soft); font-weight:700; padding:9px 12px; border-bottom:2px solid var(--rule);
+    white-space:nowrap;
+  }
+  td{ padding:11px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:rgba(169,121,58,0.045); }
+  .num{ font-family:'IBM Plex Mono',monospace; }
+  .agent-name{ font-style:italic; font-weight:500; color:var(--slate); }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace;
+    font-weight:600; font-size:12.5px; padding:3px 9px; border-radius:20px;
+  }
+  .badge.green{ background:var(--green-bg); color:var(--green); }
+  .badge.amber{ background:var(--amber-bg); color:var(--amber-dark, var(--amber)); }
+  .badge.red{ background:var(--red-bg); color:var(--red); }
+  .badge.neutral{ background:var(--paper-deep); color:var(--slate); }
+
+  button.btn{
+    font-family:inherit; font-weight:600; font-size:13px; border-radius:var(--radius-sm); cursor:pointer;
+    padding:9px 16px; border:1px solid transparent; transition:all 0.12s;
+  }
+  button.btn.brass{ background:var(--brass); color:#fff; }
+  button.btn.brass:hover{ background:var(--brass-dark); }
+  button.btn.ghost{ background:transparent; border:1px solid var(--rule); color:var(--ink-text); }
+  button.btn.ghost:hover{ border-color:var(--slate-soft); }
+  button.btn.danger{ background:transparent; color:var(--red); border:1px solid var(--red-bg); }
+  button.btn.danger:hover{ background:var(--red-bg); }
+  button.btn.sm{ padding:5px 11px; font-size:12px; }
+  .icon-btn{
+    background:none; border:none; cursor:pointer; color:var(--slate); padding:6px; border-radius:var(--radius-sm);
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .icon-btn:hover{ background:var(--paper-deep); color:var(--ink); }
+  .icon-btn.danger:hover{ background:var(--red-bg); color:var(--red); }
+
+  label.field-label{ display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); margin-bottom:6px;}
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%; font-family:inherit; font-size:13.5px; color:var(--ink-text);
+    background:var(--card); border:1px solid var(--rule); border-radius:var(--radius-sm); padding:9px 11px;
+  }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--brass); outline-offset:1px; border-color:var(--brass); }
+  textarea{ resize:vertical; min-height:76px; line-height:1.5; }
+  .field{ margin-bottom:16px; }
+  .field-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .field-hint{ font-size:11.5px; color:var(--slate-soft); margin-top:5px; }
+
+  .letterhead{
+    border:1px solid var(--rule); border-radius:var(--radius); overflow:hidden; background:var(--card);
+  }
+  .letterhead .lh-band{
+    background:var(--ink); color:#eafaf5; padding:16px 22px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .letterhead .lh-band h4{ margin:0; font-family:'Inter',serif; font-size:16px; font-weight:700;}
+  .letterhead .lh-body{ padding:20px 22px; }
+  .kv-table{ width:100%; border-collapse:collapse; }
+  .kv-table td{ padding:8px 12px; border:1px solid var(--rule); font-size:13px; }
+  .kv-table td.k{ background:var(--paper-deep); font-weight:700; width:210px; text-transform:uppercase; font-size:11px; letter-spacing:0.04em; color:var(--slate); }
+
+  .section-block{ margin-top:18px; }
+  .section-block h5{
+    font-family:'Inter',serif; font-size:14px; margin:0 0 6px 0; color:var(--ink); font-weight:700;
+    border-bottom:1.5px solid var(--brass); padding-bottom:5px; display:inline-block;
+  }
+  .section-block p{ margin:8px 0 0 0; color:var(--ink-text); white-space:pre-wrap; }
+
+  .empty-state{
+    text-align:center; padding:56px 20px; color:var(--slate-soft);
+  }
+  .empty-state svg{ opacity:0.5; margin-bottom:12px; }
+  .empty-state h4{ font-family:'Inter',serif; color:var(--ink); font-size:17px; margin:0 0 6px 0; }
+  .empty-state p{ font-size:13px; margin:0 0 18px 0; }
+
+  .toast-wrap{ position:fixed; bottom:24px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px;}
+  .toast{
+    background:var(--ink); color:#eafaf5; padding:12px 18px; border-radius:10px; font-size:13px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px;
+    border-left:3px solid var(--brass);
+    animation: slidein 0.25s ease-out;
+  }
+  @keyframes slidein{ from{ opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,29,49,0.55); display:flex; align-items:flex-start;
+    justify-content:center; padding:40px 20px; z-index:100; overflow-y:auto;
+  }
+  .modal{
+    background:var(--paper); border-radius:5px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.35);
+    border:1px solid var(--rule);
+  }
+  .modal-head{
+    padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-head h3{ font-family:'Inter',serif; margin:0; font-size:18px;}
+  .modal-body{ padding:22px 24px; max-height:70vh; overflow-y:auto;}
+  .modal-foot{ padding:16px 24px; border-top:1px solid var(--rule); display:flex; justify-content:flex-end; gap:10px;}
+
+  .loading-screen{
+    position:fixed; inset:0; background:var(--paper); display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; z-index:999;
+  }
+  .loading-screen .seal-lg{
+    width:52px;height:52px;border-radius:50%; border:2px solid var(--brass); display:flex; align-items:center;
+    justify-content:center; font-family:'Inter',serif; font-weight:700; font-size:20px; color:var(--brass);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ opacity:1;} 50%{ opacity:0.4;} }
+  .loading-screen p{ color:var(--slate); font-size:13px; letter-spacing:0.04em;}
+
+  ::-webkit-scrollbar{ width:9px; height:9px;}
+  ::-webkit-scrollbar-thumb{ background:var(--rule); border-radius:6px;}
+  ::-webkit-scrollbar-track{ background:transparent;}
+
+  @media (max-width: 880px){
+    .app{ flex-direction:column; }
+    .sidebar{ width:100%; height:auto; position:relative; flex-direction:row; align-items:center; overflow-x:auto;}
+    .brand{ border-bottom:none; padding:14px 16px;}
+    nav.navlist{ display:flex; padding:8px; }
+    .sidebar-foot{ display:none; }
+    .content{ padding:20px 16px 60px; }
+    .topbar{ padding:16px; flex-direction:column; align-items:flex-start; gap:10px;}
+    .stat-row{ grid-template-columns:1fr; }
+    .field-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading-screen">
+  <div class="seal-lg">SP</div>
+  <p>Loading your saved reviews…</p>
+</div>
+
+<div class="app" id="app" style="display:none;">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">
+        <div class="seal">SP</div>
+        <h1>Support Performance</h1>
+      </div>
+      <div class="tagline">Support Workspace</div>
+      <div id="viewerPickerWrap"></div>
+    </div>
+    <nav class="navlist" id="navlist"></nav>
+    <div class="sidebar-foot">
+      <div class="save-status" id="saveStatus"><span class="dot"></span><span id="saveStatusText">All changes saved</span></div>
+      <div class="month-chip" id="sidebarMonthChip">—</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="pageTitle">Support Performance</h2>
+        <div class="sub" id="pageSub">Your SEQAS scores and Agent Review progress in one place</div>
+      </div>
+      <div class="month-select">
+        <label>Month</label>
+        <select id="globalMonth"></select>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<div id="modalRoot"></div>
+
+<script>
+const MAX_SCORE = 17;
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+let STATE = {
+  supports: [],
+  targets: {},
+  records: [],
+  seededAugust2026: false,
+  deletedCaseNumbers: [],
+  augustAccuracyApplied: false,
+  agentReviews: [],
+  viewerSupportId: null,
+  personalTargets: {},
+  attendance: {},
+  agentReviewDeletionCounts: {},
+  agentReviewAugust2026Seeded: false,
+  historicalDuplicatesCleaned: false,
+  deletedAgentReviewIds: []
+};
+let currentView = 'myDashboard';
+let currentMonth = monthKey(new Date());
+
+function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthLabel(mk){ const [y,m]=mk.split('-').map(Number); return MONTH_NAMES[m-1]+' '+y; }
+function monthShort(mk){ const [y,m]=mk.split('-').map(Number); return MONTH_ABBR[m-1]+' '+y; }
+function uid(prefix){ return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return iso; return d.toLocaleDateString('en-US',{month:'short',day:'2-digit',year:'numeric'}); }
+
+/* ---------------------- PERSISTENCE ---------------------- */
+const STORAGE_KEY = 'seqas-review-app-data';
+
+function setSaveStatus(state, text){
+  const wrap = document.getElementById('saveStatus');
+  const label = document.getElementById('saveStatusText');
+  if(!wrap || !label) return;
+  wrap.classList.remove('saving','error');
+  if(state) wrap.classList.add(state);
+  label.textContent = text;
+}
+function isStorageReady(){
+  try{
+    const testKey = '__seqas_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  }catch(e){ return false; }
+}
+
+const SYNC_URL_KEY = 'seqas-sync-url';
+const DEFAULT_SYNC_URL = 'https://support-performance-ec0a1-default-rtdb.firebaseio.com';
+let SYNC_URL = DEFAULT_SYNC_URL;
+try{
+  const stored = localStorage.getItem(SYNC_URL_KEY);
+  SYNC_URL = (stored === null) ? DEFAULT_SYNC_URL : stored;
+}catch(e){ SYNC_URL = DEFAULT_SYNC_URL; }
+let lastSyncStatus = null;
+let lastSyncMessage = '';
+
+function syncEndpoint(){ return SYNC_URL.replace(/\/$/, '') + '/app-data.json'; }
+async function pullRemoteState(){
+  if(!SYNC_URL) return undefined;
+  try{
+    const res = await fetch(syncEndpoint(), { cache:'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    lastSyncStatus = 'ok';
+    return data;
+  }catch(e){
+    console.error('Sync pull failed', e);
+    lastSyncStatus = 'error';
+    lastSyncMessage = e && e.message ? e.message : String(e);
+    return NaN;
+  }
+}
+async function pushRemoteState(state){
+  if(!SYNC_URL) return true;
+  try{
+    const res = await fetch(syncEndpoint(), {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(state)
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    lastSyncStatus = 'ok';
+    return true;
+  }catch(e){
+    console.error('Sync push failed', e);
+    lastSyncStatus = 'error';
+    lastSyncMessage = e && e.message ? e.message : String(e);
+    return false;
+  }
+}
+function mergeArraysById(a, b){
+  const map = new Map();
+  [...(a||[]), ...(b||[])].forEach(item=>{ if(item && item.id) map.set(item.id, item); });
+  return Array.from(map.values());
+}
+function mergeMaxCounts(a, b){
+  const out = { ...(a||{}) };
+  Object.keys(b||{}).forEach(k=>{ out[k] = Math.max(out[k]||0, b[k]); });
+  return out;
+}
+function mergeStates(local, remote){
+  if(!remote || typeof remote !== 'object') return local;
+  const deletedCaseNumbers = Array.from(new Set([...(remote.deletedCaseNumbers||[]), ...(local.deletedCaseNumbers||[])].map(String)));
+  const deletedAgentReviewIds = Array.from(new Set([...(remote.deletedAgentReviewIds||[]), ...(local.deletedAgentReviewIds||[])]));
+  const merged = {
+    supports: mergeArraysById(remote.supports, local.supports),
+    targets: { ...(remote.targets||{}), ...(local.targets||{}) },
+    records: mergeArraysById(remote.records, local.records).filter(r=>!deletedCaseNumbers.includes(String(r.caseNumber))),
+    seededAugust2026: !!(local.seededAugust2026 || remote.seededAugust2026),
+    deletedCaseNumbers,
+    augustAccuracyApplied: !!(local.augustAccuracyApplied || remote.augustAccuracyApplied),
+    agentReviews: mergeArraysById(remote.agentReviews, local.agentReviews).filter(a=>!deletedAgentReviewIds.includes(a.id)),
+    deletedAgentReviewIds,
+    viewerSupportId: local.viewerSupportId,
+    personalTargets: { ...(remote.personalTargets||{}), ...(local.personalTargets||{}) },
+    attendance: { ...(remote.attendance||{}), ...(local.attendance||{}) },
+    agentReviewDeletionCounts: mergeMaxCounts(remote.agentReviewDeletionCounts, local.agentReviewDeletionCounts),
+    agentReviewAugust2026Seeded: !!(local.agentReviewAugust2026Seeded || remote.agentReviewAugust2026Seeded),
+    historicalDuplicatesCleaned: !!(local.historicalDuplicatesCleaned || remote.historicalDuplicatesCleaned),
+  };
+  return reconcileState(merged);
+}
+function dedupeSupports(state){
+  const groups = new Map();
+  (state.supports||[]).forEach(s=>{
+    const key = (s.name||'').trim().toLowerCase();
+    if(!key) return;
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  });
+  const remap = {};
+  const cleaned = [];
+  groups.forEach(list=>{
+    if(list.length === 1){ cleaned.push(list[0]); return; }
+    const scored = list.map(s=>({
+      s,
+      score: (state.records||[]).filter(r=>r.supportId===s.id).length + (state.agentReviews||[]).filter(a=>a.supportId===s.id).length
+    })).sort((a,b)=>b.score-a.score);
+    const canonical = scored[0].s;
+    cleaned.push(canonical);
+    list.forEach(s=>{ if(s.id!==canonical.id) remap[s.id] = canonical.id; });
+  });
+  if(Object.keys(remap).length === 0) return state;
+  const remapId = id => remap[id] || id;
+  state.supports = cleaned;
+  (state.records||[]).forEach(r=>{ r.supportId = remapId(r.supportId); });
+  (state.agentReviews||[]).forEach(a=>{ a.supportId = remapId(a.supportId); });
+  ['personalTargets','attendance'].forEach(field=>{
+    const out = {};
+    Object.entries(state[field]||{}).forEach(([key,val])=>{
+      const idx = key.indexOf(':');
+      const sid = idx===-1 ? key : key.slice(0,idx);
+      const rest = idx===-1 ? '' : key.slice(idx);
+      const newKey = remapId(sid) + rest;
+      if(!(newKey in out)) out[newKey] = val;
+    });
+    state[field] = out;
+  });
+  const remappedCounts = {};
+  Object.entries(state.agentReviewDeletionCounts||{}).forEach(([sid,val])=>{
+    const nid = remapId(sid);
+    remappedCounts[nid] = Math.max(remappedCounts[nid]||0, val);
+  });
+  state.agentReviewDeletionCounts = remappedCounts;
+  if(state.viewerSupportId) state.viewerSupportId = remapId(state.viewerSupportId);
+  return state;
+}
+function completenessScore(obj, fields){
+  return fields.reduce((s,f)=> s + (obj[f] ? String(obj[f]).trim().length : 0), 0);
+}
+function dedupeByKey(list, keyFn, fields){
+  const groups = new Map();
+  const noKey = [];
+  (list||[]).forEach(item=>{
+    const k = keyFn(item);
+    if(k===null || k===undefined || k===''){ noKey.push(item); return; }
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(item);
+  });
+  const result = [...noKey];
+  groups.forEach(g=>{
+    if(g.length === 1){ result.push(g[0]); return; }
+    g.sort((a,b)=> completenessScore(b,fields)-completenessScore(a,fields) || (b.createdAt||0)-(a.createdAt||0));
+    result.push(g[0]);
+  });
+  return result;
+}
+function reconcileState(state){
+  state = dedupeSupports(state);
+  if(!state.historicalDuplicatesCleaned){
+    state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
+    state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
+    state.historicalDuplicatesCleaned = true;
+  }
+  return state;
+}
+async function syncNow(){
+  if(!SYNC_URL) return;
+  const remote = await pullRemoteState();
+  if(remote === undefined) return;
+  if(Number.isNaN(remote)){
+    setSaveStatus('error', 'Sync failed — tap to retry');
+    return;
+  }
+  STATE = mergeStates(STATE, remote);
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+  const pushOk = await pushRemoteState(STATE);
+  const stamp = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if(pushOk) setSaveStatus(null, `Synced at ${stamp}`);
+  else setSaveStatus('error', 'Sync failed — tap to retry');
+}
+
+async function loadState(){
+  if(!isStorageReady()) return false;
+  let raw;
+  try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){ return false; }
+  if(raw){
+    try{
+      const parsed = JSON.parse(raw);
+      STATE.supports = parsed.supports || [];
+      STATE.targets = parsed.targets || {};
+      STATE.records = parsed.records || [];
+      STATE.seededAugust2026 = !!parsed.seededAugust2026;
+      STATE.deletedCaseNumbers = parsed.deletedCaseNumbers || [];
+      STATE.augustAccuracyApplied = !!parsed.augustAccuracyApplied;
+      STATE.agentReviews = parsed.agentReviews || [];
+      STATE.viewerSupportId = parsed.viewerSupportId || null;
+      STATE.personalTargets = parsed.personalTargets || {};
+      STATE.attendance = parsed.attendance || {};
+      STATE.agentReviewDeletionCounts = parsed.agentReviewDeletionCounts || {};
+      STATE.agentReviewAugust2026Seeded = !!parsed.agentReviewAugust2026Seeded;
+      STATE.historicalDuplicatesCleaned = !!parsed.historicalDuplicatesCleaned;
+      STATE.deletedAgentReviewIds = parsed.deletedAgentReviewIds || [];
+      STATE = reconcileState(STATE);
+      if(SYNC_URL){
+        const remote = await pullRemoteState();
+        if(remote !== undefined && !Number.isNaN(remote)){
+          STATE = mergeStates(STATE, remote);
+          try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+        }
+      }
+      setSaveStatus(null, 'All changes saved');
+      return true;
+    }catch(e){ return false; }
+  }
+  return true;
+}
+
+let hasUnsavedFailure = false;
+async function saveState(){
+  setSaveStatus('saving', 'Saving…');
+  try{
+    if(!isStorageReady()) throw new Error('localStorage is blocked or unavailable in this browser.');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+    hasUnsavedFailure = false;
+    let syncFailed = false;
+    if(SYNC_URL){
+      const remote = await pullRemoteState();
+      if(remote !== undefined && !Number.isNaN(remote)){
+        STATE = mergeStates(STATE, remote);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+      } else if(Number.isNaN(remote)){
+        syncFailed = true;
+      }
+      const pushOk = await pushRemoteState(STATE);
+      if(!pushOk) syncFailed = true;
+    }
+    const stamp = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    if(SYNC_URL && syncFailed){
+      setSaveStatus('error', 'Saved on this device — sync failed, tap to retry');
+      toastRetry('Saved here, but couldn\u2019t reach the shared database. Tap to retry syncing.');
+    } else {
+      setSaveStatus(null, SYNC_URL ? `Synced at ${stamp}` : `Saved at ${stamp}`);
+    }
+    return true;
+  }catch(e){
+    hasUnsavedFailure = true;
+    setSaveStatus('error', 'Not saved — tap to retry');
+    toastRetry('Could not save your last change. Tap here to try again.');
+    return false;
+  }
+}
+
+function allMonthsUsed(){
+  const set = new Set(STATE.records.map(r=>r.month));
+  set.add(currentMonth);
+  const now = new Date();
+  set.add(monthKey(now));
+  return Array.from(set).sort();
+}
+function recordsFor(month, supportId){
+  return STATE.records.filter(r=>r.month===month && (!supportId || r.supportId===supportId))
+    .sort((a,b)=> (a.createdAt||0)-(b.createdAt||0));
+}
+function avgPercent(recs){
+  if(!recs.length) return null;
+  return recs.reduce((s,r)=>s+r.percent,0)/recs.length;
+}
+function sortedSupports(){
+  return [...STATE.supports].sort((a,b)=>a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
+}
+function personalTargetKey(supportId, month){ return `${supportId}:${month}`; }
+function getPersonalTarget(supportId, month){
+  const key = personalTargetKey(supportId, month);
+  if(STATE.personalTargets[key] !== undefined && STATE.personalTargets[key] !== null && STATE.personalTargets[key] !== '') return Number(STATE.personalTargets[key]);
+  return null;
+}
+function getAttendance(supportId, month){
+  const key = personalTargetKey(supportId, month);
+  return STATE.attendance[key] || { absent:0, vl:0, ml:0, el:0 };
+}
+function getWorkingDaysInMonth(month){
+  const [y,m] = month.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  let count = 0;
+  for(let d=1; d<=daysInMonth; d++){
+    const day = new Date(y, m-1, d).getDay();
+    if(day !== 0 && day !== 6) count++;
+  }
+  return count;
+}
+function getAdjustedTarget(supportId, month){
+  const base = getPersonalTarget(supportId, month);
+  if(base===null) return null;
+  const att = getAttendance(supportId, month);
+  const leaveDays = (Number(att.absent)||0) + (Number(att.vl)||0) + (Number(att.ml)||0) + (Number(att.el)||0);
+  const workingDays = getWorkingDaysInMonth(month);
+  if(leaveDays<=0 || workingDays<=0) return base;
+  const factor = Math.max(0, (workingDays - leaveDays) / workingDays);
+  return Math.max(0, Math.round(base * factor));
+}
+function scoreBadgeClass(pct){
+  if(pct===null || pct===undefined) return 'neutral';
+  if(pct>=0.85) return 'green';
+  if(pct>=0.70) return 'amber';
+  return 'red';
+}
+function pctStr(p){ return p===null||p===undefined ? '—' : Math.round(p*100)+'%'; }
+
+function toast(msg, isError){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  if(isError) el.style.borderLeftColor = 'var(--red)';
+  el.innerHTML = `<span>${esc(msg)}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity 0.3s'; setTimeout(()=>el.remove(),300); }, 2600);
+}
+function toastRetry(msg){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.borderLeftColor = 'var(--red)';
+  el.style.cursor = 'pointer';
+  el.innerHTML = `<span>${esc(msg)}</span>`;
+  el.addEventListener('click', ()=>{ el.remove(); saveState(); });
+  wrap.appendChild(el);
+  setTimeout(()=>{ if(el.isConnected){ el.style.opacity='0'; el.style.transition='opacity 0.3s'; setTimeout(()=>el.remove(),300); } }, 6000);
+}
+
+const PAGE_META = {
+  myDashboard: ['Support Performance', 'Your SEQAS scores and Agent Review progress in one place'],
+  myRecords: ['SEQAS Records', 'Search your own past evaluations'],
+  agentReviews: ['Agent Review', 'Log commendations and feedback from agents you\u2019ve helped'],
+};
+
+const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
+const AGENT_COMMENDATION_CATEGORIES = ['Exceptional Customer Service','Technical Excellence','Process & Policy Adherence','Efficiency & Productivity','Team Collaboration','Going Above & Beyond'];
+const SEVERITY_LEVELS = ['Low','Medium','High','Critical'];
+const IMPACT_LEVELS = ['Low','Medium','High','Significant'];
+let agentReviewKind = 'review';
+let editingAgentReviewId = null;
+
+function setView(view){
+  currentView = view;
+  if(view !== 'agentReviews') editingAgentReviewId = null;
+  renderNav();
+  const meta = PAGE_META[view];
+  document.getElementById('pageTitle').textContent = meta[0];
+  document.getElementById('pageSub').textContent = meta[1];
+  render();
+}
+
+function populateGlobalMonth(){
+  const sel = document.getElementById('globalMonth');
+  const months = allMonthsUsed();
+  sel.innerHTML = months.map(m=>`<option value="${m}" ${m===currentMonth?'selected':''}>${monthLabel(m)}</option>`).join('');
+  document.getElementById('sidebarMonthChip').textContent = monthLabel(currentMonth);
+}
+
+const NAV_SUPPORT = [
+  { group:'My Overview', items:[
+    { view:'myDashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
+  ]},
+  { group:'My Cases', items:[
+    { view:'myRecords', label:'SEQAS Records', icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>' },
+    { view:'agentReviews', label:'Agent Review', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
+  ]},
+];
+
+function renderNav(){
+  const nav = document.getElementById('navlist');
+  nav.innerHTML = NAV_SUPPORT.map(g=>`
+    <div class="navgroup-label">${esc(g.group)}</div>
+    ${g.items.map(item=>`<button data-view="${item.view}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>${esc(item.label)}</button>`).join('')}
+  `).join('');
+  nav.querySelectorAll('button[data-view]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view===currentView);
+    b.addEventListener('click', ()=>setView(b.dataset.view));
+  });
+  renderViewerPicker();
+}
+
+function renderViewerPicker(){
+  const wrap = document.getElementById('viewerPickerWrap');
+  if(!STATE.supports.length){ wrap.innerHTML=''; return; }
+  const options = sortedSupports().map(s=>`<option value="${s.id}" ${s.id===STATE.viewerSupportId?'selected':''}>${esc(s.name)}</option>`).join('');
+  wrap.innerHTML = `
+    <div class="viewer-picker">
+      <label>Viewing as</label>
+      <select id="viewerSelect">${options}</select>
+    </div>`;
+  document.getElementById('viewerSelect').addEventListener('change', async (e)=>{
+    STATE.viewerSupportId = e.target.value;
+    await saveState();
+    render();
+  });
+}
+function ensureViewerSupport(){
+  if(!STATE.supports.length) return null;
+  if(!STATE.viewerSupportId || !STATE.supports.find(s=>s.id===STATE.viewerSupportId)){
+    STATE.viewerSupportId = sortedSupports()[0].id;
+  }
+  return STATE.viewerSupportId;
+}
+
+function render(){
+  populateGlobalMonth();
+  const c = document.getElementById('content');
+  if(currentView==='myDashboard') c.innerHTML = renderMyDashboard();
+  else if(currentView==='myRecords') c.innerHTML = renderMyRecords();
+  else if(currentView==='agentReviews') c.innerHTML = renderAgentReviews();
+  attachViewHandlers();
+}
+
+function renderMyDashboard(){
+  if(!STATE.supports.length){
+    return emptyState('No supports on the roster yet', 'Ask your supervisor to add you to the roster.', null, null);
+  }
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const months = allMonthsUsed();
+  const myAll = STATE.records.filter(r=>r.supportId===viewerId);
+  const overallAvg = avgPercent(myAll);
+  const thisMonthRecs = recordsFor(currentMonth, viewerId);
+  const thisMonthAvg = avgPercent(thisMonthRecs);
+
+  const rows = months.map(m=>{
+    const recs = recordsFor(m, viewerId);
+    const avg = avgPercent(recs);
+    return `<tr>
+      <td style="font-weight:600;">${monthLabel(m)}</td>
+      <td class="num">${recs.length ? `<span class="badge ${scoreBadgeClass(avg)}">${pctStr(avg)}</span>` : '<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+      <td class="num">${recs.length}</td>
+    </tr>`;
+  }).join('');
+
+  const recentRows = myAll.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,5).map(r=>`
+    <tr>
+      <td class="num">${fmtDate(r.dateOfEval)}</td>
+      <td class="agent-name">${esc(r.agentName)}</td>
+      <td class="num">${esc(r.caseNumber)}</td>
+      <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
+    </tr>`).join('');
+
+  const thisMonthTarget = getPersonalTarget(viewerId, currentMonth);
+  const att = getAttendance(viewerId, currentMonth);
+  const leaveDays = (Number(att.absent)||0)+(Number(att.vl)||0)+(Number(att.ml)||0)+(Number(att.el)||0);
+  const adjustedTarget = getAdjustedTarget(viewerId, currentMonth);
+
+  const myAgentAll = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+  const myAgentThisMonth = myAgentAll.filter(a=>a.date && a.date.slice(0,7)===currentMonth);
+  const reviewCount = myAgentAll.filter(a=>a.mode==='review').length;
+  const commendationCount = myAgentAll.filter(a=>a.mode==='commendation').length;
+  const reviewCountMonth = myAgentThisMonth.filter(a=>a.mode==='review').length;
+  const commendationCountMonth = myAgentThisMonth.filter(a=>a.mode==='commendation').length;
+  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
+
+  return `
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="display:flex; align-items:center; gap:14px;">
+      <div class="seal" style="width:40px;height:40px;font-size:15px;">${esc(viewer.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>
+      <div>
+        <div style="font-weight:700; font-size:16px; color:var(--ink-text);">${esc(viewer.name)}</div>
+        <div style="font-size:12px; color:var(--slate-soft);">${myAll.length} SEQAS evaluation${myAll.length===1?'':'s'} &middot; ${myAgentAll.length} agent entr${myAgentAll.length===1?'y':'ies'} on file</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"><h3>SEQAS Review</h3></div>
+
+  <div class="stat-row" style="grid-template-columns:repeat(2,1fr);">
+    <div class="stat-card">
+      <div class="label">Overall Average</div>
+      <div class="value">${pctStr(overallAvg)}</div>
+      <div class="delta">across ${myAll.length} evaluation${myAll.length===1?'':'s'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">${monthLabel(currentMonth)} Average</div>
+      <div class="value">${pctStr(thisMonthAvg)}</div>
+      <div class="delta">${thisMonthRecs.length} evaluation${thisMonthRecs.length===1?'':'s'} this month</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Score by Month</h3></div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Month</th><th>Average</th><th>Reviews</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><h3>Most Recent Evaluations</h3><span style="font-size:11.5px; color:var(--slate-soft);">See SEQAS Records for the full list</span></div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${recentRows ? `<table><thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Score</th></tr></thead><tbody>${recentRows}</tbody></table>` : emptyState('No evaluations yet', 'Your evaluations will show up here once your supervisor logs one.', null, null)}
+    </div>
+  </div>
+
+  <div class="section-divider"><h3>Agent Review</h3></div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="label">${monthLabel(currentMonth)} Target Progress</div>
+      <div class="value" style="color:${completionRate===null?'inherit':(completionRate>=1?'var(--green)':'var(--ink)')}; ${adjustedTarget===null?'font-size:15px;':''}">${adjustedTarget===null ? 'No target set' : (completionRate===null ? '\u2014' : Math.round(completionRate*100)+'%')}</div>
+      <div class="delta">
+        ${adjustedTarget===null
+          ? 'Ask your supervisor to set your monthly target'
+          : `${myAgentThisMonth.length} of ${adjustedTarget}${leaveDays>0?` (adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}`}
+        ${completionRate!==null && completionRate>=1 ? '<span class="badge green" style="margin-left:6px;">Target reached</span>' : ''}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Reviews Submitted</div>
+      <div class="value">${reviewCount}</div>
+      <div class="delta">${reviewCountMonth} this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Commendations Submitted</div>
+      <div class="value">${commendationCount}</div>
+      <div class="delta">${commendationCountMonth} this month</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <h3>Agent Entries</h3>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <select id="dashAgentReviewMonthFilter" style="width:auto; font-size:12.5px; padding:6px 8px;"></select>
+        <button class="btn ghost sm" data-goto="agentReviews">Log a new entry</button>
+      </div>
+    </div>
+    <div class="card-body" id="dashAgentEntriesWrap" style="overflow-x:auto;"></div>
+  </div>
+
+  <div class="card attendance-compact">
+    <div class="card-header"><h3>Attendance</h3><span style="font-size:11px; color:var(--slate-soft);">${monthLabel(currentMonth)} \u2014 adjusts your Agent Review target above</span></div>
+    <div class="card-body">
+      <form id="attendanceForm" style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">Absent</label><input type="number" min="0" id="att_absent" value="${att.absent||0}"></div>
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">VL</label><input type="number" min="0" id="att_vl" value="${att.vl||0}"></div>
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">ML</label><input type="number" min="0" id="att_ml" value="${att.ml||0}"></div>
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">EL</label><input type="number" min="0" id="att_el" value="${att.el||0}"></div>
+        <button type="submit" class="btn brass sm">Save</button>
+      </form>
+      <p class="field-hint" style="margin:10px 0 0 0;">${thisMonthTarget===null ? 'No monthly target has been set for you yet \u2014 attendance will apply once your supervisor sets one.' : `Base target this month: <strong>${thisMonthTarget}</strong>. Days off reduce it proportionally.`}</p>
+    </div>
+  </div>
+  `;
+}
+
+function renderMyRecords(){
+  const options = sortedSupports().map(s=>`<option value="${s.id}" ${s.id===STATE.viewerSupportId?'selected':''}>${esc(s.name)}</option>`).join('');
+  return `
+  <div class="filter-bar">
+    <div class="month-select">
+      <label>Support</label>
+      <select id="myRecordsSupportFilter">${options}</select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body" id="myRecordsTableWrap" style="overflow-x:auto;"></div>
+  </div>
+  `;
+}
+function renderMyRecordsTable(){
+  const viewerId = ensureViewerSupport();
+  let recs = STATE.records.filter(r=>r.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const wrap = document.getElementById('myRecordsTableWrap');
+  if(!wrap) return;
+  if(!recs.length){
+    wrap.innerHTML = emptyState('No evaluations found', 'Your evaluations will show up here once logged.', null, null);
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Score</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        ${recs.map(r=>`
+          <tr>
+            <td class="num">${fmtDate(r.dateOfEval)}</td>
+            <td class="agent-name">${esc(r.agentName)}</td>
+            <td class="num">${esc(r.caseNumber)}</td>
+            <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="icon-btn" title="View" data-my-view="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="icon-btn" title="Download PDF" data-my-download="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M6 9l6 6 6-6"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+  wrap.querySelectorAll('[data-my-view]').forEach(b=>b.addEventListener('click', ()=>openExportModal(b.dataset.myView)));
+  wrap.querySelectorAll('[data-my-download]').forEach(b=>b.addEventListener('click', ()=>downloadRecordPdf(b.dataset.myDownload)));
+}
+
+function renderAgentReviews(){
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const editingEntry = editingAgentReviewId ? STATE.agentReviews.find(a=>a.id===editingAgentReviewId) : null;
+  const issueOptions = AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const categoryOptions = AGENT_COMMENDATION_CATEGORIES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const severityOptions = SEVERITY_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const impactOptions = IMPACT_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const kind = editingEntry ? editingEntry.mode : 'review';
+  return `
+  <div class="card">
+    <div class="card-header">
+      <h3>${editingEntry?'Edit Agent Entry':'Log an Agent Entry'}</h3>
+      <div class="mode-toggle" id="arKindToggle" style="margin:0; background:var(--paper-deep); border-color:var(--rule);">
+        <button type="button" data-ar-kind="review" class="${kind==='review'?'active':''}" style="color:var(--slate);">Agent Review</button>
+        <button type="button" data-ar-kind="commendation" class="${kind==='commendation'?'active':''}" style="color:var(--slate);">Agent Commendation</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <form id="agentReviewForm">
+        <div class="field">
+          <label class="field-label">Support Name</label>
+          <input type="text" value="${esc(viewer ? viewer.name : '')}" disabled>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label">Agent Name</label>
+            <input type="text" id="ar_agent" placeholder="e.g. Dean Clemente" value="${editingEntry?esc(editingEntry.agentName):''}">
+          </div>
+          <div class="field">
+            <label class="field-label">Case Number</label>
+            <input type="text" id="ar_case" placeholder="e.g. 13872622" value="${editingEntry?esc(editingEntry.caseNumber):''}">
+          </div>
+          <div class="field">
+            <label class="field-label" id="ar_categoryLabel">Type of Issue</label>
+            <select id="ar_category">${(kind==='review'?issueOptions:categoryOptions)}</select>
+          </div>
+          <div class="field">
+            <label class="field-label" id="ar_levelLabel">Severity / Impact</label>
+            <select id="ar_level">${(kind==='review'?severityOptions:impactOptions)}</select>
+          </div>
+        </div>
+
+        <div id="ar_reviewSections" style="${kind!=='review'?'display:none;':''}">
+          <div class="field">
+            <label class="field-label">1. Interaction Summary <span style="color:var(--brass);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">What happened \u2014 brief summary of the interaction</div>
+            <textarea id="ar_s1" placeholder="Describe the interaction and reason for review...">${kind==='review'&&editingEntry?esc(editingEntry.section1):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">2. Gap Identified <span style="color:var(--brass);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">What was missed \u2014 policy, KB, or steps not followed</div>
+            <textarea id="ar_s2" placeholder="Outline the gap clearly...">${kind==='review'&&editingEntry?esc(editingEntry.section2):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">3. Opportunities &amp; Recommended Actions <span style="color:var(--brass);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Next steps \u2014 coaching points and expected actions</div>
+            <textarea id="ar_s3" placeholder="State coaching points and recommendations...">${kind==='review'&&editingEntry?esc(editingEntry.section3):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">4. Positive Observations <span style="color:var(--slate-soft); text-transform:none; font-weight:400;">(recommended)</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">What the agent did well \u2014 strengths to reinforce</div>
+            <textarea id="ar_s4" placeholder="Acknowledge strengths and positive behaviors...">${kind==='review'&&editingEntry?esc(editingEntry.section4):''}</textarea>
+          </div>
+        </div>
+
+        <div id="ar_commendationSections" style="${kind==='review'?'display:none;':''}">
+          <div class="field">
+            <label class="field-label">1. What Went Well <span style="color:var(--green);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Interaction summary \u2014 how the agent effectively handled it</div>
+            <textarea id="ar_c1" placeholder="Summarize the interaction and positive outcome...">${kind==='commendation'&&editingEntry?esc(editingEntry.section1):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">2. Key Strengths Displayed <span style="color:var(--green);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Behaviors / KB adherence \u2014 specific strengths demonstrated</div>
+            <textarea id="ar_c2" placeholder="Recognize specific behaviors, processes, or KB articles...">${kind==='commendation'&&editingEntry?esc(editingEntry.section2):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">3. Business Impact &amp; Recognition <span style="color:var(--green);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Value / next steps \u2014 impact on CX, efficiency, or business goals</div>
+            <textarea id="ar_c3" placeholder="Explain the positive impact and encourage continued excellence...">${kind==='commendation'&&editingEntry?esc(editingEntry.section3):''}</textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn ghost" id="ar_previewBtn">Generate Preview</button>
+          <button type="submit" class="btn brass" id="ar_saveBtn">${editingEntry?'Save Changes':'Save Entry'}</button>
+          ${editingEntry?'<button type="button" class="btn ghost" id="ar_cancelEditBtn">Cancel</button>':''}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card" id="ar_previewCard" style="display:none; margin-top:20px;">
+    <div class="card-header"><h3>Formatted Preview</h3><button type="button" class="btn ghost sm" id="ar_copyBtn">Copy to Clipboard</button></div>
+    <div class="card-body"><pre id="ar_previewText" style="white-space:pre-wrap; font-family:inherit; font-size:13px; line-height:1.6; margin:0; color:var(--ink-text);"></pre></div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Your Entries</h3>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="ar_countChip" style="font-size:11.5px; color:var(--slate-soft);"></span>
+        <select id="myAgentReviewMonthFilter" style="width:auto; font-size:12.5px; padding:6px 8px;"></select>
+      </div>
+    </div>
+    <div class="card-body" id="myAgentReviewsWrap" style="overflow-x:auto;"></div>
+  </div>
+  `;
+}
+
+function buildAgentEntryText(e){
+  const lines = [];
+  const meta = [];
+  if(e.agentName) meta.push('Agent: '+e.agentName);
+  if(e.caseNumber) meta.push('Case: '+e.caseNumber);
+  if(meta.length){ lines.push(meta.join('   |   ')); lines.push(''); }
+  if(e.mode==='review'){
+    if(e.category) lines.push('Type of Issue: '+e.category);
+    if(e.level) lines.push('Severity: '+e.level);
+    lines.push('');
+    lines.push('1. Interaction Summary'); lines.push(e.section1||'');
+    lines.push('');
+    lines.push('2. Gap Identified'); lines.push(e.section2||'');
+    lines.push('');
+    lines.push('3. Opportunities & Recommended Actions'); lines.push(e.section3||'');
+    if(e.section4){ lines.push(''); lines.push('4. Positive Observations'); lines.push(e.section4); }
+  } else {
+    if(e.category) lines.push('Category: '+e.category);
+    if(e.level) lines.push('Impact Level: '+e.level);
+    lines.push('');
+    lines.push('1. What Went Well'); lines.push(e.section1||'');
+    lines.push('');
+    lines.push('2. Key Strengths Displayed'); lines.push(e.section2||'');
+    lines.push('');
+    lines.push('3. Business Impact & Recognition'); lines.push(e.section3||'');
+  }
+  return lines.join('\n');
+}
+
+function readAgentReviewForm(){
+  const kind = agentReviewKind;
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const base = {
+    mode: kind,
+    supportId: viewerId,
+    supportName: viewer ? viewer.name : '',
+    agentName: document.getElementById('ar_agent').value.trim(),
+    caseNumber: document.getElementById('ar_case').value.trim(),
+    category: document.getElementById('ar_category').value,
+    level: document.getElementById('ar_level').value,
+  };
+  if(kind==='review'){
+    base.section1 = document.getElementById('ar_s1').value.trim();
+    base.section2 = document.getElementById('ar_s2').value.trim();
+    base.section3 = document.getElementById('ar_s3').value.trim();
+    base.section4 = document.getElementById('ar_s4').value.trim();
+  } else {
+    base.section1 = document.getElementById('ar_c1').value.trim();
+    base.section2 = document.getElementById('ar_c2').value.trim();
+    base.section3 = document.getElementById('ar_c3').value.trim();
+    base.section4 = '';
+  }
+  return base;
+}
+function validateAgentReviewForm(d){
+  const missing = [];
+  if(!d.category) missing.push(d.mode==='review' ? 'Type of Issue' : 'Category');
+  if(!d.section1) missing.push(d.mode==='review' ? 'Interaction Summary' : 'What Went Well');
+  if(!d.section2) missing.push(d.mode==='review' ? 'Gap Identified' : 'Key Strengths Displayed');
+  if(!d.section3) missing.push(d.mode==='review' ? 'Opportunities & Recommended Actions' : 'Business Impact & Recognition');
+  return missing;
+}
+function updateAgentReviewModeUI(){
+  document.querySelectorAll('#arKindToggle [data-ar-kind]').forEach(btn=>{
+    const active = btn.dataset.arKind === agentReviewKind;
+    btn.classList.toggle('active', active);
+    btn.style.color = active ? (agentReviewKind==='review' ? 'var(--brass-dark)' : 'var(--green)') : 'var(--slate)';
+    btn.style.background = active ? (agentReviewKind==='review' ? 'var(--brass-tint)' : 'var(--green-bg)') : 'none';
+  });
+  const isReview = agentReviewKind==='review';
+  document.getElementById('ar_reviewSections').style.display = isReview ? 'block' : 'none';
+  document.getElementById('ar_commendationSections').style.display = isReview ? 'none' : 'block';
+  document.getElementById('ar_categoryLabel').textContent = isReview ? 'Type of Issue' : 'Category';
+  document.getElementById('ar_levelLabel').textContent = isReview ? 'Severity' : 'Impact';
+  document.getElementById('ar_category').innerHTML = (isReview ? AGENT_REVIEW_TYPES : AGENT_COMMENDATION_CATEGORIES).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  document.getElementById('ar_level').innerHTML = (isReview ? SEVERITY_LEVELS : IMPACT_LEVELS).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const saveBtn = document.getElementById('ar_saveBtn');
+  if(saveBtn) saveBtn.className = 'btn ' + (isReview ? 'brass' : 'ghost');
+  document.getElementById('ar_previewCard').style.display = 'none';
+}
+
+function renderDashboardAgentEntriesTable(){
+  const viewerId = ensureViewerSupport();
+  const wrap = document.getElementById('dashAgentEntriesWrap');
+  const monthSel = document.getElementById('dashAgentReviewMonthFilter');
+  if(!wrap) return;
+  const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+
+  if(monthSel){
+    const months = Array.from(new Set(all.map(a=>(a.date||'').slice(0,7)).filter(Boolean))).sort().reverse();
+    const prevValue = monthSel.value;
+    monthSel.innerHTML = `<option value="">All months</option>${months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('')}`;
+    if(months.includes(prevValue)) monthSel.value = prevValue;
+  }
+  const monthFilter = monthSel ? monthSel.value : '';
+  const filtered = monthFilter ? all.filter(a=>(a.date||'').slice(0,7)===monthFilter) : all;
+  const entries = filtered.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  if(!entries.length){
+    wrap.innerHTML = emptyState('No agent entries yet', monthFilter ? 'Nothing logged for this month yet.' : 'Log your first review or commendation from the Agent Review tab.', 'agentReviews', 'Go to Agent Review');
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th></tr></thead>
+      <tbody>
+        ${entries.map(a=>`
+          <tr>
+            <td class="num">${fmtDate(a.date)}</td>
+            <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
+            <td class="num">${esc(a.caseNumber)||'\u2014'}</td>
+            <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
+            <td>${esc(a.category)||'\u2014'}</td>
+            <td style="max-width:300px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+function renderMyAgentReviewsTable(){
+  const viewerId = ensureViewerSupport();
+  const wrap = document.getElementById('myAgentReviewsWrap');
+  const chip = document.getElementById('ar_countChip');
+  const monthSel = document.getElementById('myAgentReviewMonthFilter');
+  if(!wrap) return;
+  const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+
+  if(monthSel){
+    const months = Array.from(new Set(all.map(a=>(a.date||'').slice(0,7)).filter(Boolean))).sort().reverse();
+    const prevValue = monthSel.value;
+    monthSel.innerHTML = `<option value="">All months</option>${months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('')}`;
+    if(months.includes(prevValue)) monthSel.value = prevValue;
+  }
+  const monthFilter = monthSel ? monthSel.value : '';
+  const filtered = monthFilter ? all.filter(a=>(a.date||'').slice(0,7)===monthFilter) : all;
+  const entries = filtered.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  if(chip){
+    const rc = filtered.filter(a=>a.mode==='review').length;
+    const cc = filtered.filter(a=>a.mode==='commendation').length;
+    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'}`;
+  }
+  if(!entries.length){
+    wrap.innerHTML = emptyState('No entries yet', monthFilter ? 'Nothing logged for this month yet.' : 'Add your first agent review or commendation using the form above.', null, null);
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        ${entries.map(a=>`
+          <tr>
+            <td class="num">${fmtDate(a.date)}</td>
+            <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
+            <td class="num">${esc(a.caseNumber)||'\u2014'}</td>
+            <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
+            <td>${esc(a.category)||'\u2014'}</td>
+            <td style="max-width:260px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="icon-btn" title="Edit" data-ar-edit="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              <button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+  wrap.querySelectorAll('[data-ar-edit]').forEach(b=>{
+    b.addEventListener('click', ()=>{ editingAgentReviewId = b.dataset.arEdit; setView('agentReviews'); });
+  });
+  wrap.querySelectorAll('[data-ar-delete]').forEach(b=>{
+    b.addEventListener('click', ()=>deleteAgentReviewEntry(b.dataset.arDelete, renderMyAgentReviewsTable));
+  });
+}
+async function deleteAgentReviewEntry(id, refreshFn){
+  const entry = STATE.agentReviews.find(a=>a.id===id);
+  if(!entry) return;
+  if(!confirm('Delete this entry? This can\u2019t be undone.')) return;
+  STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==id);
+  STATE.deletedAgentReviewIds = STATE.deletedAgentReviewIds || [];
+  if(!STATE.deletedAgentReviewIds.includes(id)) STATE.deletedAgentReviewIds.push(id);
+  if(refreshFn) refreshFn();
+  const ok = await saveState();
+  if(ok){
+    toast('Entry deleted for good \u2014 it won\u2019t come back on refresh.');
+  } else {
+    toastRetry('Deleted here, but the save failed \u2014 tap to retry so it stays deleted.');
+  }
+}
+
+function emptyState(title, sub, gotoView, cta){
+  return `<div class="empty-state">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+    <h4>${esc(title)}</h4>
+    <p>${esc(sub)}</p>
+    ${gotoView?`<button class="btn ghost" data-goto="${gotoView}">${esc(cta)}</button>`:''}
+  </div>`;
+}
+
+function attachViewHandlers(){
+  document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click', ()=>setView(b.dataset.goto)));
+
+  if(currentView==='myDashboard'){
+    const form = document.getElementById('attendanceForm');
+    if(form){
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const viewerId = ensureViewerSupport();
+        const key = personalTargetKey(viewerId, currentMonth);
+        STATE.attendance[key] = {
+          absent: Math.max(0, parseInt(document.getElementById('att_absent').value)||0),
+          vl: Math.max(0, parseInt(document.getElementById('att_vl').value)||0),
+          ml: Math.max(0, parseInt(document.getElementById('att_ml').value)||0),
+          el: Math.max(0, parseInt(document.getElementById('att_el').value)||0),
+        };
+        await saveState();
+        render();
+        toast('Attendance saved');
+      });
+    }
+    renderDashboardAgentEntriesTable();
+    const dashMonthFilterEl = document.getElementById('dashAgentReviewMonthFilter');
+    if(dashMonthFilterEl) dashMonthFilterEl.addEventListener('change', renderDashboardAgentEntriesTable);
+  }
+
+  if(currentView==='myRecords'){
+    renderMyRecordsTable();
+    const sel = document.getElementById('myRecordsSupportFilter');
+    if(sel){
+      sel.addEventListener('change', async ()=>{
+        STATE.viewerSupportId = sel.value;
+        await saveState();
+        renderViewerPicker();
+        renderMyRecordsTable();
+      });
+    }
+  }
+
+  if(currentView==='agentReviews'){
+    const editingEntry = editingAgentReviewId ? STATE.agentReviews.find(a=>a.id===editingAgentReviewId) : null;
+    agentReviewKind = editingEntry ? editingEntry.mode : 'review';
+    updateAgentReviewModeUI();
+    if(editingEntry){
+      document.getElementById('ar_category').value = editingEntry.category || '';
+      document.getElementById('ar_level').value = editingEntry.level || '';
+    }
+    renderMyAgentReviewsTable();
+    const monthFilterEl = document.getElementById('myAgentReviewMonthFilter');
+    if(monthFilterEl) monthFilterEl.addEventListener('change', renderMyAgentReviewsTable);
+    document.querySelectorAll('#arKindToggle [data-ar-kind]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        agentReviewKind = btn.dataset.arKind;
+        updateAgentReviewModeUI();
+      });
+    });
+    document.getElementById('ar_previewBtn').addEventListener('click', ()=>{
+      const d = readAgentReviewForm();
+      const missing = validateAgentReviewForm(d);
+      if(missing.length){ toast('Please complete: ' + missing.join(', '), true); return; }
+      document.getElementById('ar_previewText').textContent = buildAgentEntryText(d);
+      document.getElementById('ar_previewCard').style.display = 'block';
+    });
+    document.getElementById('ar_copyBtn').addEventListener('click', ()=>{
+      const d = readAgentReviewForm();
+      navigator.clipboard.writeText(buildAgentEntryText(d)).then(()=>toast('Copied to clipboard')).catch(()=>toast('Could not copy \u2014 select and copy manually.', true));
+    });
+    const cancelBtn = document.getElementById('ar_cancelEditBtn');
+    if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingAgentReviewId = null; setView('agentReviews'); });
+    document.getElementById('agentReviewForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const d = readAgentReviewForm();
+      const missing = validateAgentReviewForm(d);
+      if(missing.length){ toast('Please complete: ' + missing.join(', '), true); return; }
+      if(editingAgentReviewId){
+        const idx = STATE.agentReviews.findIndex(a=>a.id===editingAgentReviewId);
+        if(idx>-1) STATE.agentReviews[idx] = { ...STATE.agentReviews[idx], ...d };
+        await saveState();
+        editingAgentReviewId = null;
+        toast('Entry updated');
+        setView('agentReviews');
+      } else {
+        const entry = { id: uid('ar'), date: new Date().toISOString().slice(0,10), createdAt: Date.now(), ...d };
+        STATE.agentReviews.push(entry);
+        await saveState();
+        e.target.reset();
+        agentReviewKind = 'review';
+        updateAgentReviewModeUI();
+        renderMyAgentReviewsTable();
+        toast(entry.mode==='commendation' ? 'Commendation added' : 'Review added');
+      }
+    });
+  }
+}
+
+function downloadRecordPdf(recordId){
+  const r = STATE.records.find(x=>x.id===recordId);
+  if(!r) return;
+  const subject = `SEQAS REVIEW - ${r.supportName} | ${monthShort(r.month)}`;
+  generatePdf(r, subject);
+}
+function openExportModal(recordId){
+  const r = STATE.records.find(x=>x.id===recordId);
+  if(!r) return;
+  const subject = `SEQAS REVIEW - ${r.supportName} | ${monthShort(r.month)}`;
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-backdrop" id="exportBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Export Evaluation</h3>
+        <button class="icon-btn" id="closeExportModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label class="field-label">Email Subject</label>
+          <input type="text" id="subjectField" value="${esc(subject)}" readonly>
+        </div>
+        <div class="letterhead" style="margin-top:6px;">
+          <div class="lh-band"><h4>SEQAS REVIEW \u2014 ${esc(r.supportName)}</h4><span style="font-size:12px; color:#a9d3c9;">${monthShort(r.month)}</span></div>
+          <div class="lh-body">
+            <table class="kv-table">
+              <tr><td class="k">Date of Evaluation</td><td>${fmtDate(r.dateOfEval)}</td></tr>
+              <tr><td class="k">Chat Date</td><td>${fmtDate(r.chatDate)}</td></tr>
+              <tr><td class="k">Support Name</td><td>${esc(r.supportName)}</td></tr>
+              <tr><td class="k">Agent Name</td><td class="agent-name">${esc(r.agentName)}</td></tr>
+              <tr><td class="k">Case Number</td><td>${esc(r.caseNumber)}</td></tr>
+              <tr><td class="k">Review Score</td><td>${r.total}/${MAX_SCORE} (${pctStr(r.percent)})</td></tr>
+            </table>
+            <div class="section-block"><h5>Support Action</h5><p>${esc(r.supportAction)||'\u2014'}</p></div>
+            <div class="section-block"><h5>Commitment Met / Observations</h5><p>${esc(r.commitmentObservations)||'\u2014'}</p></div>
+            <div class="section-block"><h5>Additional Actions That Could Be Performed</h5><p>${esc(r.additionalActions)||'\u2014'}</p></div>
+            <div class="section-block"><h5>TL Commitment and Coaching Notes</h5><p>${esc(r.tlCommitment)||'\u2014'}</p></div>
+          </div>
+        </div>
+        <p class="field-hint">Downloading the PDF saves it to your device automatically.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" id="copyEmailBtn">Copy Email Text</button>
+        <button class="btn brass" id="downloadPdfBtn">Download PDF</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('closeExportModal').addEventListener('click', ()=>root.innerHTML='');
+  document.getElementById('exportBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='exportBackdrop') root.innerHTML=''; });
+
+  const emailBody = `Hi ${r.supportName},\n\nPlease review the attached SEQAS evaluation.\n\nDATE OF EVALUATION : ${fmtDate(r.dateOfEval)}\nCHAT DATE : ${fmtDate(r.chatDate)}\nSUPPORT NAME : ${r.supportName}\nAGENT NAME : ${r.agentName}\nCASE NUMBER : ${r.caseNumber}\n\n(PDF evaluation attached)`;
+  document.getElementById('copyEmailBtn').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(emailBody).then(()=>toast('Email text copied')).catch(()=>toast('Could not copy', true));
+  });
+  document.getElementById('downloadPdfBtn').addEventListener('click', ()=>generatePdf(r, subject));
+}
+
+function generatePdf(r, subject){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+    const marginX = 48;
+    let y = 56;
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(9,60,93);
+    doc.rect(0,0,pageWidth,64,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(17);
+    doc.text('SEQAS REVIEW', marginX, 34);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+    doc.text(`${r.supportName}  |  ${subject.split('|')[1].trim()}`, marginX, 50);
+
+    y = 96;
+    doc.setTextColor(28,43,58);
+
+    const kv = [
+      ['DATE OF EVALUATION', fmtDate(r.dateOfEval), false],
+      ['CHAT DATE', fmtDate(r.chatDate), false],
+      ['SUPPORT NAME', r.supportName, false],
+      ['AGENT NAME', r.agentName, true],
+      ['CASE NUMBER', String(r.caseNumber), false],
+      ['REVIEW SCORE', `${r.total}/${MAX_SCORE}  (${Math.round(r.percent*100)}%)`, false],
+    ];
+    const rowH = 22;
+    kv.forEach((pair, i)=>{
+      const ry = y + i*rowH;
+      doc.setFillColor(i%2===0 ? 234 : 247, i%2===0 ? 244 : 250, i%2===0 ? 251 : 253);
+      doc.rect(marginX, ry-14, pageWidth-marginX*2, rowH, 'F');
+      doc.setDrawColor(214,229,240);
+      doc.rect(marginX, ry-14, pageWidth-marginX*2, rowH, 'S');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      doc.setTextColor(92,98,112);
+      doc.text(pair[0], marginX+10, ry);
+      doc.setFont('helvetica', pair[2] ? 'italic' : 'normal'); doc.setFontSize(11);
+      doc.setTextColor(28,43,58);
+      doc.text(String(pair[1]), marginX+190, ry);
+    });
+    y = y + kv.length*rowH + 24;
+
+    const sections = [
+      ['Support Action', r.supportAction],
+      ['Commitment Met / Observations', r.commitmentObservations],
+      ['Additional Actions That Could Be Performed', r.additionalActions],
+      ['TL Commitment and Coaching Notes', r.tlCommitment],
+    ];
+    sections.forEach(([title, body])=>{
+      if(y > 740){ doc.addPage(); y = 56; }
+      doc.setDrawColor(59,117,151);
+      doc.setLineWidth(1.4);
+      doc.line(marginX, y, marginX+34, y);
+      doc.setFont('helvetica','bold'); doc.setFontSize(12.5);
+      doc.setTextColor(28,43,58);
+      doc.text(title, marginX, y-6);
+      y += 16;
+      doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+      doc.setTextColor(28,43,58);
+      const lines = doc.splitTextToSize(body && body.trim() ? body : '\u2014', pageWidth - marginX*2);
+      lines.forEach(line=>{
+        if(y > 780){ doc.addPage(); y = 56; }
+        doc.text(line, marginX, y);
+        y += 14;
+      });
+      y += 16;
+    });
+
+    const fname = `SEQAS_${r.supportName.replace(/\s+/g,'_')}_${r.month}.pdf`;
+    doc.save(fname);
+    toast('PDF downloaded');
+  }catch(e){
+    console.error(e);
+    toast('Could not generate the PDF in this browser.', true);
+  }
+}
+
+async function init(){
+  const ok = await loadState();
+  if(!ok){
+    alert('Local storage is not accessible in this browser session.');
+    return;
+  }
+  ensureViewerSupport();
+  document.getElementById('globalMonth').addEventListener('change', (e)=>{ currentMonth = e.target.value; render(); });
+  document.getElementById('saveStatus').addEventListener('click', ()=>{
+    if(document.getElementById('saveStatus').classList.contains('error')) saveState();
+  });
+  if(STATE.records.some(r=>r.month==='2026-08')) currentMonth = '2026-08';
+  setView('myDashboard');
+  document.getElementById('loading').style.display='none';
+  document.getElementById('app').style.display='flex';
+  
+  setInterval(async ()=>{
+    if(!SYNC_URL) return;
+    if(currentView==='agentReviews') return;
+    const before = JSON.stringify(STATE);
+    await syncNow();
+    if(JSON.stringify(STATE) !== before) render();
+  }, 45000);
+}
+init();
+</script>
+</body>
+</html>
