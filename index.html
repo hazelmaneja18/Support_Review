@@ -51,25 +51,58 @@
     min-height:100vh;
   }
   ::selection{ background: var(--brass); color:#fff; }
-  .app{ display:flex; min-height:100vh; }
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
 
   /* ---------- SIDEBAR ---------- */
   .sidebar{
-    width:242px; flex-shrink:0;
+    width:242px;
+    flex-shrink:0;
     background: linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
     border-right:1px solid rgba(255,255,255,0.06);
-    color:#dcefe9; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+    color:#dcefe9;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
   }
-  .brand{ padding:26px 22px 18px 22px; border-bottom:1px solid rgba(255,255,255,0.1); }
-  .brand .mark{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .brand{
+    padding:26px 22px 18px 22px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .brand .mark{
+    display:flex; align-items:center; gap:10px; margin-bottom:6px;
+  }
   .brand .seal{
-    width:30px;height:30px;border-radius:50%; background:rgba(93,248,216,0.14); border:1px solid var(--pal-mint);
-    display:flex;align-items:center;justify-content:center; font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; color:var(--pal-mint); flex-shrink:0;
+    width:30px;height:30px;border-radius:50%;
+    background:rgba(93,248,216,0.14);
+    border:1px solid var(--pal-mint);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; color:var(--pal-mint);
+    flex-shrink:0;
   }
-  .brand h1{ font-family:'Inter',sans-serif; font-weight:800; font-size:18px; letter-spacing:-0.01em; margin:0; color:#f2fbf8; }
-  .brand .tagline{ font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:#7fa39b; margin-top:3px; }
+  .brand h1{
+    font-family:'Inter',sans-serif;
+    font-weight:800;
+    font-size:18px;
+    letter-spacing:-0.01em;
+    margin:0;
+    color:#f2fbf8;
+  }
+  .brand .tagline{
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#7fa39b;
+    margin-top:3px;
+  }
   .viewer-picker{ margin-top:14px; }
-  .viewer-picker label{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px; font-weight:700; }
+  .viewer-picker label{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px; font-weight:700;
+  }
   .viewer-picker select{
     width:100%; background:#ffffff; border:1px solid rgba(255,255,255,0.5); color:var(--pal-navy);
     font-size:13px; font-weight:600; padding:9px 30px 9px 11px; border-radius:var(--radius-sm); cursor:pointer;
@@ -83,27 +116,91 @@
     background:var(--brass-tint); color:var(--brass-dark); white-space:nowrap;
   }
   .type-badge.commendation{ background:var(--green-bg); color:var(--green); }
+  .mode-toggle{
+    display:flex; align-items:center; gap:2px; margin-top:14px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:3px;
+    width:fit-content;
+  }
+  .mode-toggle button{
+    display:flex; align-items:center; gap:5px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:11px; font-weight:600; color:#8aa9a3;
+    padding:6px 11px; border-radius:16px; transition:background 0.15s, color 0.15s;
+  }
+  .mode-toggle button.active{ background:var(--pal-mint); color:var(--pal-navy); }
+  .kind-tabs{ display:inline-flex; gap:4px; padding:4px; background:var(--paper-deep); border:1px solid var(--rule); border-radius:24px; margin-bottom:20px; }
+  .kind-tabs button{
+    display:flex; align-items:center; gap:7px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--slate); padding:9px 18px; border-radius:20px;
+    transition:background 0.15s, color 0.15s;
+  }
+  .kind-tabs button.active[data-kind="review"]{ background:var(--amber-bg); color:var(--amber); }
+  .kind-tabs button.active[data-kind="commendation"]{ background:var(--green-bg); color:var(--green); }
+  .kind-count-row{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .kind-count-pill{
+    display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--rule-soft);
+    border-radius:var(--radius); padding:12px 18px; box-shadow:var(--shadow);
+  }
+  .kind-count-pill .num{ font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:700; color:var(--ink-text); }
+  .kind-count-pill .lbl{ font-size:11.5px; color:var(--slate-soft); }
   
-  nav.navlist{ padding:16px 12px; flex:1; overflow-y:auto; }
+  nav.navlist{
+    padding:16px 12px;
+    flex:1;
+    overflow-y:auto;
+  }
   .navlist button{
-    width:100%; display:flex; align-items:center; gap:11px; background:none; border:none; color:#a9c9c2;
-    text-align:left; font-family:inherit; font-size:13.5px; font-weight:500; padding:9px 12px; border-radius:var(--radius-sm);
-    cursor:pointer; letter-spacing:0.01em; margin-bottom:2px; transition:background 0.15s, color 0.15s;
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    background:none;
+    border:none;
+    color:#a9c9c2;
+    text-align:left;
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:500;
+    padding:9px 12px;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    letter-spacing:0.01em;
+    margin-bottom:2px;
+    transition:background 0.15s, color 0.15s;
   }
   .navlist button svg{ flex-shrink:0; opacity:0.75; }
   .navlist button:hover{ background:rgba(255,255,255,0.06); color:#f2fbf8; }
-  .navlist button.active{ background:rgba(93,248,216,0.16); color:var(--pal-mint); font-weight:600; box-shadow: inset 2px 0 0 var(--pal-mint); }
+  .navlist button.active{
+    background:rgba(93,248,216,0.16);
+    color:var(--pal-mint);
+    font-weight:600;
+    box-shadow: inset 2px 0 0 var(--pal-mint);
+  }
   .navlist button.active svg{ opacity:1; }
-  .navlist .navgroup-label{ font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#5f7d77; padding:14px 12px 6px 12px; font-weight:600; }
+  .navlist .navgroup-label{
+    font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
+    color:#5f7d77; padding:14px 12px 6px 12px; font-weight:600;
+  }
   .sidebar-foot{
-    padding:14px 22px 18px 22px; border-top:1px solid rgba(255,255,255,0.1); font-size:11.5px; color:#7fa39b; display:flex; flex-direction:column; gap:10px;
+    padding:14px 22px 18px 22px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    font-size:11.5px;
+    color:#7fa39b;
+    display:flex; flex-direction:column; gap:10px;
   }
   .sidebar-foot .month-chip{
-    display:inline-flex;align-items:center;gap:6px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
-    padding:5px 10px;border-radius:20px; color:#f2fbf8; font-weight:600; font-size:12px; width:fit-content;
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    padding:5px 10px;border-radius:20px;
+    color:#f2fbf8; font-weight:600; font-size:12px;
+    width:fit-content;
   }
-  .save-status{ display:flex; align-items:center; gap:7px; font-size:11px; color:#7fa39b; }
-  .save-status .dot{ width:6px; height:6px; border-radius:50%; background:var(--pal-mint); flex-shrink:0; }
+  .save-status{
+    display:flex; align-items:center; gap:7px; font-size:11px; color:#7fa39b;
+  }
+  .save-status .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--pal-mint); flex-shrink:0;
+  }
   .save-status.error{ cursor:pointer; }
   .save-status.error .dot{ background:#ff9d9d; }
   .save-status.saving .dot{ background:var(--pal-teal); }
@@ -111,33 +208,56 @@
   /* ---------- MAIN ---------- */
   .main{ flex:1; min-width:0; }
   .topbar{
-    position:sticky; top:0; z-index:5; background:rgba(220,238,234,0.92); backdrop-filter:blur(6px);
-    border-bottom:1px solid var(--rule); padding:20px 36px; display:flex; align-items:center; justify-content:space-between; gap:20px;
+    position:sticky; top:0; z-index:5;
+    background:rgba(220,238,234,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--rule);
+    padding:20px 36px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
   }
-  .topbar h2{ font-family:'Inter',serif; font-size:24px; font-weight:700; margin:0; color:var(--ink); }
+  .topbar h2{
+    font-family:'Inter',serif;
+    font-size:24px; font-weight:700; margin:0; color:var(--ink);
+  }
   .topbar .sub{ color:var(--slate); font-size:12.5px; margin-top:2px;}
   .content{ padding:28px 36px 60px 36px; max-width:1180px; }
 
   .month-select{
-    display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--rule); border-radius:20px; padding:6px 6px 6px 14px;
+    display:flex; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--rule);
+    border-radius:20px; padding:6px 6px 6px 14px;
   }
   .month-select label{ font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate-soft); }
   .month-select select{
-    border:none; background:none; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--ink); padding:4px 6px; cursor:pointer;
+    border:none; background:none; font-family:'IBM Plex Mono',monospace;
+    font-size:13px; font-weight:600; color:var(--ink); padding:4px 6px; cursor:pointer;
   }
 
   /* ---------- CARDS / COMMON ---------- */
-  .card{ background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius); box-shadow:var(--shadow); }
-  .card-header{ padding:16px 20px; border-bottom:1px solid var(--rule-soft); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule-soft);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+  .card-header{
+    padding:16px 20px; border-bottom:1px solid var(--rule-soft);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
   .card-header h3{ font-family:'Inter',serif; font-size:16.5px; margin:0; font-weight:700; color:var(--ink);}
   .card-body{ padding:20px; }
 
   .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;}
-  .section-divider{ display:flex; align-items:center; gap:12px; margin:8px 0 16px 0; }
-  .section-divider h3{
-    font-family:'Inter',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--brass-dark); margin:0; white-space:nowrap;
+  .section-divider{
+    display:flex; align-items:center; gap:12px; margin:8px 0 16px 0;
   }
-  .section-divider::after{ content:""; flex:1; height:1px; background:var(--rule); }
+  .section-divider h3{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--brass-dark); margin:0; white-space:nowrap;
+  }
+  .section-divider::after{
+    content:""; flex:1; height:1px; background:var(--rule);
+  }
   .attendance-compact .card-header h3{ font-size:14px; }
   .attendance-compact input[type=number]{ padding:7px 8px; text-align:center; }
   .attendance-compact .field-label{ font-size:10px; margin-bottom:4px; }
@@ -145,7 +265,9 @@
     background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius);
     padding:18px 20px; box-shadow:var(--shadow); position:relative; overflow:hidden;
   }
-  .stat-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--brass); }
+  .stat-card::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--brass);
+  }
   .stat-card .label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--slate-soft); font-weight:600;}
   .stat-card .value{ font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; color:var(--ink); margin-top:6px;}
   .stat-card .value small{ font-size:14px; color:var(--slate); font-weight:500;}
@@ -154,7 +276,8 @@
   table{ width:100%; border-collapse:collapse; font-size:13px;}
   th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em;
-    color:var(--slate-soft); font-weight:700; padding:9px 12px; border-bottom:2px solid var(--rule); white-space:nowrap;
+    color:var(--slate-soft); font-weight:700; padding:9px 12px; border-bottom:2px solid var(--rule);
+    white-space:nowrap;
   }
   td{ padding:11px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:middle; }
   tr:last-child td{ border-bottom:none; }
@@ -200,7 +323,29 @@
   .field-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
   .field-hint{ font-size:11.5px; color:var(--slate-soft); margin-top:5px; }
 
-  .empty-state{ text-align:center; padding:56px 20px; color:var(--slate-soft); }
+  .letterhead{
+    border:1px solid var(--rule); border-radius:var(--radius); overflow:hidden; background:var(--card);
+  }
+  .letterhead .lh-band{
+    background:var(--ink); color:#eafaf5; padding:16px 22px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .letterhead .lh-band h4{ margin:0; font-family:'Inter',serif; font-size:16px; font-weight:700;}
+  .letterhead .lh-body{ padding:20px 22px; }
+  .kv-table{ width:100%; border-collapse:collapse; }
+  .kv-table td{ padding:8px 12px; border:1px solid var(--rule); font-size:13px; }
+  .kv-table td.k{ background:var(--paper-deep); font-weight:700; width:210px; text-transform:uppercase; font-size:11px; letter-spacing:0.04em; color:var(--slate); }
+
+  .section-block{ margin-top:18px; }
+  .section-block h5{
+    font-family:'Inter',serif; font-size:14px; margin:0 0 6px 0; color:var(--ink); font-weight:700;
+    border-bottom:1.5px solid var(--brass); padding-bottom:5px; display:inline-block;
+  }
+  .section-block p{ margin:8px 0 0 0; color:var(--ink-text); white-space:pre-wrap; }
+
+  .empty-state{
+    text-align:center; padding:56px 20px; color:var(--slate-soft);
+  }
   .empty-state svg{ opacity:0.5; margin-bottom:12px; }
   .empty-state h4{ font-family:'Inter',serif; color:var(--ink); font-size:17px; margin:0 0 6px 0; }
   .empty-state p{ font-size:13px; margin:0 0 18px 0; }
@@ -208,7 +353,9 @@
   .toast-wrap{ position:fixed; bottom:24px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px;}
   .toast{
     background:var(--ink); color:#eafaf5; padding:12px 18px; border-radius:10px; font-size:13px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px; border-left:3px solid var(--brass); animation: slidein 0.25s ease-out;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px;
+    border-left:3px solid var(--brass);
+    animation: slidein 0.25s ease-out;
   }
   @keyframes slidein{ from{ opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
@@ -216,18 +363,25 @@
     position:fixed; inset:0; background:rgba(20,29,49,0.55); display:flex; align-items:flex-start;
     justify-content:center; padding:40px 20px; z-index:100; overflow-y:auto;
   }
-  .modal{ background:var(--paper); border-radius:5px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.35); border:1px solid var(--rule); }
-  .modal-head{ padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between; }
+  .modal{
+    background:var(--paper); border-radius:5px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.35);
+    border:1px solid var(--rule);
+  }
+  .modal-head{
+    padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between;
+  }
   .modal-head h3{ font-family:'Inter',serif; margin:0; font-size:18px;}
   .modal-body{ padding:22px 24px; max-height:70vh; overflow-y:auto;}
   .modal-foot{ padding:16px 24px; border-top:1px solid var(--rule); display:flex; justify-content:flex-end; gap:10px;}
 
   .loading-screen{
-    position:fixed; inset:0; background:var(--paper); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; z-index:999;
+    position:fixed; inset:0; background:var(--paper); display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; z-index:999;
   }
   .loading-screen .seal-lg{
-    width:52px;height:52px;border-radius:50%; border:2px solid var(--brass); display:flex; align-items:center; justify-content:center;
-    font-family:'Inter',serif; font-weight:700; font-size:20px; color:var(--brass); animation: pulse 1.4s ease-in-out infinite;
+    width:52px;height:52px;border-radius:50%; border:2px solid var(--brass); display:flex; align-items:center;
+    justify-content:center; font-family:'Inter',serif; font-weight:700; font-size:20px; color:var(--brass);
+    animation: pulse 1.4s ease-in-out infinite;
   }
   @keyframes pulse{ 0%,100%{ opacity:1;} 50%{ opacity:0.4;} }
   .loading-screen p{ color:var(--slate); font-size:13px; letter-spacing:0.04em;}
@@ -295,109 +449,6 @@
 const MAX_SCORE = 17;
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-
-const AUGUST_2026_SEED = [
-  { supportName:'Aj Dela Cruz', aliases:[], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-07', agentName:'Dean Clemente', caseNumber:'13872622',
-    scores:{ identification:1, relationship:1, diagnosis:1, accuracy:1, communication:2, resource:0, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'Subtemplate is not showing, and the incorrect KB was followed.', relationship:'Support remotely connected to clear the first failure.', diagnosis:'Support is already familiar with this issue.', accuracy:'Support was able to apply the fix.', communication:'Support was able to communicate properly with the agent.', resource:'The KB was not properly utilized.', logging:'All are properly documented.', efficiency:'Support consistently provided answers.', compliance:'No compliance concerns.' },
-    supportAction:`Support communicated properly and resolved the issue.`, commitmentObservations:`Support will ensure proper KB is referenced.`, additionalActions:`Verify batch configuration and end-of-day times.`, tlCommitment:`I will coach Support to consistently use correct KB.` },
-  { supportName:'Aj Dela Cruz', aliases:[], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-24', agentName:'Japteg Singh', caseNumber:'13936552',
-    scores:{ identification:2, relationship:2, diagnosis:1, accuracy:1, communication:2, resource:1, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'Template contract type followed.', relationship:'Good collaborative tone.', diagnosis:'Good technical checks performed.', accuracy:'Applied remote fix.', communication:'Concise and complete updates.', resource:'Good tool utilization.', logging:'Logging properly handled.', efficiency:'Excellent response times.', compliance:'No compliance concerns.' },
-    supportAction:`Support handled case remotely under correct contract.`, commitmentObservations:`Strong technical troubleshooting.`, additionalActions:`Review day-close pattern.`, tlCommitment:`Coach on identifying recurring root causes.` },
-  { supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-24', agentName:'Jerry Perez', caseNumber:'13932253',
-    scores:{ identification:2, relationship:2, diagnosis:2, accuracy:1, communication:2, resource:2, logging:1, efficiency:0, compliance:1 },
-    criteriaNotes:{ identification:'Correct template review.', relationship:'Guided step-by-step.', diagnosis:'Reasonable procedural fix.', accuracy:'NetLoader approach accurate.', communication:'Instructions easy to follow.', resource:'KB 7768 referenced.', logging:'VASC referral not acknowledged.', efficiency:'Gaps in final replies.', compliance:'No compliance concerns.' },
-    supportAction:`Guided agent through NetLoader steps.`, commitmentObservations:`Good KB knowledge demonstrated.`, additionalActions:`Confirm VASC referral before close.`, tlCommitment:`Reinforce closing the loop with agent.` },
-  { supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-21', agentName:'Remond Licayan', caseNumber:'13930263',
-    scores:{ identification:2, relationship:2, diagnosis:1, accuracy:2, communication:2, resource:2, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'Contract type acknowledged.', relationship:'Guided agent well.', diagnosis:'Root cause understood.', accuracy:'Solution path accurate.', communication:'Clear status updates.', resource:'Backend validation verified.', logging:'Properly documented.', efficiency:'Responsive throughout.', compliance:'No compliance concerns.' },
-    supportAction:`Backend deletion completed and verified.`, commitmentObservations:`Good case ownership shown.`, additionalActions:`Provide more proactive guidance during testing.`, tlCommitment:`Maintain strong ownership habits.` },
-  { supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-21', agentName:'Sidrick Mondalo', caseNumber:'13930992',
-    scores:{ identification:2, relationship:2, diagnosis:1, accuracy:1, communication:2, resource:2, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'Contract applied correctly.', relationship:'Good targeted questions.', diagnosis:'Recognized StopTransaction trigger.', accuracy:'Fix cleared immediate error.', communication:'Clear explanations.', resource:'Good log checks.', logging:'Properly documented.', efficiency:'Timely interaction.', compliance:'No compliance concerns.' },
-    supportAction:`Cleared firstFailureDate and verified card processing.`, commitmentObservations:`Strong troubleshooting and analysis.`, additionalActions:`Review case history for recurring patterns.`, tlCommitment:`Coach on full KB procedure completion.` },
-  { supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-21', agentName:'James Querubin', caseNumber:'13930960',
-    scores:{ identification:1, relationship:2, diagnosis:1, accuracy:2, communication:1, resource:2, logging:2, efficiency:1, compliance:1 },
-    criteriaNotes:{ identification:'Contract details verified.', relationship:'Identified issue early.', diagnosis:'DCHS check performed.', accuracy:'Applied elevated config fix.', communication:'Short directives given.', resource:'Followed elevated KB.', logging:'Properly logged.', efficiency:'Extended silence gaps.', compliance:'No compliance concerns.' },
-    supportAction:`Applied socketHandshakeTimeout and prototype scope changes.`, commitmentObservations:`Strong technical knowledge shown.`, additionalActions:`Provide brief explanations during wait times.`, tlCommitment:`Focus on consistent communication pace.` },
-  { supportName:'Glory Barbacena', aliases:[], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-23', agentName:'James Querubin', caseNumber:'13934804',
-    scores:{ identification:2, relationship:2, diagnosis:2, accuracy:2, communication:1, resource:2, logging:2, efficiency:1, compliance:1 },
-    criteriaNotes:{ identification:'Reviewed template before response.', relationship:'Patient and polite.', diagnosis:'Stuck Jlogs identified.', accuracy:'Force closed cashier and cleared logs.', communication:'Short instructions.', resource:'Actions aligned with KB.', logging:'Documented properly.', efficiency:'Moderate response pacing.', compliance:'No compliance concerns.' },
-    supportAction:`Cleared stuck Jlogs and force-closed cashier.`, commitmentObservations:`Good technical handling.`, additionalActions:`Explain rationale behind reboots.`, tlCommitment:`Encourage citing KB references in chat.` },
-  { supportName:'Glory Barbacena', aliases:[], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-24', agentName:'James Querubin', caseNumber:'13934608',
-    scores:{ identification:2, relationship:1, diagnosis:1, accuracy:2, communication:1, resource:1, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'Handled remotely as required.', relationship:'Clarification asked late.', diagnosis:'Premature compatibility answer.', accuracy:'Final recommendation accurate.', communication:'Direct confirmation.', resource:'KB 4202 consulted.', logging:'Properly documented.', efficiency:'Good response speed.', compliance:'No compliance concerns.' },
-    supportAction:`Confirmed base version compatibility requirement.`, commitmentObservations:`Acknowledged initial miss and corrected.`, additionalActions:`Verify base version before answering.`, tlCommitment:`Coaching on verify first, answer second.` },
-  { supportName:'Judy Tolentino', aliases:[], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-13', agentName:'Davareo H.', caseNumber:'13896113',
-    scores:{ identification:2, relationship:2, diagnosis:0, accuracy:1, communication:1, resource:2, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'Fuel subtemplate displayed.', relationship:'Provided clear guidelines.', diagnosis:'Misread offline pumps initially.', accuracy:'Referred to Pump Tech.', communication:'Mid-chat correction made.', resource:'KB and MNSP used.', logging:'Proper documentation.', efficiency:'Consistent answers.', compliance:'No compliance concerns.' },
-    supportAction:`Guided troubleshooting and escalated to pump tech.`, commitmentObservations:`Identified need to slow down and verify details.`, additionalActions:`Confirm active offline pumps before referral.`, tlCommitment:`Coach on thoroughly reading case details upfront.` },
-  { supportName:'Judy Tolentino', aliases:[], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-24', agentName:'Jan Neri', caseNumber:'13924963',
-    scores:{ identification:2, relationship:2, diagnosis:1, accuracy:1, communication:1, resource:2, logging:2, efficiency:1, compliance:1 },
-    criteriaNotes:{ identification:'Remote handling adhered to.', relationship:'Good probing questions.', diagnosis:'Firmware check completed.', accuracy:'Next step inconclusive.', communication:'Closing messages fragmented.', resource:'Decision tree followed.', logging:'Notes maintained.', efficiency:'Pacing slowed at close.', compliance:'No compliance concerns.' },
-    supportAction:`Checked contactless settings and firmware compliance.`, commitmentObservations:`Good probing questions throughout.`, additionalActions:`Provide a clean summary before wrap-up.`, tlCommitment:`Focus on case closure summaries.` },
-  { supportName:'Kristian Ong', aliases:[], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-01', agentName:'Boh Daclis', caseNumber:'13848131',
-    scores:{ identification:1, relationship:2, diagnosis:1, accuracy:1, communication:2, resource:1, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'KB available.', relationship:'Encouraged independent troubleshooting.', diagnosis:'Remote fix applied.', accuracy:'Fixed immediate error.', communication:'Clear and concise.', resource:'Batch config checked.', logging:'Documented properly.', efficiency:'Prompt replies.', compliance:'No compliance concerns.' },
-    supportAction:`Checked batch configurations and resolved card issue.`, commitmentObservations:`Clear communication maintained.`, additionalActions:`Verify site closing schedule.`, tlCommitment:`Reinforce closing time verification steps.` },
-  { supportName:'Kristian Ong', aliases:[], month:'2026-08', dateOfEval:'2026-08-27', chatDate:'2026-08-27', agentName:'Jerrold Ramirez', caseNumber:'13587296',
-    scores:{ identification:2, relationship:2, diagnosis:1, accuracy:1, communication:2, resource:2, logging:2, efficiency:1, compliance:0 },
-    criteriaNotes:{ identification:'Template reviewed fully.', relationship:'Supportive throughout.', diagnosis:'Noted broader network trend.', accuracy:'Commander reboot restored sales.', communication:'Clear directions.', resource:'Cross-referenced active reports.', logging:'Case resolved remotely.', efficiency:'15 minute silence gap.', compliance:'Original scoresheet flag.' },
-    supportAction:`Directed Sunoco verification and commander reboot.`, commitmentObservations:`Strong diagnostic reasoning.`, additionalActions:`Follow up proactively during wait times.`, tlCommitment:`Coach on closing loop on wider trends.` },
-  { supportName:'Melvin Lagrosa', aliases:[], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-07', agentName:'Paul Bandilla', caseNumber:'13871571',
-    scores:{ identification:2, relationship:2, diagnosis:2, accuracy:1, communication:2, resource:1, logging:2, efficiency:0, compliance:1 },
-    criteriaNotes:{ identification:'Pinpad subtemplate showing.', relationship:'Clear guidance provided.', diagnosis:'Asked targeted ping questions.', accuracy:'Recommended VASC escalation.', communication:'Effective communication.', resource:'Commander reboot outside steps.', logging:'Documented.', efficiency:'Unnecessary reboot added time.', compliance:'No compliance concerns.' },
-    supportAction:`Troubleshot black screen pinpad and referred to VASC.`, commitmentObservations:`Good hardware triage.`, additionalActions:`Keep troubleshooting isolated to affected component.`, tlCommitment:`Coach against steps outside applicable KB.` },
-  { supportName:'Melvin Lagrosa', aliases:[], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-16', agentName:'Renard Relova', caseNumber:'13904964',
-    scores:{ identification:1, relationship:0, diagnosis:0, accuracy:0, communication:2, resource:1, logging:2, efficiency:0, compliance:1 },
-    criteriaNotes:{ identification:'Alternative KB needed.', relationship:'Missed verifying POS 102.', diagnosis:'Cybera call unneeded.', accuracy:'Transferred without POS reboot.', communication:'Communicated clearly.', resource:'KB not properly utilized.', logging:'Documented.', efficiency:'Unnecessary transfer lengthened call.', compliance:'No compliance concerns.' },
-    supportAction:`Communicated clearly with agent during triage.`, commitmentObservations:`Opportunity to isolate single POS issues.`, additionalActions:`Power cycle affected register first.`, tlCommitment:`Coach on complete diagnosis before escalating.` },
-  { supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-19', agentName:'Reshma Banu', caseNumber:'13915394',
-    scores:{ identification:2, relationship:1, diagnosis:0, accuracy:0, communication:2, resource:0, logging:2, efficiency:2, compliance:1 },
-    criteriaNotes:{ identification:'Template completely filled.', relationship:'Provided instructions.', diagnosis:'Missed probing on report goals.', accuracy:'Lottery advice inaccurate.', communication:'Clear tone.', resource:'Supervisor consult needed.', logging:'Documented.', efficiency:'No reply delays.', compliance:'No compliance concerns.' },
-    supportAction:`Provided instructions on cashier configuration.`, commitmentObservations:`Clarify customer requirements upfront.`, additionalActions:`Consult T3/Supervisor when KB absent.`, tlCommitment:`Coach on targeted clarification questioning.` },
-  { supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], month:'2026-08', dateOfEval:'2026-08-21', chatDate:'2026-08-20', agentName:'Jan Tarroza', caseNumber:'13925779',
-    scores:{ identification:1, relationship:1, diagnosis:1, accuracy:0, communication:2, resource:0, logging:2, efficiency:0, compliance:1 },
-    criteriaNotes:{ identification:'Fuel subtemplate present.', relationship:'Guided first issue.', diagnosis:'Missed reprint history root cause.', accuracy:'Premature pump tech referral.', communication:'Understandable communication.', resource:'KB 4191 not referenced.', logging:'Documented.', efficiency:'Unneeded FCC restart.', compliance:'No compliance concerns.' },
-    supportAction:`Addressed initial dispensing issue.`, commitmentObservations:`Improve multi-issue triage.`, additionalActions:`Search reprint receipt KB.`, tlCommitment:`Reinforce proper KB searching for secondary faults.` }
-];
-
-const AGENT_REVIEW_AUGUST_SEED = [
-  { mode:'commendation', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Kimberly Torres', caseNumber:'13847946', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-07', supportName:'Judy Tolentino', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13874944', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-12', supportName:'Aj Dela Cruz', aliases:[], agentName:'Roi L.', caseNumber:'13884835', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-12', supportName:'Aj Dela Cruz', aliases:[], agentName:'Dean Clemente', caseNumber:'13880211', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-11', supportName:'Glory Barbacena', aliases:[], agentName:'Sidrick Mondalo', caseNumber:'13888227', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-14', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Madel Negrete', caseNumber:'13897796', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-19', supportName:'Judy Tolentino', aliases:[], agentName:'Bench Manuel', caseNumber:'13918595', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-19', supportName:'Aj Dela Cruz', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13918635', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-21', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Dean Clemente', caseNumber:'13875124', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-21', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Alfredo III. Ce\u00f1o', caseNumber:'13919369', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-21', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Christian Luis Quimno', caseNumber:'13928601', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-24', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Felisha Sy', caseNumber:'13899358', category:'', section1:'' },
-  { mode:'commendation', date:'2026-08-26', supportName:'Judy Tolentino', aliases:[], agentName:'Roi Chester Lumtao', caseNumber:'13946883', category:'', section1:'' },
-  { mode:'review', date:'2026-08-01', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Daniel Arago', caseNumber:'13846511', category:'Procedural', section1:'DCR#3 Poll error' },
-  { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Sheenam Dhiman', caseNumber:'13812789', category:'Procedural', section1:'Card transaction cashed out without verify' },
-  { mode:'review', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Jayson Camero', caseNumber:'13871724', category:'Behaviour', section1:'Cards not working inside/out' },
-  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'Dean Clemente', caseNumber:'13872622', category:'Knowledge Gap', section1:'Card transaction is not working' },
-  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'Harold Reyes', caseNumber:'13872127', category:'Knowledge Gap', section1:'Add function keys on screen' },
-  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'', caseNumber:'13867260', category:'Knowledge Gap', section1:'EPS Network Unavailable' },
-  { mode:'review', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Jayson Camero', caseNumber:'13894723', category:'Call Handling', section1:'FPs 7, 8, 9, 10 offline' },
-  { mode:'review', date:'2026-08-01', supportName:'Glory Barbacena', aliases:[], agentName:'Arlenne Labagala', caseNumber:'13850529', category:'Knowledge Gap', section1:'Loyalty prompt missing' },
-  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'Hazel Mae Bongalos', caseNumber:'13913108', category:'Knowledge Gap', section1:'All DCRs Poll Error' },
-  { mode:'review', date:'2026-08-01', supportName:'Aj Dela Cruz', aliases:[], agentName:'', caseNumber:'13918637', category:'Procedural', section1:'Unable to log in POS 101' },
-  { mode:'review', date:'2026-08-01', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Sheenam Dhiman', caseNumber:'13923678', category:'Behaviour', section1:'Unable to ping POS 101' },
-  { mode:'review', date:'2026-08-01', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Hazel Mae Bongalos', caseNumber:'13862511', category:'Procedural', section1:'EPS Network Unavailable' },
-  { mode:'review', date:'2026-08-01', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Christian Luis Quimno', caseNumber:'13875158', category:'Knowledge Gap', section1:'All FPs Offline' },
-  { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Boh Brian Daclis', caseNumber:'13919486', category:'Procedural', section1:'Incorrect day close time' },
-  { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'', caseNumber:'13924010', category:'Procedural', section1:'PLU not found' },
-  { mode:'review', date:'2026-08-01', supportName:'Glory Barbacena', aliases:[], agentName:'Salvador Rubio Jr', caseNumber:'13906297', category:'Procedural', section1:'Unable to process cards' },
-  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'Supriya Sheety', caseNumber:'13925136', category:'Procedural', section1:'Pinpads slow' },
-  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13933369', category:'Knowledge Gap', section1:'EPS Busy' },
-  { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'', caseNumber:'13941140', category:'Knowledge Gap', section1:'Unable to process cards' },
-  { mode:'review', date:'2026-08-01', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Sidrick Mondalo', caseNumber:'13930992', category:'Procedural', section1:'' }
-];
 
 let STATE = {
   supports: [],
@@ -595,97 +646,6 @@ function reconcileState(state){
   }
   return state;
 }
-function seedState(){
-  const names = ['Aj Dela Cruz','Kristian Ong','Melvin Lagrosa','Zachary Payabyab','Glory Barbacena','Gemmalyn Silvestre','Judy Tolentino','Christian Mark Patdu'];
-  return {
-    supports: names.map(n=>({ id: uid('sup'), name:n })),
-    targets: {},
-    records: [],
-    seededAugust2026: false,
-    deletedCaseNumbers: [],
-    augustAccuracyApplied: false,
-    agentReviews: [],
-    viewerSupportId: null,
-    personalTargets: {},
-    attendance: {},
-    agentReviewDeletionCounts: {},
-    agentReviewAugust2026Seeded: false,
-    historicalDuplicatesCleaned: false,
-    deletedAgentReviewIds: []
-  };
-}
-function findOrCreateSupport(canonicalName, aliases){
-  let sup = STATE.supports.find(s=>s.name.toLowerCase()===canonicalName.toLowerCase());
-  if(!sup){
-    for(const alias of (aliases||[])){
-      sup = STATE.supports.find(s=>s.name.toLowerCase()===alias.toLowerCase());
-      if(sup){ sup.name = canonicalName; break; }
-    }
-  }
-  if(!sup){ sup = { id: uid('sup'), name: canonicalName }; STATE.supports.push(sup); }
-  return sup;
-}
-async function ensureAugustSeed(){
-  if(STATE.seededAugust2026) return;
-  const existingCases = new Set(STATE.records.map(r=>String(r.caseNumber)));
-  const deletedCases = new Set((STATE.deletedCaseNumbers||[]).map(String));
-  AUGUST_2026_SEED.forEach(entry=>{
-    if(existingCases.has(String(entry.caseNumber))) return;
-    if(deletedCases.has(String(entry.caseNumber))) return;
-    const sup = findOrCreateSupport(entry.supportName, entry.aliases);
-    const total = Object.values(entry.scores).reduce((s,v)=>s+v,0);
-    STATE.records.push({
-      id: uid('rec'),
-      month: entry.month,
-      supportId: sup.id,
-      supportName: sup.name,
-      dateOfEval: entry.dateOfEval,
-      chatDate: entry.chatDate,
-      agentName: entry.agentName,
-      caseNumber: entry.caseNumber,
-      scores: entry.scores,
-      criteriaNotes: entry.criteriaNotes || {},
-      total,
-      percent: total / MAX_SCORE,
-      supportAction: entry.supportAction,
-      commitmentObservations: entry.commitmentObservations,
-      additionalActions: entry.additionalActions,
-      tlCommitment: entry.tlCommitment,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-  });
-  STATE.seededAugust2026 = true;
-  await saveState();
-}
-async function ensureAgentReviewAugustSeed(){
-  if(STATE.agentReviewAugust2026Seeded) return;
-  const existingCases = new Set(STATE.agentReviews.map(a=>`${a.mode}:${String(a.caseNumber)}`));
-  AGENT_REVIEW_AUGUST_SEED.forEach(entry=>{
-    const key = `${entry.mode}:${String(entry.caseNumber)}`;
-    if(existingCases.has(key)) return;
-    const sup = findOrCreateSupport(entry.supportName, entry.aliases);
-    STATE.agentReviews.push({
-      id: uid('ar'),
-      mode: entry.mode,
-      date: entry.date,
-      supportId: sup.id,
-      supportName: sup.name,
-      agentName: entry.agentName || '',
-      caseNumber: entry.caseNumber,
-      category: entry.category || '',
-      level: '',
-      section1: entry.section1 || '',
-      section2: '',
-      section3: '',
-      section4: '',
-      createdAt: Date.now()
-    });
-  });
-  STATE.agentReviewAugust2026Seeded = true;
-  await saveState();
-}
-
 async function syncNow(){
   if(!SYNC_URL) return;
   const remote = await pullRemoteState();
@@ -734,11 +694,8 @@ async function loadState(){
       setSaveStatus(null, 'All changes saved');
       return true;
     }catch(e){ return false; }
-  } else {
-    STATE = seedState();
-    await saveState();
-    return true;
   }
+  return true;
 }
 
 let hasUnsavedFailure = false;
@@ -778,10 +735,9 @@ async function saveState(){
 
 function allMonthsUsed(){
   const set = new Set(STATE.records.map(r=>r.month));
-  for(let i=1; i<=12; i++){
-    set.add(`2026-${String(i).padStart(2,'0')}`);
-  }
   set.add(currentMonth);
+  const now = new Date();
+  set.add(monthKey(now));
   return Array.from(set).sort();
 }
 function recordsFor(month, supportId){
@@ -980,7 +936,7 @@ function renderMyDashboard(){
   const commendationCount = myAgentAll.filter(a=>a.mode==='commendation').length;
   const reviewCountMonth = myAgentThisMonth.filter(a=>a.mode==='review').length;
   const commendationCountMonth = myAgentThisMonth.filter(a=>a.mode==='commendation').length;
-  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? Math.min(1, myAgentThisMonth.length/adjustedTarget) : null;
+  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
 
   return `
   <div class="card" style="margin-bottom:20px;">
@@ -1417,9 +1373,9 @@ async function deleteAgentReviewEntry(id, refreshFn){
   if(refreshFn) refreshFn();
   const ok = await saveState();
   if(ok){
-    toast('Entry deleted for good');
+    toast('Entry deleted for good \u2014 it won\u2019t come back on refresh.');
   } else {
-    toastRetry('Deleted here, but save failed');
+    toastRetry('Deleted here, but the save failed \u2014 tap to retry so it stays deleted.');
   }
 }
 
@@ -1497,7 +1453,7 @@ function attachViewHandlers(){
     });
     document.getElementById('ar_copyBtn').addEventListener('click', ()=>{
       const d = readAgentReviewForm();
-      navigator.clipboard.writeText(buildAgentEntryText(d)).then(()=>toast('Copied to clipboard')).catch(()=>toast('Could not copy', true));
+      navigator.clipboard.writeText(buildAgentEntryText(d)).then(()=>toast('Copied to clipboard')).catch(()=>toast('Could not copy \u2014 select and copy manually.', true));
     });
     const cancelBtn = document.getElementById('ar_cancelEditBtn');
     if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingAgentReviewId = null; setView('agentReviews'); });
@@ -1567,8 +1523,10 @@ function openExportModal(recordId){
             <div class="section-block"><h5>TL Commitment and Coaching Notes</h5><p>${esc(r.tlCommitment)||'\u2014'}</p></div>
           </div>
         </div>
+        <p class="field-hint">Downloading the PDF saves it to your device automatically.</p>
       </div>
       <div class="modal-foot">
+        <button class="btn ghost" id="copyEmailBtn">Copy Email Text</button>
         <button class="btn brass" id="downloadPdfBtn">Download PDF</button>
       </div>
     </div>
@@ -1576,6 +1534,11 @@ function openExportModal(recordId){
 
   document.getElementById('closeExportModal').addEventListener('click', ()=>root.innerHTML='');
   document.getElementById('exportBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='exportBackdrop') root.innerHTML=''; });
+
+  const emailBody = `Hi ${r.supportName},\n\nPlease review the attached SEQAS evaluation.\n\nDATE OF EVALUATION : ${fmtDate(r.dateOfEval)}\nCHAT DATE : ${fmtDate(r.chatDate)}\nSUPPORT NAME : ${r.supportName}\nAGENT NAME : ${r.agentName}\nCASE NUMBER : ${r.caseNumber}\n\n(PDF evaluation attached)`;
+  document.getElementById('copyEmailBtn').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(emailBody).then(()=>toast('Email text copied')).catch(()=>toast('Could not copy', true));
+  });
   document.getElementById('downloadPdfBtn').addEventListener('click', ()=>generatePdf(r, subject));
 }
 
@@ -1652,7 +1615,8 @@ function generatePdf(r, subject){
     doc.save(fname);
     toast('PDF downloaded');
   }catch(e){
-    toast('Could not generate PDF', true);
+    console.error(e);
+    toast('Could not generate the PDF in this browser.', true);
   }
 }
 
@@ -1662,8 +1626,6 @@ async function init(){
     alert('Local storage is not accessible in this browser session.');
     return;
   }
-  await ensureAugustSeed();
-  await ensureAgentReviewAugustSeed();
   ensureViewerSupport();
   document.getElementById('globalMonth').addEventListener('change', (e)=>{ currentMonth = e.target.value; render(); });
   document.getElementById('saveStatus').addEventListener('click', ()=>{
@@ -1673,7 +1635,7 @@ async function init(){
   setView('myDashboard');
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='flex';
-
+  
   setInterval(async ()=>{
     if(!SYNC_URL) return;
     if(currentView==='agentReviews') return;
