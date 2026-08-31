@@ -564,9 +564,6 @@
 <script>
 /* =========================================================================
    SUPPORT_REVIEW — SEQAS evaluation tracker
-   Persistence via localStorage (this runs as a standalone downloaded file,
-   opened directly in the browser — not inside Claude's live artifact panel —
-   so localStorage is the correct, reliable storage for this app).
    ========================================================================= */
 
 const CRITERIA = [
@@ -620,10 +617,6 @@ If the template shows ASM / HD but the site actually has Onsite contract, suppor
 ];
 const MAX_SCORE = CRITERIA.reduce((s,c)=>s+c.max,0); // 17
 
-/* August 2026 evaluations, transcribed from the team's SEQAS feedback PDFs.
-   Per-criterion scores are a best-effort reconstruction from the written
-   feedback (the PDFs only stated the overall percentage) — open any record
-   in Edit and adjust individual ratings if they don't look right. */
 const AUGUST_2026_SEED = [
   { supportName:'Aj Dela Cruz', aliases:[], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-07', agentName:'Dean Clemente', caseNumber:'13872622',
     scores:{ identification:1, relationship:1, diagnosis:1, accuracy:1, communication:2, resource:0, logging:2, efficiency:2, compliance:1 },
@@ -754,10 +747,7 @@ const AUGUST_2026_SEED = [
     tlCommitment:`Coaching will be provided to reinforce proper diagnostic questioning and KB utilization, especially when multiple issues are reported within the same case. Support will be reminded to fully diagnose each issue before proceeding with a referral or escalation. Support should review KB 000004191 and ensure the reprint receipt troubleshooting process is properly followed. Additional emphasis will be placed on avoiding unnecessary FCC restarts when the issue is isolated to the POS, as this can cause additional downtime and increase handle time. Moving forward, Support is expected to confirm the affected component, ask the appropriate diagnostic questions, utilize the correct KB, and complete the applicable troubleshooting before referring the case to another team.` },
 ];
 
-/* August 2026 Agent Review entries (commendations + reviews), transcribed
-   from the team's Agent Review spreadsheet. */
 const AGENT_REVIEW_AUGUST_SEED = [
-  // Commendations
   { mode:'commendation', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Kimberly Torres', caseNumber:'13847946', category:'', section1:'' },
   { mode:'commendation', date:'2026-08-07', supportName:'Judy Tolentino', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13874944', category:'', section1:'' },
   { mode:'commendation', date:'2026-08-12', supportName:'Aj Dela Cruz', aliases:[], agentName:'Roi L.', caseNumber:'13884835', category:'', section1:'' },
@@ -771,7 +761,6 @@ const AGENT_REVIEW_AUGUST_SEED = [
   { mode:'commendation', date:'2026-08-21', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Christian Luis Quimno', caseNumber:'13928601', category:'', section1:'' },
   { mode:'commendation', date:'2026-08-24', supportName:'Christian Mark Patdu', aliases:['Christian Patdu'], agentName:'Felisha Sy', caseNumber:'13899358', category:'', section1:'' },
   { mode:'commendation', date:'2026-08-26', supportName:'Judy Tolentino', aliases:[], agentName:'Roi Chester Lumtao', caseNumber:'13946883', category:'', section1:'' },
-  // Reviews
   { mode:'review', date:'2026-08-01', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Daniel Arago', caseNumber:'13846511', category:'Procedural', section1:'DCR#3 Poll error / DCR#3 shows "Please Pay Inside E01"' },
   { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Sheenam Dhiman', caseNumber:'13812789', category:'Procedural', section1:'Card transaction cashed out without verifying with network' },
   { mode:'review', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Jayson Camero', caseNumber:'13871724', category:'Behaviour', section1:'Cards not working inside/out' },
@@ -812,7 +801,7 @@ let STATE = {
   historicalDuplicatesCleaned: false,
   deletedAgentReviewIds: []
 };
-let appMode = 'support'; // 'support' | 'supervisor'
+let appMode = 'support';
 let supervisorUnlocked = false;
 const SUPERVISOR_PASSWORD = 'Verifone123';
 let currentView = 'myDashboard';
@@ -843,18 +832,12 @@ function isStorageReady(){
     localStorage.setItem(testKey, '1');
     localStorage.removeItem(testKey);
     return true;
-  }catch(e){
-    return false;
-  }
+  }catch(e){ return false; }
 }
 let loadFailed = false;
 let lastLoadError = null;
 let lastRawValue = null;
 
-/* ---------------------- TEAM SYNC (optional, shared) ----------------------
-   If a supervisor sets a Sync URL (a free Firebase Realtime Database),
-   everyone's copy of this file pulls/merges/pushes to that same address,
-   so entries made on different devices become visible to each other. */
 const SYNC_URL_KEY = 'seqas-sync-url';
 const DEFAULT_SYNC_URL = 'https://support-performance-ec0a1-default-rtdb.firebaseio.com';
 let SYNC_URL = DEFAULT_SYNC_URL;
@@ -862,12 +845,10 @@ try{
   const stored = localStorage.getItem(SYNC_URL_KEY);
   SYNC_URL = (stored === null) ? DEFAULT_SYNC_URL : stored;
 }catch(e){ SYNC_URL = DEFAULT_SYNC_URL; }
-let lastSyncStatus = null; // 'ok' | 'error' | null (never configured/attempted)
+let lastSyncStatus = null;
 let lastSyncMessage = '';
 
-function syncEndpoint(){
-  return SYNC_URL.replace(/\/$/, '') + '/app-data.json';
-}
+function syncEndpoint(){ return SYNC_URL.replace(/\/$/, '') + '/app-data.json'; }
 async function pullRemoteState(){
   if(!SYNC_URL) return undefined;
   try{
@@ -875,12 +856,12 @@ async function pullRemoteState(){
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     lastSyncStatus = 'ok';
-    return data; // null is a valid "nothing there yet" response
+    return data;
   }catch(e){
     console.error('Sync pull failed', e);
     lastSyncStatus = 'error';
     lastSyncMessage = e && e.message ? e.message : String(e);
-    return NaN; // NaN = distinct "the request itself failed" sentinel
+    return NaN;
   }
 }
 async function pushRemoteState(state){
@@ -933,10 +914,6 @@ function mergeStates(local, remote){
   };
   return reconcileState(merged);
 }
-// Collapses supports that share the same name under different IDs (which could
-// happen if a new device seeded its own fresh roster before this fix existed),
-// keeping whichever ID has the most history attached and remapping everything
-// else — records, agent reviews, targets, attendance, deletion counts — to it.
 function dedupeSupports(state){
   const groups = new Map();
   (state.supports||[]).forEach(s=>{
@@ -985,11 +962,6 @@ function dedupeSupports(state){
 function completenessScore(obj, fields){
   return fields.reduce((s,f)=> s + (obj[f] ? String(obj[f]).trim().length : 0), 0);
 }
-// Collapses items sharing the same real-world identity (e.g. the same case
-// number) that ended up with different internal IDs — which happens when two
-// devices each seed their own copy of the same data before ever syncing.
-// Keeps whichever copy has more content filled in; items with no usable key
-// (blank case number, etc.) are left untouched since they can't be matched.
 function dedupeByKey(list, keyFn, fields){
   const groups = new Map();
   const noKey = [];
@@ -1007,17 +979,8 @@ function dedupeByKey(list, keyFn, fields){
   });
   return result;
 }
-// Runs every cleanup pass together: duplicate people, duplicate SEQAS
-// records (by case number), and duplicate Agent Review entries (by
-// mode + case number). Safe to call repeatedly — it's a no-op once clean.
 function reconcileState(state){
-  // Same-named people are always safe to collapse continuously — a person's
-  // name genuinely shouldn't duplicate.
   state = dedupeSupports(state);
-  // Same-case-number duplicates were a one-time seeding bug, NOT something
-  // that should keep being "cleaned up" forever — a support might legitimately
-  // log a second review or record against the same case number later, and
-  // that must never be mistaken for a leftover duplicate and dropped.
   if(!state.historicalDuplicatesCleaned){
     state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
     state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
@@ -1028,7 +991,7 @@ function reconcileState(state){
 async function syncNow(){
   if(!SYNC_URL) return;
   const remote = await pullRemoteState();
-  if(remote === undefined) return; // not configured
+  if(remote === undefined) return;
   if(Number.isNaN(remote)){
     setSaveStatus('error', 'Sync failed — tap to retry');
     return;
@@ -1044,13 +1007,11 @@ async function syncNow(){
 async function loadState(){
   if(!isStorageReady()){
     loadFailed = true;
-    lastLoadError = { type:'unavailable', message:'localStorage is blocked or unavailable in this browser (private/incognito mode sometimes disables it).' };
+    lastLoadError = { type:'unavailable', message:'localStorage is blocked or unavailable in this browser.' };
     return false;
   }
   let raw;
-  try{
-    raw = localStorage.getItem(STORAGE_KEY);
-  }catch(e){
+  try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){
     loadFailed = true;
     lastLoadError = { type:'fetch', message: e && e.message ? e.message : String(e) };
     return false;
@@ -1090,13 +1051,9 @@ async function loadState(){
       return false;
     }
   } else {
-    // Nothing saved yet on this browser (first-ever run here).
     if(SYNC_URL){
       const remote = await pullRemoteState();
       if(remote && typeof remote === 'object' && Array.isArray(remote.supports) && remote.supports.length){
-        // The shared database already has a real roster — adopt it as-is.
-        // (Merging it against a freshly-seeded local roster would create
-        // duplicate people under new random IDs, since matching is by ID.)
         STATE = {
           supports: remote.supports || [],
           targets: remote.targets || {},
@@ -1231,8 +1188,6 @@ async function ensureAugustSeed(){
   STATE.seededAugust2026 = true;
   await saveState();
 }
-// Backfills per-criterion notes on August records that were seeded before
-// notes existed, without touching anything the person has since edited.
 async function ensureAugustNotes(){
   let changed = false;
   AUGUST_2026_SEED.forEach(entry=>{
@@ -1247,10 +1202,6 @@ async function ensureAugustNotes(){
   });
   if(changed) await saveState();
 }
-// One-time correction: the August records were first entered with a best-effort
-// reconstruction of per-criterion scores. This applies the person's actual
-// scoring sheet over that reconstruction, exactly once, so it never clobbers
-// anything the person edits after this point.
 async function ensureAugustAccuracy(){
   if(STATE.augustAccuracyApplied) return;
   AUGUST_2026_SEED.forEach(entry=>{
@@ -1371,7 +1322,6 @@ function buildSummary(scores, notes){
   });
   const gaps = [...notMet, ...partial];
   const lower = s=>s.charAt(0).toLowerCase()+s.slice(1);
-  const cap = s=>s.charAt(0).toUpperCase()+s.slice(1);
   const list = arr => arr.length<=1 ? (arr[0]||'') : arr.slice(0,-1).join(', ')+' and '+arr[arr.length-1];
   const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 
@@ -1379,7 +1329,6 @@ function buildSummary(scores, notes){
     return { supportAction:'Score each criterion above, then generate the summary.', commitment:'', additional:'', tlNotes:'' };
   }
 
-  // -------- SUPPORT ACTION: one recap paragraph, strengths first --------
   const saParts = [];
   if(met.length){
     saParts.push(pick([
@@ -1401,7 +1350,6 @@ function buildSummary(scores, notes){
   }
   const supportAction = saParts.join(' ');
 
-  // -------- COMMITMENT / OBSERVATIONS: two short paragraphs, ownership then opportunity --------
   const cParts = [];
   if(met.length){
     cParts.push(pick([
@@ -1429,7 +1377,6 @@ function buildSummary(scores, notes){
   }
   const commitment = cParts.join('\n\n');
 
-  // -------- ADDITIONAL ACTIONS: bullet list, one per opportunity --------
   let additional;
   if(!gaps.length){
     additional = pick([
@@ -1443,7 +1390,6 @@ function buildSummary(scores, notes){
     }).join('\n\n');
   }
 
-  // -------- TL COMMITMENT: a short, warm coaching paragraph --------
   const tParts = [];
   if(gaps.length){
     tParts.push(pick([
@@ -1504,7 +1450,7 @@ const PAGE_META = {
   supports: ['Manage Supports', 'Add or remove people from the active roster'],
   myDashboard: ['Support Performance', 'Your SEQAS scores and Agent Review progress in one place'],
   myRecords: ['SEQAS Records', 'Search your own past evaluations'],
-  agentReviews: ['Agent Review', 'Log commendations and feedback from agents you\u2019ve helped'],
+  agentReviews: ['Agent Reviews', 'Master log of commendations and feedback from agents across the team'],
 };
 
 const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
@@ -1532,7 +1478,6 @@ function populateGlobalMonth(){
   document.getElementById('sidebarMonthChip').textContent = monthLabel(currentMonth);
 }
 
-/* ---------------------- MODE / NAV ---------------------- */
 const NAV_SUPERVISOR = [
   { group:'Overview', items:[
     { view:'dashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
@@ -1652,14 +1597,29 @@ function render(){
 }
 
 /* ======================================================================
-   DASHBOARD
+   DASHBOARD (Supervisor)
    ====================================================================== */
 function renderDashboard(){
   const months = allMonthsUsed();
   const thisMonthRecs = recordsFor(currentMonth);
   const teamAvg = avgPercent(thisMonthRecs);
   const target = getTarget(currentMonth);
-  const rate = target>0 ? thisMonthRecs.length/target : null;
+  const rawRate = target>0 ? (thisMonthRecs.length/target) : null;
+  const cappedRate = rawRate !== null ? Math.min(1, rawRate) : null;
+
+  // Calculate Average Agent Review Progress across team
+  let totalAgentRates = 0;
+  let countWithTarget = 0;
+  sortedSupports().forEach(s=>{
+    const adjusted = getAdjustedTarget(s.id, currentMonth);
+    if(adjusted !== null && adjusted > 0){
+      const monthCount = STATE.agentReviews.filter(a=>a.supportId===s.id && a.date && a.date.slice(0,7)===currentMonth).length;
+      const rate = Math.min(1, monthCount / adjusted);
+      totalAgentRates += rate;
+      countWithTarget++;
+    }
+  });
+  const avgAgentCompletion = countWithTarget > 0 ? (totalAgentRates / countWithTarget) : null;
 
   const rows = sortedSupports().map(sup=>{
     const cells = months.map(m=>{
@@ -1675,6 +1635,24 @@ function renderDashboard(){
 
   const teamOverallAvg = avgPercent(STATE.records);
 
+  // Support Agent Reviews Table for Dashboard
+  const agentReviewRows = sortedSupports().map(s=>{
+    const mine = STATE.agentReviews.filter(a=>a.supportId===s.id);
+    const rc = mine.filter(a=>a.mode==='review').length;
+    const cc = mine.filter(a=>a.mode==='commendation').length;
+    const monthCount = mine.filter(a=>a.date && a.date.slice(0,7)===currentMonth).length;
+    const adjusted = getAdjustedTarget(s.id, currentMonth);
+    const rate = (adjusted!==null && adjusted>0) ? Math.min(1, monthCount/adjusted) : null;
+    return `<tr>
+      <td style="font-weight:600;">${esc(s.name)}</td>
+      <td class="num">${rc}</td>
+      <td class="num">${cc}</td>
+      <td class="num">${rc+cc}</td>
+      <td class="num">${monthCount}</td>
+      <td class="num">${rate===null ? '<span style="color:var(--slate-soft);">No target set</span>' : `<span class="badge ${rate>=1?'green':'neutral'}">${Math.round(rate*100)}%</span>`}</td>
+    </tr>`;
+  }).join('');
+
   return `
   <div class="stat-row">
     <div class="stat-card">
@@ -1683,21 +1661,21 @@ function renderDashboard(){
       <div class="delta">on the current roster</div>
     </div>
     <div class="stat-card">
-      <div class="label">${monthLabel(currentMonth)} Average Score</div>
-      <div class="value">${pctStr(teamAvg)} <small>/ 100%</small></div>
-      <div class="delta">across ${thisMonthRecs.length} evaluation${thisMonthRecs.length===1?'':'s'}</div>
+      <div class="label">${monthLabel(currentMonth)} SEQAS Review</div>
+      <div class="value">${cappedRate===null ? '—' : Math.round(cappedRate*100)+'%'}</div>
+      <div class="delta">${thisMonthRecs.length} / ${target} evaluations completed</div>
     </div>
     <div class="stat-card">
-      <div class="label">${monthLabel(currentMonth)} Reviews vs Target</div>
-      <div class="value">${thisMonthRecs.length}<small> / ${target}</small></div>
-      <div class="delta"><span class="badge ${rate>=1?'green':'red'}">${rate===null?'—':Math.round(rate*100)+'%'} of target</span></div>
+      <div class="label">Agent Reviews Progress</div>
+      <div class="value">${avgAgentCompletion===null ? '—' : Math.round(avgAgentCompletion*100)+'%'}</div>
+      <div class="delta">team average completion for ${monthLabel(currentMonth)}</div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-header">
       <h3>Score Summary</h3>
-      <span style="font-size:11.5px; color:var(--slate-soft);">Average % per support, per month &middot; overall average ${pctStr(teamOverallAvg)}</span>
+      <span style="font-size:11.5px; color:var(--slate-soft);">${monthLabel(currentMonth)} average ${pctStr(teamAvg)} &middot; overall average ${pctStr(teamOverallAvg)}</span>
     </div>
     <div class="card-body" style="overflow-x:auto;">
       ${STATE.supports.length ? `
@@ -1705,6 +1683,20 @@ function renderDashboard(){
         <thead><tr><th>Support</th>${months.map(m=>`<th>${monthLabel(m).slice(0,3).toUpperCase()} '${m.slice(2,4)}</th>`).join('')}<th>Overall</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin scoring.', 'supports','Add supports')}
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Support Agent Reviews</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Reviews and commendations submitted by each support for ${monthLabel(currentMonth)}</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${STATE.supports.length ? `
+      <table>
+        <thead><tr><th>Support</th><th>Reviews</th><th>Commendations</th><th>Total</th><th>This Month</th><th>Progress</th></tr></thead>
+        <tbody>${agentReviewRows}</tbody>
+      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
     </div>
   </div>
   `;
@@ -1725,7 +1717,7 @@ function renderCounts(){
   const rateCells = months.map(m=>{
     const total = recordsFor(m).length;
     const target = getTarget(m);
-    const rate = target>0 ? total/target : null;
+    const rate = target>0 ? Math.min(1, total/target) : null;
     return `<td class="num"><span class="badge ${rate===null?'neutral':(rate>=1?'green':'red')}">${rate===null?'—':Math.round(rate*100)+'%'}</span></td>`;
   }).join('');
 
@@ -2033,7 +2025,7 @@ function renderSupports(){
           <li>Go to <strong>console.firebase.google.com</strong> and create a free project (any name).</li>
           <li>In the left menu, open <strong>Build \u2192 Realtime Database</strong> and click <strong>Create Database</strong>. Choose <strong>Start in test mode</strong>.</li>
           <li>Copy the URL shown at the top of that page (it looks like <code>https://your-project-default-rtdb.firebaseio.com</code>) and paste it below.</li>
-          <li>Under the database's <strong>Rules</strong> tab, make sure both <code>.read</code> and <code>.write</code> are set to <code>true</code>, then click Publish. (This keeps things simple, but means anyone with the URL can read or change the data \u2014 don't share it outside your team.)</li>
+          <li>Under the database's <strong>Rules</strong> tab, make sure both <code>.read</code> and <code>.write</code> are set to <code>true</code>, then click Publish.</li>
         </ol>
       </details>
       <div class="field-grid">
@@ -2097,7 +2089,8 @@ function renderMyDashboard(){
   const commendationCount = myAgentAll.filter(a=>a.mode==='commendation').length;
   const reviewCountMonth = myAgentThisMonth.filter(a=>a.mode==='review').length;
   const commendationCountMonth = myAgentThisMonth.filter(a=>a.mode==='commendation').length;
-  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
+  const rawRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
+  const completionRate = rawRate !== null ? Math.min(1, rawRate) : null;
 
   return `
   <div class="card" style="margin-bottom:20px;">
@@ -2195,7 +2188,7 @@ function renderMyDashboard(){
 }
 
 /* ======================================================================
-   MY RECORDS (Support View, read-only + searchable)
+   MY RECORDS (Support View)
    ====================================================================== */
 function renderMyRecords(){
   const options = sortedSupports().map(s=>`<option value="${s.id}" ${s.id===STATE.viewerSupportId?'selected':''}>${esc(s.name)}</option>`).join('');
@@ -2243,7 +2236,7 @@ function renderMyRecordsTable(){
 }
 
 /* ======================================================================
-   AGENT REVIEW (Support: add + own list · Supervisor: view all)
+   AGENT REVIEW (Support: add & own list | Supervisor: master log)
    ====================================================================== */
 function renderAgentReviews(){
   if(appMode==='support'){
@@ -2357,36 +2350,7 @@ function renderAgentReviews(){
     `;
   } else {
     const supFilterOptions = sortedSupports().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
-    const bySupportRows = sortedSupports().map(s=>{
-      const mine = STATE.agentReviews.filter(a=>a.supportId===s.id);
-      const rc = mine.filter(a=>a.mode==='review').length;
-      const cc = mine.filter(a=>a.mode==='commendation').length;
-      const monthCount = mine.filter(a=>a.date && a.date.slice(0,7)===currentMonth).length;
-      const target = getPersonalTarget(s.id, currentMonth);
-      const adjusted = getAdjustedTarget(s.id, currentMonth);
-      const rate = (adjusted!==null && adjusted>0) ? monthCount/adjusted : null;
-      const targetVal = (target===null) ? '' : target;
-      return `<tr>
-        <td style="font-weight:600;">${esc(s.name)}</td>
-        <td class="num">${rc}</td>
-        <td class="num">${cc}</td>
-        <td class="num">${rc+cc}</td>
-        <td class="num">${monthCount}</td>
-        <td class="num"><input type="number" min="0" class="target-input" placeholder="\u2014" data-personal-target-support="${s.id}" data-personal-target-month="${currentMonth}" value="${targetVal}"></td>
-        <td class="num">${rate===null ? '<span style="color:var(--slate-soft);">No target set</span>' : `<span class="badge ${rate>=1?'green':'neutral'}">${Math.round(rate*100)}%</span>`}</td>
-      </tr>`;
-    }).join('');
     return `
-    <div class="card" style="margin-bottom:20px;">
-      <div class="card-header"><h3>By Support</h3><span style="font-size:11.5px; color:var(--slate-soft);">Reviews and commendations submitted by each support \u2014 target &amp; progress for ${monthLabel(currentMonth)}</span></div>
-      <div class="card-body" style="overflow-x:auto;">
-        ${STATE.supports.length ? `
-        <table>
-          <thead><tr><th>Support</th><th>Reviews</th><th>Commendations</th><th>Total</th><th>This Month</th><th>Target</th><th>Progress</th></tr></thead>
-          <tbody>${bySupportRows}</tbody>
-        </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
-      </div>
-    </div>
     <div class="filter-bar">
       <select id="arFilterSupport"><option value="">All supports</option>${supFilterOptions}</select>
       <select id="arFilterKind"><option value="">All entries</option><option value="review">Agent Reviews</option><option value="commendation">Agent Commendations</option></select>
@@ -2883,18 +2847,6 @@ function attachViewHandlers(){
       renderAllAgentReviewsTable();
       document.getElementById('arFilterSupport').addEventListener('change', renderAllAgentReviewsTable);
       document.getElementById('arFilterKind').addEventListener('change', renderAllAgentReviewsTable);
-      document.querySelectorAll('[data-personal-target-support]').forEach(inp=>{
-        inp.addEventListener('change', async ()=>{
-          const supId = inp.dataset.personalTargetSupport;
-          const m = inp.dataset.personalTargetMonth;
-          const key = personalTargetKey(supId, m);
-          if(inp.value === ''){ delete STATE.personalTargets[key]; }
-          else { STATE.personalTargets[key] = Math.max(0, parseInt(inp.value)||0); }
-          await saveState();
-          render();
-          toast('Target updated');
-        });
-      });
     }
   }
 
@@ -3125,7 +3077,6 @@ function generatePdf(r, subject){
     let y = 56;
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Letterhead band
     doc.setFillColor(9,60,93);
     doc.rect(0,0,pageWidth,64,'F');
     doc.setTextColor(255,255,255);
@@ -3137,7 +3088,6 @@ function generatePdf(r, subject){
     y = 96;
     doc.setTextColor(28,43,58);
 
-    // Key/value table
     const kv = [
       ['DATE OF EVALUATION', fmtDate(r.dateOfEval), false],
       ['CHAT DATE', fmtDate(r.chatDate), false],
@@ -3325,7 +3275,7 @@ function startBackgroundSync(){
     if(!SYNC_URL) return;
     const safeViews = ['myDashboard','myRecords','dashboard','counts','records','supports','agentReviews'];
     if(!safeViews.includes(currentView)) return;
-    if(currentView==='agentReviews' && appMode==='support') return; // don't disrupt an in-progress form
+    if(currentView==='agentReviews' && appMode==='support') return;
     if(currentView==='new') return;
     const before = JSON.stringify(STATE);
     await syncNow();
