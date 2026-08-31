@@ -3,88 +3,283 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SUPPORT PERFORMANCE - Support View</title>
+<title>SUPPORT PERFORMANCE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
-    --pal-navy:#093C5D; --pal-blue:#3B7597; --pal-teal:#6FD1D7; --pal-mint:#5DF8D8;
-    --ink:#093C5D; --ink-2:#3B7597; --ink-soft:#2c5470; --paper:#d9eef0; --paper-deep:#c4e3e6;
-    --card:#f7fdfd; --rule:#b3d8db; --rule-soft:#cbe6e8; --brass:#3B7597; --brass-dark:#26506b;
-    --brass-tint:#d7f2f0; --ink-text:#093C5D; --slate:#365f6e; --slate-soft:#6c959e;
-    --green:#0d6b5c; --green-bg:#8ff0dd; --red:#8f2f2f; --red-bg:#f6c9c9;
-    --amber:#7a5e10; --amber-bg:#f5dd8f; --neutral-ink:#2c5f68; --neutral-bg:#cdeceb;
-    --radius:10px; --radius-sm:6px; --shadow: 0 1px 2px rgba(9,60,93,0.06), 0 4px 16px rgba(9,60,93,0.06);
+    --pal-navy:#093C5D;
+    --pal-blue:#3B7597;
+    --pal-teal:#6FD1D7;
+    --pal-mint:#5DF8D8;
+
+    --ink:#093C5D;
+    --ink-2:#3B7597;
+    --ink-soft:#2c5470;
+    --paper:#d9eef0;
+    --paper-deep:#c4e3e6;
+    --card:#f7fdfd;
+    --rule:#b3d8db;
+    --rule-soft:#cbe6e8;
+    --brass:#3B7597;
+    --brass-dark:#26506b;
+    --brass-tint:#d7f2f0;
+    --ink-text:#093C5D;
+    --slate:#365f6e;
+    --slate-soft:#6c959e;
+    --green:#0d6b5c;
+    --green-bg:#8ff0dd;
+    --red:#8f2f2f;
+    --red-bg:#f6c9c9;
+    --amber:#7a5e10;
+    --amber-bg:#f5dd8f;
+    --neutral-ink:#2c5f68;
+    --neutral-bg:#cdeceb;
+    --radius:10px;
+    --radius-sm:6px;
+    --shadow: 0 1px 2px rgba(9,60,93,0.06), 0 4px 16px rgba(9,60,93,0.06);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{ background:var(--paper); color:var(--ink-text); font-family:'Inter', -apple-system, sans-serif; font-size:14.5px; line-height:1.5; min-height:100vh; }
+  body{
+    background:var(--paper);
+    color:var(--ink-text);
+    font-family:'Inter', -apple-system, sans-serif;
+    font-size:14.5px;
+    line-height:1.5;
+    min-height:100vh;
+  }
   ::selection{ background: var(--brass); color:#fff; }
-  .app{ display:flex; min-height:100vh; }
-  .sidebar{ width:242px; flex-shrink:0; background:linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%); border-right:1px solid rgba(255,255,255,0.06); color:#dcefe9; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; }
-  .brand{ padding:26px 22px 18px 22px; border-bottom:1px solid rgba(255,255,255,0.1); }
-  .brand .mark{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
-  .brand .seal{ width:30px;height:30px;border-radius:50%; background:rgba(93,248,216,0.14); border:1px solid var(--pal-mint); display:flex;align-items:center;justify-content:center; font-weight:700; font-size:12.5px; color:var(--pal-mint); flex-shrink:0; }
-  .brand h1{ font-weight:800; font-size:18px; letter-spacing:-0.01em; margin:0; color:#f2fbf8; }
-  .brand .tagline{ font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:#7fa39b; margin-top:3px; }
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:242px;
+    flex-shrink:0;
+    background: linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+    border-right:1px solid rgba(255,255,255,0.06);
+    color:#dcefe9;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    padding:26px 22px 18px 22px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .brand .mark{
+    display:flex; align-items:center; gap:10px; margin-bottom:6px;
+  }
+  .brand .seal{
+    width:30px;height:30px;border-radius:50%;
+    background:rgba(93,248,216,0.14);
+    border:1px solid var(--pal-mint);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; color:var(--pal-mint);
+    flex-shrink:0;
+  }
+  .brand h1{
+    font-family:'Inter',sans-serif;
+    font-weight:800;
+    font-size:18px;
+    letter-spacing:-0.01em;
+    margin:0;
+    color:#f2fbf8;
+  }
+  .brand .tagline{
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#7fa39b;
+    margin-top:3px;
+  }
+  .mode-toggle{
+    display:flex; align-items:center; gap:2px; margin-top:14px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:3px;
+    width:fit-content;
+  }
+  .mode-toggle button{
+    display:flex; align-items:center; gap:5px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:11px; font-weight:600; color:#8aa9a3;
+    padding:6px 11px; border-radius:16px; transition:background 0.15s, color 0.15s;
+  }
+  .mode-toggle button.active{ background:var(--pal-mint); color:var(--pal-navy); }
+  .mode-toggle button svg{ flex-shrink:0; }
   .viewer-picker{ margin-top:14px; }
-  .viewer-picker label{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px; font-weight:700; }
-  .viewer-picker select{ width:100%; background:#ffffff; border:1px solid rgba(255,255,255,0.5); color:var(--pal-navy); font-size:13px; font-weight:600; padding:9px 30px 9px 11px; border-radius:var(--radius-sm); cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23093C5D' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat:no-repeat; background-position:right 9px center; }
-  nav.navlist{ padding:16px 12px; flex:1; overflow-y:auto; }
-  .navlist button{ width:100%; display:flex; align-items:center; gap:11px; background:none; border:none; color:#a9c9c2; text-align:left; font-family:inherit; font-size:13.5px; font-weight:500; padding:9px 12px; border-radius:var(--radius-sm); cursor:pointer; margin-bottom:2px; transition:background 0.15s, color 0.15s; }
+  .viewer-picker label{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px; font-weight:700;
+  }
+  .viewer-picker select{
+    width:100%; background:#ffffff; border:1px solid rgba(255,255,255,0.5); color:var(--pal-navy);
+    font-size:13px; font-weight:600; padding:9px 30px 9px 11px; border-radius:var(--radius-sm); cursor:pointer;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23093C5D' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 9px center;
+  }
+  .viewer-picker select option{ background:#ffffff; color:var(--pal-navy); }
+  .type-badge{
+    display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px;
+    background:var(--brass-tint); color:var(--brass-dark); white-space:nowrap;
+  }
+  .type-badge.commendation{ background:var(--green-bg); color:var(--green); }
+  nav.navlist{
+    padding:16px 12px;
+    flex:1;
+    overflow-y:auto;
+  }
+  .navlist button{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    background:none;
+    border:none;
+    color:#a9c9c2;
+    text-align:left;
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:500;
+    padding:9px 12px;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    letter-spacing:0.01em;
+    margin-bottom:2px;
+    transition:background 0.15s, color 0.15s;
+  }
   .navlist button svg{ flex-shrink:0; opacity:0.75; }
   .navlist button:hover{ background:rgba(255,255,255,0.06); color:#f2fbf8; }
-  .navlist button.active{ background:rgba(93,248,216,0.16); color:var(--pal-mint); font-weight:600; box-shadow:inset 2px 0 0 var(--pal-mint); }
+  .navlist button.active{
+    background:rgba(93,248,216,0.16);
+    color:var(--pal-mint);
+    font-weight:600;
+    box-shadow: inset 2px 0 0 var(--pal-mint);
+  }
   .navlist button.active svg{ opacity:1; }
-  .navlist .navgroup-label{ font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#5f7d77; padding:14px 12px 6px 12px; font-weight:600; }
-  .sidebar-foot{ padding:14px 22px 18px 22px; border-top:1px solid rgba(255,255,255,0.1); font-size:11.5px; color:#7fa39b; display:flex; flex-direction:column; gap:10px; }
-  .sidebar-foot .month-chip{ display:inline-flex;align-items:center;gap:6px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); padding:5px 10px;border-radius:20px; color:#f2fbf8; font-weight:600; font-size:12px; width:fit-content; }
-  .save-status{ display:flex; align-items:center; gap:7px; font-size:11px; color:#7fa39b; }
-  .save-status .dot{ width:6px; height:6px; border-radius:50%; background:var(--pal-mint); flex-shrink:0; }
+  .navlist .navgroup-label{
+    font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
+    color:#5f7d77; padding:14px 12px 6px 12px; font-weight:600;
+  }
+  .sidebar-foot{
+    padding:14px 22px 18px 22px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    font-size:11.5px;
+    color:#7fa39b;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .sidebar-foot .month-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    padding:5px 10px;border-radius:20px;
+    color:#f2fbf8; font-weight:600; font-size:12px;
+    width:fit-content;
+  }
+  .save-status{
+    display:flex; align-items:center; gap:7px; font-size:11px; color:#7fa39b;
+  }
+  .save-status .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--pal-mint); flex-shrink:0;
+  }
   .save-status.error{ cursor:pointer; }
   .save-status.error .dot{ background:#ff9d9d; }
   .save-status.saving .dot{ background:var(--pal-teal); }
+
+  /* ---------- MAIN ---------- */
   .main{ flex:1; min-width:0; }
-  .topbar{ position:sticky; top:0; z-index:5; background:rgba(220,238,234,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--rule); padding:20px 36px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
-  .topbar h2{ font-size:24px; font-weight:700; margin:0; color:var(--ink); }
-  .topbar .sub{ color:var(--slate); font-size:12.5px; margin-top:2px; }
+  .topbar{
+    position:sticky; top:0; z-index:5;
+    background:rgba(220,238,234,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--rule);
+    padding:20px 36px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+  }
+  .topbar h2{
+    font-family:'Inter',sans-serif;
+    font-size:24px; font-weight:700; margin:0; color:var(--ink);
+  }
+  .topbar .sub{ color:var(--slate); font-size:12.5px; margin-top:2px;}
   .content{ padding:28px 36px 60px 36px; max-width:1180px; }
-  .month-select{ display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--rule); border-radius:20px; padding:6px 6px 6px 14px; }
+
+  .month-select{
+    display:flex; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--rule);
+    border-radius:20px; padding:6px 6px 6px 14px;
+  }
   .month-select label{ font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate-soft); }
-  .month-select select{ border:none; background:none; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--ink); padding:4px 6px; cursor:pointer; }
-  .card{ background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius); box-shadow:var(--shadow); }
-  .card-header{ padding:16px 20px; border-bottom:1px solid var(--rule-soft); display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .card-header h3{ font-size:16.5px; margin:0; font-weight:700; color:var(--ink); }
+  .month-select select{
+    border:none; background:none; font-family:'IBM Plex Mono',monospace;
+    font-size:13px; font-weight:600; color:var(--ink); padding:4px 6px; cursor:pointer;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule-soft);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+  .card-header{
+    padding:16px 20px; border-bottom:1px solid var(--rule-soft);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .card-header h3{ font-family:'Inter',sans-serif; font-size:16.5px; margin:0; font-weight:700; color:var(--ink);}
   .card-body{ padding:20px; }
-  .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
-  .section-divider{ display:flex; align-items:center; gap:12px; margin:8px 0 16px 0; }
-  .section-divider h3{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--brass-dark); margin:0; white-space:nowrap; }
-  .section-divider::after{ content:""; flex:1; height:1px; background:var(--rule); }
-  .stat-card{ background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
-  .stat-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--brass); }
-  .stat-card .label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--slate-soft); font-weight:600; }
-  .stat-card .value{ font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; color:var(--ink); margin-top:6px; }
-  .stat-card .value small{ font-size:14px; color:var(--slate); font-weight:500; }
-  .stat-card .delta{ font-size:12px; margin-top:4px; color:var(--slate); }
-  table{ width:100%; border-collapse:collapse; font-size:13px; }
-  th{ text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--slate-soft); font-weight:700; padding:9px 12px; border-bottom:2px solid var(--rule); white-space:nowrap; }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;}
+  .section-divider{
+    display:flex; align-items:center; gap:12px; margin:8px 0 16px 0;
+  }
+  .section-divider h3{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--brass-dark); margin:0; white-space:nowrap;
+  }
+  .section-divider::after{
+    content:""; flex:1; height:1px; background:var(--rule);
+  }
+  .stat-card{
+    background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius);
+    padding:18px 20px; box-shadow:var(--shadow); position:relative; overflow:hidden;
+  }
+  .stat-card::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--brass);
+  }
+  .stat-card .label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--slate-soft); font-weight:600;}
+  .stat-card .value{ font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; color:var(--ink); margin-top:6px;}
+  .stat-card .value small{ font-size:14px; color:var(--slate); font-weight:500;}
+  .stat-card .delta{ font-size:12px; margin-top:4px; color:var(--slate);}
+
+  table{ width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--slate-soft); font-weight:700; padding:9px 12px; border-bottom:2px solid var(--rule);
+    white-space:nowrap;
+  }
   td{ padding:11px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:middle; }
   tr:last-child td{ border-bottom:none; }
   tbody tr:hover{ background:rgba(169,121,58,0.045); }
   .num{ font-family:'IBM Plex Mono',monospace; }
   .agent-name{ font-style:italic; font-weight:500; color:var(--slate); }
-  .badge{ display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:12.5px; padding:3px 9px; border-radius:20px; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace;
+    font-weight:600; font-size:12.5px; padding:3px 9px; border-radius:20px;
+  }
   .badge.green{ background:var(--green-bg); color:var(--green); }
   .badge.amber{ background:var(--amber-bg); color:var(--amber-dark, var(--amber)); }
   .badge.red{ background:var(--red-bg); color:var(--red); }
   .badge.neutral{ background:var(--paper-deep); color:var(--slate); }
-  .type-badge{ display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; background:var(--brass-tint); color:var(--brass-dark); white-space:nowrap; }
-  .type-badge.commendation{ background:var(--green-bg); color:var(--green); }
-  .mode-toggle{ display:flex; align-items:center; gap:2px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:3px; width:fit-content; }
-  .mode-toggle button{ display:flex; align-items:center; gap:5px; border:none; background:none; cursor:pointer; font-family:inherit; font-size:11px; font-weight:600; color:#8aa9a3; padding:6px 11px; border-radius:16px; transition:background 0.15s, color 0.15s; }
-  .mode-toggle button.active{ background:var(--pal-mint); color:var(--pal-navy); }
-  button.btn{ font-family:inherit; font-weight:600; font-size:13px; border-radius:var(--radius-sm); cursor:pointer; padding:9px 16px; border:1px solid transparent; transition:all 0.12s; }
+
+  button.btn{
+    font-family:inherit; font-weight:600; font-size:13px; border-radius:var(--radius-sm); cursor:pointer;
+    padding:9px 16px; border:1px solid transparent; transition:all 0.12s;
+  }
+  button.btn.primary{ background:var(--ink); color:#eafaf5; }
   button.btn.brass{ background:var(--brass); color:#fff; }
   button.btn.brass:hover{ background:var(--brass-dark); }
   button.btn.ghost{ background:transparent; border:1px solid var(--rule); color:var(--ink-text); }
@@ -92,38 +287,59 @@
   button.btn.danger{ background:transparent; color:var(--red); border:1px solid var(--red-bg); }
   button.btn.danger:hover{ background:var(--red-bg); }
   button.btn.sm{ padding:5px 11px; font-size:12px; }
-  .icon-btn{ background:none; border:none; cursor:pointer; color:var(--slate); padding:6px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; justify-content:center; }
+  .icon-btn{
+    background:none; border:none; cursor:pointer; color:var(--slate); padding:6px; border-radius:var(--radius-sm);
+    display:inline-flex; align-items:center; justify-content:center;
+  }
   .icon-btn:hover{ background:var(--paper-deep); color:var(--ink); }
   .icon-btn.danger:hover{ background:var(--red-bg); color:var(--red); }
-  label.field-label{ display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); margin-bottom:6px; }
-  input[type=text], input[type=number], input[type=date], select, textarea{ width:100%; font-family:inherit; font-size:13.5px; color:var(--ink-text); background:var(--card); border:1px solid var(--rule); border-radius:var(--radius-sm); padding:9px 11px; }
+
+  label.field-label{ display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate); margin-bottom:6px;}
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%; font-family:inherit; font-size:13.5px; color:var(--ink-text);
+    background:var(--card); border:1px solid var(--rule); border-radius:var(--radius-sm); padding:9px 11px;
+  }
   input:focus, select:focus, textarea:focus{ outline:2px solid var(--brass); outline-offset:1px; border-color:var(--brass); }
   textarea{ resize:vertical; min-height:76px; line-height:1.5; }
   .field{ margin-bottom:16px; }
   .field-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
   .field-hint{ font-size:11.5px; color:var(--slate-soft); margin-top:5px; }
+
   .empty-state{ text-align:center; padding:56px 20px; color:var(--slate-soft); }
   .empty-state svg{ opacity:0.5; margin-bottom:12px; }
-  .empty-state h4{ font-size:17px; margin:0 0 6px 0; color:var(--ink); }
+  .empty-state h4{ color:var(--ink); font-size:17px; margin:0 0 6px 0; font-family:'Inter',sans-serif; }
   .empty-state p{ font-size:13px; margin:0 0 18px 0; }
-  .toast-wrap{ position:fixed; bottom:24px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px; }
-  .toast{ background:var(--ink); color:#eafaf5; padding:12px 18px; border-radius:10px; font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px; border-left:3px solid var(--brass); }
-  .modal-backdrop{ position:fixed; inset:0; background:rgba(20,29,49,0.55); display:flex; align-items:flex-start; justify-content:center; padding:40px 20px; z-index:100; overflow-y:auto; }
+
+  .toast-wrap{ position:fixed; bottom:24px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px;}
+  .toast{
+    background:var(--ink); color:#eafaf5; padding:12px 18px; border-radius:10px; font-size:13px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px;
+    border-left:3px solid var(--brass); animation: slidein 0.25s ease-out;
+  }
+  @keyframes slidein{ from{ opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,29,49,0.55); display:flex; align-items:flex-start;
+    justify-content:center; padding:40px 20px; z-index:100; overflow-y:auto;
+  }
   .modal{ background:var(--paper); border-radius:5px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.35); border:1px solid var(--rule); }
   .modal-head{ padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between; }
-  .modal-head h3{ margin:0; font-size:18px; }
-  .modal-body{ padding:22px 24px; max-height:70vh; overflow-y:auto; }
-  .modal-foot{ padding:16px 24px; border-top:1px solid var(--rule); display:flex; justify-content:flex-end; gap:10px; }
+  .modal-head h3{ margin:0; font-size:18px;}
+  .modal-body{ padding:22px 24px; max-height:70vh; overflow-y:auto;}
+  .modal-foot{ padding:16px 24px; border-top:1px solid var(--rule); display:flex; justify-content:flex-end; gap:10px;}
+
   .letterhead{ border:1px solid var(--rule); border-radius:var(--radius); overflow:hidden; background:var(--card); }
   .letterhead .lh-band{ background:var(--ink); color:#eafaf5; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; }
-  .letterhead .lh-band h4{ margin:0; font-size:16px; font-weight:700; }
+  .letterhead .lh-band h4{ margin:0; font-size:16px; font-weight:700;}
   .letterhead .lh-body{ padding:20px 22px; }
   .kv-table{ width:100%; border-collapse:collapse; }
   .kv-table td{ padding:8px 12px; border:1px solid var(--rule); font-size:13px; }
   .kv-table td.k{ background:var(--paper-deep); font-weight:700; width:210px; text-transform:uppercase; font-size:11px; letter-spacing:0.04em; color:var(--slate); }
+
   .section-block{ margin-top:18px; }
   .section-block h5{ font-size:14px; margin:0 0 6px 0; color:var(--ink); font-weight:700; border-bottom:1.5px solid var(--brass); padding-bottom:5px; display:inline-block; }
   .section-block p{ margin:8px 0 0 0; color:var(--ink-text); white-space:pre-wrap; }
+
   .attendance-compact input[type=number]{ padding:7px 8px; text-align:center; }
   .attendance-compact .field-label{ font-size:10px; margin-bottom:4px; }
   .loading-screen{ position:fixed; inset:0; background:var(--paper); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; z-index:999; }
@@ -142,9 +358,13 @@
     <div class="brand">
       <div class="mark">
         <div class="seal">SP</div>
-        <h1>Support Portal</h1>
+        <h1>Support Performance</h1>
       </div>
       <div class="tagline">Evaluation &amp; Coaching Ledger</div>
+      <div class="mode-toggle" id="modeToggle">
+        <button type="button" class="active" data-mode="support"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Support View</button>
+        <button type="button" data-mode="supervisor"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4Z"/></svg>Supervisor</button>
+      </div>
       <div id="viewerPickerWrap"></div>
     </div>
     <nav class="navlist" id="navlist"></nav>
@@ -177,6 +397,33 @@ const MAX_SCORE = 17;
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
+const AUGUST_2026_SEED = [
+  { supportName:'Aj Dela Cruz', aliases:[], month:'2026-08', dateOfEval:'2026-08-19', chatDate:'2026-08-07', agentName:'Dean Clemente', caseNumber:'13872622',
+    scores:{ identification:1, relationship:1, diagnosis:1, accuracy:1, communication:2, resource:0, logging:2, efficiency:2, compliance:1 },
+    criteriaNotes:{ identification:'Subtemplate is not showing, and the incorrect KB was followed. Support had the opportunity to ask the agent for clarification and provide the correct KB: 4487.', relationship:'Support remotely connected to clear the first failure but did not instruct the agent to check the closing dates, amount, and count through PuTTY to ensure everything was correct.', diagnosis:'Support is already familiar with this issue, but there was an opportunity to verify whether the site is closing at the correct time or following the automatic end-of-day process. Support could have also checked the closing dates, amounts, and counts to ensure everything was accurate and properly aligned.', accuracy:'Support was able to apply the fix, but they also needed to check with the network or conference the site to make sure that, going forward, the site follows the correct closing date and time.', communication:'Support was able to communicate properly with the agent.', resource:'The KB was not properly utilized. Support was unable to check the batch configuration to confirm if it was set to Day, verify whether the caller was closing at the correct time, or check the count and amount to ensure they were not exceeding the limit and determine if anything needed to be manually deleted. The process for conferencing the call to the Network team was also not followed.', logging:'All are properly documented.', efficiency:'Support consistently provided answers to the agent.', compliance:'No compliance concerns.' },
+    supportAction:`Support was able to communicate properly with the agent and provide the necessary assistance. However, there were opportunities to improve the troubleshooting process. The correct KB (4487) should have been followed, and Support should have verified the batch configuration, closing date and time, amount, and count through PuTTY. Support should also have confirmed whether the site was following the correct automatic end-of-day process. For cases requiring Network involvement, Support should have followed the proper process by conferencing the call to the Network team to ensure the issue was fully addressed and to prevent recurrence.`,
+    commitmentObservations:`Going forward, Support will ensure the correct KB and troubleshooting steps are followed. They will verify the site's closing configuration, dates, amounts, and counts, and confirm that the site is following the correct closing process. When Network assistance is required, Support will follow the proper conferencing process.`,
+    additionalActions:`The Subtemplate was not displaying, and the incorrect KB was initially followed. Support had an opportunity to clarify the issue with the agent and provide KB 4487. PuTTY should be used to verify the closing date, amount, and count after clearing the initial failure. Batch configuration should be checked to confirm it is set correctly to Day. Support should verify that the site is closing at the correct time and following the automatic end-of-day process. The Network team should be involved when necessary to confirm the site's configuration and closing process.`,
+    tlCommitment:`I will coach Support to consistently use the correct KB and Subtemplate, verify all required configurations during troubleshooting, and ensure the complete troubleshooting process is followed before resolving the case. I will also reinforce the proper escalation and conferencing process with the Network team when required.` },
+
+  { supportName:'Aj Dela Cruz', aliases:[], month:'2026-08', dateOfEval:'2026-08-24', chatDate:'2026-08-24', agentName:'Japteg Singh', caseNumber:'13936552',
+    scores:{ identification:2, relationship:2, diagnosis:1, accuracy:1, communication:2, resource:1, logging:2, efficiency:2, compliance:1 },
+    criteriaNotes:{ identification:'The template listed Contract Type as PSP HD / ASM / No Onsite, and support handled the entire case remotely with no dispatch or VASC referral needed — correct for this contract type. No sub-template issues, and support did not ask anything already answered in the template, since the agent had already provided a thorough troubleshooting summary.', relationship:'The agent came in with a clear, well-documented ask (clear stuck cashiers, logs, and firstFailureDate) backed by thorough pre-troubleshooting, so support moving directly into action rather than asking additional clarifying questions was appropriate here — the groundwork had already been laid. The tone throughout was friendly and professional on both sides.', diagnosis:'Support\'s technical diagnosis and verification (Buypass ID, localtotals thresholds, firstFailureDate, cashier/jlog/tlog checks) was thorough and accurate. However, support did not flag or investigate the inconsistent day-close timestamps visible in the log listing the agent provided (ranging from 3:01 AM to as late as 2:39 PM across different days). This inconsistency is a likely root cause of the recurring StopTransaction trigger, and per KB, sites with irregular or out-of-window closes are at risk of this issue recurring — potentially escalating to a disk-full condition if left unaddressed. Support has an opportunity to review day-close timing patterns like this and advise the agent to confirm the site\'s correct cutoff/batch-close window with the network or get Buypass on a conference call, rather than only resolving the immediate symptom.', accuracy:'The technical fix applied was accurate and resolved the immediate issue. However, without addressing the inconsistent close times, the underlying root cause remains unaddressed, and the same issue is likely to recur. Support has an opportunity to pair the technical fix with a recommendation to correct the site\'s closing schedule, so the fix is not just a repeat patch on a recurring problem.', communication:'Support\'s updates were concise but complete, clearly confirming each check performed and its result, which suits a technical peer-to-peer exchange like this one. Communication was easy to follow throughout.', resource:'Support made good use of the available tools for the technical checks — Buypass ID, localtotals threshold verification, firstFailureDate clearing, and additional standard checks (cashiers, jlogs, tlogs, fuel pending transactions). However, support has an opportunity here: given the site\'s day-close timestamps were inconsistent (ranging from 3:01 AM to 2:39 PM across different days), support should have verified the closing/cutoff timeframe with the network or Buypass directly. This isn\'t an optional extra step — when a site isn\'t closing consistently, confirming the correct close window with the network is necessary to prevent the issue from recurring. Resolving the symptom without this verification leaves the root cause unaddressed.', logging:'No dispatch or transfer was required, and nothing in the transcript indicates improper handling of logging.', efficiency:'Support\'s response times were excellent throughout — connection info to first update in under 3 minutes, additional checks completed shortly after, and the agent confirmed resolution within a reasonable window matching the "check after 2-3 mins" guidance. No agent question went unanswered.', compliance:'No compliance concerns.' },
+    supportAction:`Support reviewed the template and correctly handled the case remotely under the PSP HD / ASM / No Onsite contract. Since the agent provided a detailed troubleshooting summary upfront, Support appropriately proceeded directly into the technical checks without repeating questions that had already been answered. Support verified the Buypass ID, localtotals thresholds, firstFailureDate, cashier status, Jlogs, Tlogs, and pending fuel transactions. The required technical fix was applied successfully, and the immediate StopTransaction issue was resolved.`,
+    commitmentObservations:`Support demonstrated strong technical troubleshooting and verification. The checks performed were thorough, the communication was concise and easy to follow, and the response times were excellent. The main gap was that Support did not investigate the inconsistent day-close timestamps, which ranged from approximately 3:01 AM to 2:39 PM across different days. This is an important finding because inconsistent or out-of-window day closes can contribute to recurring StopTransaction issues. While the immediate issue was resolved, the underlying cause was not fully addressed, creating a potential risk of recurrence.`,
+    additionalActions:`Support should review the site's day-close pattern whenever recurring StopTransaction behavior is identified. Given the inconsistent closing times, Support should recommend confirming the correct cutoff or batch-close window with the network or coordinating with Buypass to verify the expected timeframe. The case should include documentation of the irregular close times and the recommendation provided to the site. Addressing the closing schedule along with the technical fix would provide a more complete resolution and reduce the likelihood of the issue recurring.`,
+    tlCommitment:`This was a strong interaction from a technical execution, communication, and responsiveness standpoint. The primary coaching opportunity is to look beyond the immediate symptom and identify potential recurring root causes. Support should review available logs and timestamps for patterns that may explain why the issue is recurring and ensure those findings are addressed before closing the case. The technical fix was correct, but pairing it with verification of the site's day-close/cutoff schedule would result in a more complete and sustainable resolution.` }
+];
+
+const AGENT_REVIEW_AUGUST_SEED = [
+  { mode:'commendation', date:'2026-08-01', supportName:'Melvin Lagrosa', aliases:[], agentName:'Kimberly Torres', caseNumber:'13847946', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-07', supportName:'Judy Tolentino', aliases:[], agentName:'Boh Brian Daclis', caseNumber:'13874944', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-12', supportName:'Aj Dela Cruz', aliases:[], agentName:'Roi L.', caseNumber:'13884835', category:'', section1:'' },
+  { mode:'commendation', date:'2026-08-12', supportName:'Aj Dela Cruz', aliases:[], agentName:'Dean Clemente', caseNumber:'13880211', category:'', section1:'' },
+  { mode:'review', date:'2026-08-01', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Daniel Arago', caseNumber:'13846511', category:'Procedural', section1:'DCR#3 Poll error / DCR#3 shows "Please Pay Inside E01"' },
+  { mode:'review', date:'2026-08-01', supportName:'Zachary Payabyab', aliases:['Zachary Jeremy Payabyab'], agentName:'Sheenam Dhiman', caseNumber:'13812789', category:'Procedural', section1:'Card transaction cashed out without verifying with network' }
+];
+
 let STATE = {
   supports: [], targets: {}, records: [], seededAugust2026: false, deletedCaseNumbers: [],
   augustAccuracyApplied: false, agentReviews: [], viewerSupportId: null, personalTargets: {},
@@ -188,6 +435,7 @@ let currentView = 'myDashboard';
 let currentMonth = monthKey(new Date());
 let editingAgentReviewId = null;
 let agentReviewKind = 'review';
+const SUPERVISOR_PASSWORD = 'Verifone123';
 
 const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
 const AGENT_COMMENDATION_CATEGORIES = ['Exceptional Customer Service','Technical Excellence','Process & Policy Adherence','Efficiency & Productivity','Team Collaboration','Going Above & Beyond'];
@@ -218,9 +466,7 @@ function setSaveStatus(state, text){
   if(state) wrap.classList.add(state);
   label.textContent = text;
 }
-function isStorageReady(){
-  try{ localStorage.setItem('__test__','1'); localStorage.removeItem('__test__'); return true; }catch(e){ return false; }
-}
+function isStorageReady(){ try{ localStorage.setItem('__test__','1'); localStorage.removeItem('__test__'); return true; }catch(e){ return false; } }
 
 function syncEndpoint(){ return SYNC_URL.replace(/\/$/, '') + '/app-data.json'; }
 async function pullRemoteState(){
@@ -275,6 +521,17 @@ async function syncNow(){
   await pushRemoteState(STATE);
 }
 
+function seedState(){
+  const names = ['Aj Dela Cruz','Kristian Ong','Melvin Lagrosa','Zachary Payabyab','Glory Barbacena','Gemmalyn Silvestre','Judy Tolentino','Christian Mark Patdu'];
+  return {
+    supports: names.map(n=>({ id: uid('sup'), name:n })),
+    targets: {}, records: [], seededAugust2026: false, deletedCaseNumbers: [],
+    augustAccuracyApplied: false, agentReviews: [], viewerSupportId: null, personalTargets: {},
+    attendance: {}, agentReviewDeletionCounts: {}, agentReviewAugust2026Seeded: false,
+    historicalDuplicatesCleaned: false, deletedAgentReviewIds: []
+  };
+}
+
 async function loadState(){
   if(!isStorageReady()) return false;
   let raw = localStorage.getItem(STORAGE_KEY);
@@ -288,15 +545,10 @@ async function loadState(){
       return true;
     }catch(e){ return false; }
   } else {
-    if(SYNC_URL){
-      const remote = await pullRemoteState();
-      if(remote && typeof remote==='object' && remote.supports){
-        STATE = remote;
-        return true;
-      }
-    }
+    STATE = seedState();
+    await saveState();
+    return true;
   }
-  return true;
 }
 
 async function saveState(){
@@ -382,8 +634,8 @@ const PAGE_META = {
 };
 
 const NAV_SUPPORT = [
-  { group:'My Overview', items:[{ view:'myDashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' }] },
-  { group:'My Cases', items:[
+  { group:'MY OVERVIEW', items:[{ view:'myDashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' }] },
+  { group:'MY CASES', items:[
     { view:'myRecords', label:'SEQAS Records', icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>' },
     { view:'agentReviews', label:'Agent Review', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
   ]},
@@ -427,6 +679,39 @@ function ensureViewerSupport(){
     STATE.viewerSupportId = sortedSupports()[0].id;
   }
   return STATE.viewerSupportId;
+}
+
+function openSupervisorModal(){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+  <div class="modal-backdrop" id="supervisorBackdrop">
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-head">
+        <h3>Supervisor Access</h3>
+        <button class="icon-btn" id="closeSupervisorModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <form id="supervisorForm">
+          <div class="field" style="margin-bottom:14px;">
+            <label class="field-label">Password</label>
+            <input type="password" id="supervisorPassword" autocomplete="current-password" required autofocus>
+          </div>
+          <button type="submit" class="btn brass" style="width:100%;">Unlock</button>
+        </form>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('closeSupervisorModal').addEventListener('click', ()=>root.innerHTML='');
+  document.getElementById('supervisorBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='supervisorBackdrop') root.innerHTML=''; });
+  document.getElementById('supervisorForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    if(document.getElementById('supervisorPassword').value === SUPERVISOR_PASSWORD){
+      root.innerHTML = '';
+      window.location.href = 'supervisor.html';
+    } else {
+      toast('Incorrect password', true);
+    }
+  });
 }
 
 function populateGlobalMonth(){
@@ -475,16 +760,15 @@ function renderMyDashboard(){
   const commendationCount = myAgentAll.filter(a=>a.mode==='commendation').length;
   const reviewCountMonth = myAgentThisMonth.filter(a=>a.mode==='review').length;
   const commendationCountMonth = myAgentThisMonth.filter(a=>a.mode==='commendation').length;
-  const rawRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
-  const cappedProgress = rawRate !== null ? Math.min(100, Math.round(rawRate * 100)) : null;
+  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
 
   return `
   <div class="card" style="margin-bottom:20px;">
     <div class="card-body" style="display:flex; align-items:center; gap:14px;">
-      <div class="seal" style="width:40px;height:40px;font-size:15px;">${esc(viewer.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>
+      <div class="seal" style="width:40px;height:40px;font-size:15px; border-radius:50%; background:var(--ink); color:#eafaf5; display:flex; align-items:center; justify-content:center; font-weight:700;">${esc(viewer.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>
       <div>
         <div style="font-weight:700; font-size:16px; color:var(--ink-text);">${esc(viewer.name)}</div>
-        <div style="font-size:12px; color:var(--slate-soft);">${myAll.length} SEQAS evaluation${myAll.length===1?'':'s'} · ${myAgentAll.length} agent entr${myAgentAll.length===1?'y':'ies'} on file</div>
+        <div style="font-size:12px; color:var(--slate-soft);">${myAll.length} SEQAS evaluations · ${myAgentAll.length} agent entries on file</div>
       </div>
     </div>
   </div>
@@ -521,8 +805,8 @@ function renderMyDashboard(){
   <div class="stat-row">
     <div class="stat-card">
       <div class="label">${monthLabel(currentMonth)} Target Progress</div>
-      <div class="value" style="color:${cappedProgress===100?'var(--green)':'var(--ink)'};">${adjustedTarget===null ? 'No target set' : (cappedProgress===null ? '—' : cappedProgress+'%')}</div>
-      <div class="delta">${adjustedTarget===null ? 'Awaiting supervisor target' : `${myAgentThisMonth.length} of ${adjustedTarget}${leaveDays>0?` (${leaveDays} leave days)`:''}`}</div>
+      <div class="value" style="color:${completionRate===null?'inherit':(completionRate>=1?'var(--green)':'var(--ink)')};">${adjustedTarget===null ? 'No target set' : (completionRate===null ? '—' : Math.round(completionRate*100)+'%')}</div>
+      <div class="delta">${adjustedTarget===null ? 'Ask your supervisor to set your monthly target' : `${myAgentThisMonth.length} of ${adjustedTarget}${leaveDays>0?` (adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}`}</div>
     </div>
     <div class="stat-card">
       <div class="label">Reviews Submitted</div>
@@ -548,7 +832,7 @@ function renderMyDashboard(){
   </div>
 
   <div class="card attendance-compact">
-    <div class="card-header"><h3>Attendance</h3><span style="font-size:11px; color:var(--slate-soft);">${monthLabel(currentMonth)}</span></div>
+    <div class="card-header"><h3>Attendance</h3><span style="font-size:11px; color:var(--slate-soft);">${monthLabel(currentMonth)} — adjusts your Agent Review target</span></div>
     <div class="card-body">
       <form id="attendanceForm" style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
         <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">Absent</label><input type="number" min="0" id="att_absent" value="${att.absent||0}"></div>
@@ -558,8 +842,7 @@ function renderMyDashboard(){
         <button type="submit" class="btn brass sm">Save</button>
       </form>
     </div>
-  </div>
-  `;
+  </div>`;
 }
 
 function renderMyRecords(){
@@ -574,7 +857,7 @@ function renderMyRecordsTable(){
   let recs = STATE.records.filter(r=>r.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   const wrap = document.getElementById('myRecordsTableWrap');
   if(!wrap) return;
-  if(!recs.length){ wrap.innerHTML = emptyState('No evaluations found', 'Past evaluations will appear here.', null, null); return; }
+  if(!recs.length){ wrap.innerHTML = emptyState('No evaluations found', 'Your evaluations will show up here once logged.', null, null); return; }
   wrap.innerHTML = `
     <table>
       <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Score</th><th style="text-align:right;">Actions</th></tr></thead>
@@ -631,13 +914,13 @@ function renderAgentReviews(){
         <div id="ar_reviewSections" style="${kind!=='review'?'display:none;':''}">
           <div class="field"><label class="field-label">1. Interaction Summary *</label><textarea id="ar_s1" placeholder="Describe the interaction...">${kind==='review'&&editingEntry?esc(editingEntry.section1):''}</textarea></div>
           <div class="field"><label class="field-label">2. Gap Identified *</label><textarea id="ar_s2" placeholder="Outline the gap...">${kind==='review'&&editingEntry?esc(editingEntry.section2):''}</textarea></div>
-          <div class="field"><label class="field-label">3. Opportunities &amp; Recommended Actions *</label><textarea id="ar_s3" placeholder="State recommendations...">${kind==='review'&&editingEntry?esc(editingEntry.section3):''}</textarea></div>
+          <div class="field"><label class="field-label">3. Opportunities &amp; Recommended Actions *</label><textarea id="ar_s3" placeholder="State coaching points...">${kind==='review'&&editingEntry?esc(editingEntry.section3):''}</textarea></div>
           <div class="field"><label class="field-label">4. Positive Observations</label><textarea id="ar_s4" placeholder="Acknowledge strengths...">${kind==='review'&&editingEntry?esc(editingEntry.section4):''}</textarea></div>
         </div>
 
         <div id="ar_commendationSections" style="${kind==='review'?'display:none;':''}">
           <div class="field"><label class="field-label">1. What Went Well *</label><textarea id="ar_c1" placeholder="Summarize positive outcome...">${kind==='commendation'&&editingEntry?esc(editingEntry.section1):''}</textarea></div>
-          <div class="field"><label class="field-label">2. Key Strengths Displayed *</label><textarea id="ar_c2" placeholder="Recognize specific strengths...">${kind==='commendation'&&editingEntry?esc(editingEntry.section2):''}</textarea></div>
+          <div class="field"><label class="field-label">2. Key Strengths Displayed *</label><textarea id="ar_c2" placeholder="Recognize specific behaviors...">${kind==='commendation'&&editingEntry?esc(editingEntry.section2):''}</textarea></div>
           <div class="field"><label class="field-label">3. Business Impact &amp; Recognition *</label><textarea id="ar_c3" placeholder="Explain positive impact...">${kind==='commendation'&&editingEntry?esc(editingEntry.section3):''}</textarea></div>
         </div>
 
@@ -980,9 +1263,45 @@ function downloadRecordPdf(recordId){
 
 async function init(){
   await loadState();
+  if(!STATE.seededAugust2026){
+    AUGUST_2026_SEED.forEach(entry=>{
+      const total = Object.values(entry.scores).reduce((s,v)=>s+v,0);
+      let sup = STATE.supports.find(s=>s.name===entry.supportName);
+      if(!sup){ sup = { id:uid('sup'), name:entry.supportName }; STATE.supports.push(sup); }
+      STATE.records.push({
+        id: uid('rec'), month: entry.month, supportId: sup.id, supportName: sup.name,
+        dateOfEval: entry.dateOfEval, chatDate: entry.chatDate, agentName: entry.agentName,
+        caseNumber: entry.caseNumber, scores: entry.scores, criteriaNotes: entry.criteriaNotes,
+        total, percent: total/MAX_SCORE, supportAction: entry.supportAction,
+        commitmentObservations: entry.commitmentObservations, additionalActions: entry.additionalActions,
+        tlCommitment: entry.tlCommitment, createdAt: Date.now()
+      });
+    });
+    STATE.seededAugust2026 = true;
+  }
+  if(!STATE.agentReviewAugust2026Seeded){
+    AGENT_REVIEW_AUGUST_SEED.forEach(entry=>{
+      let sup = STATE.supports.find(s=>s.name===entry.supportName);
+      if(!sup){ sup = { id:uid('sup'), name:entry.supportName }; STATE.supports.push(sup); }
+      STATE.agentReviews.push({
+        id: uid('ar'), mode: entry.mode, date: entry.date, supportId: sup.id,
+        supportName: sup.name, agentName: entry.agentName, caseNumber: entry.caseNumber,
+        category: entry.category, level:'', section1: entry.section1, section2:'', section3:'', section4:'',
+        createdAt: Date.now()
+      });
+    });
+    STATE.agentReviewAugust2026Seeded = true;
+  }
   ensureViewerSupport();
   document.getElementById('globalMonth').addEventListener('change', (e)=>{ currentMonth = e.target.value; render(); });
   document.getElementById('saveStatus').addEventListener('click', ()=>saveState());
+  
+  document.querySelectorAll('#modeToggle [data-mode]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(btn.dataset.mode === 'supervisor') openSupervisorModal();
+    });
+  });
+
   if(STATE.records.some(r=>r.month==='2026-08')) currentMonth = '2026-08';
   setView('myDashboard');
   document.getElementById('loading').style.display='none';
