@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SUPERVISOR ACCESS - SUPPORT PERFORMANCE</title>
+<title>SUPPORT PERFORMANCE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -51,49 +51,156 @@
     min-height:100vh;
   }
   ::selection{ background: var(--brass); color:#fff; }
-  .app{ display:flex; min-height:100vh; }
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
 
   /* ---------- SIDEBAR ---------- */
   .sidebar{
-    width:242px; flex-shrink:0;
+    width:242px;
+    flex-shrink:0;
     background: linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
     border-right:1px solid rgba(255,255,255,0.06);
-    color:#dcefe9; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+    color:#dcefe9;
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
   }
-  .brand{ padding:26px 22px 18px 22px; border-bottom:1px solid rgba(255,255,255,0.1); }
-  .brand .mark{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .brand{
+    padding:26px 22px 18px 22px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .brand .mark{
+    display:flex; align-items:center; gap:10px; margin-bottom:6px;
+  }
   .brand .seal{
-    width:30px;height:30px;border-radius:50%; background:rgba(93,248,216,0.14); border:1px solid var(--pal-mint);
-    display:flex;align-items:center;justify-content:center; font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; color:var(--pal-mint); flex-shrink:0;
+    width:30px;height:30px;border-radius:50%;
+    background:rgba(93,248,216,0.14);
+    border:1px solid var(--pal-mint);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; color:var(--pal-mint);
+    flex-shrink:0;
   }
-  .brand h1{ font-family:'Inter',sans-serif; font-weight:800; font-size:18px; letter-spacing:-0.01em; margin:0; color:#f2fbf8; }
-  .brand .tagline{ font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:#7fa39b; margin-top:3px; }
+  .brand h1{
+    font-family:'Inter',sans-serif;
+    font-weight:800;
+    font-size:18px;
+    letter-spacing:-0.01em;
+    margin:0;
+    color:#f2fbf8;
+  }
+  .brand .tagline{
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#7fa39b;
+    margin-top:3px;
+  }
+  .viewer-picker{ margin-top:14px; }
+  .viewer-picker label{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:#7fa39b; display:block; margin-bottom:5px; font-weight:700;
+  }
+  .viewer-picker select{
+    width:100%; background:#ffffff; border:1px solid rgba(255,255,255,0.5); color:var(--pal-navy);
+    font-size:13px; font-weight:600; padding:9px 30px 9px 11px; border-radius:var(--radius-sm); cursor:pointer;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23093C5D' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 9px center;
+  }
+  .viewer-picker select option{ background:#ffffff; color:var(--pal-navy); }
   .type-badge{
     display:inline-flex; align-items:center; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px;
     background:var(--brass-tint); color:var(--brass-dark); white-space:nowrap;
   }
   .type-badge.commendation{ background:var(--green-bg); color:var(--green); }
+  .mode-toggle{
+    display:flex; align-items:center; gap:2px; margin-top:14px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:3px;
+    width:fit-content;
+  }
+  .mode-toggle button{
+    display:flex; align-items:center; gap:5px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:11px; font-weight:600; color:#8aa9a3;
+    padding:6px 11px; border-radius:16px; transition:background 0.15s, color 0.15s;
+  }
+  .mode-toggle button.active{ background:var(--pal-mint); color:var(--pal-navy); }
+  .kind-tabs{ display:inline-flex; gap:4px; padding:4px; background:var(--paper-deep); border:1px solid var(--rule); border-radius:24px; margin-bottom:20px; }
+  .kind-tabs button{
+    display:flex; align-items:center; gap:7px; border:none; background:none; cursor:pointer;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--slate); padding:9px 18px; border-radius:20px;
+    transition:background 0.15s, color 0.15s;
+  }
+  .kind-tabs button.active[data-kind="review"]{ background:var(--amber-bg); color:var(--amber); }
+  .kind-tabs button.active[data-kind="commendation"]{ background:var(--green-bg); color:var(--green); }
+  .kind-count-row{ display:flex; gap:14px; margin-bottom:20px; flex-wrap:wrap; }
+  .kind-count-pill{
+    display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--rule-soft);
+    border-radius:var(--radius); padding:12px 18px; box-shadow:var(--shadow);
+  }
+  .kind-count-pill .num{ font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:700; color:var(--ink-text); }
+  .kind-count-pill .lbl{ font-size:11.5px; color:var(--slate-soft); }
   
-  nav.navlist{ padding:16px 12px; flex:1; overflow-y:auto; }
+  nav.navlist{
+    padding:16px 12px;
+    flex:1;
+    overflow-y:auto;
+  }
   .navlist button{
-    width:100%; display:flex; align-items:center; gap:11px; background:none; border:none; color:#a9c9c2;
-    text-align:left; font-family:inherit; font-size:13.5px; font-weight:500; padding:9px 12px; border-radius:var(--radius-sm);
-    cursor:pointer; letter-spacing:0.01em; margin-bottom:2px; transition:background 0.15s, color 0.15s;
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    background:none;
+    border:none;
+    color:#a9c9c2;
+    text-align:left;
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:500;
+    padding:9px 12px;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    letter-spacing:0.01em;
+    margin-bottom:2px;
+    transition:background 0.15s, color 0.15s;
   }
   .navlist button svg{ flex-shrink:0; opacity:0.75; }
   .navlist button:hover{ background:rgba(255,255,255,0.06); color:#f2fbf8; }
-  .navlist button.active{ background:rgba(93,248,216,0.16); color:var(--pal-mint); font-weight:600; box-shadow: inset 2px 0 0 var(--pal-mint); }
+  .navlist button.active{
+    background:rgba(93,248,216,0.16);
+    color:var(--pal-mint);
+    font-weight:600;
+    box-shadow: inset 2px 0 0 var(--pal-mint);
+  }
   .navlist button.active svg{ opacity:1; }
-  .navlist .navgroup-label{ font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#5f7d77; padding:14px 12px 6px 12px; font-weight:600; }
+  .navlist .navgroup-label{
+    font-size:10px; letter-spacing:0.14em; text-transform:uppercase;
+    color:#5f7d77; padding:14px 12px 6px 12px; font-weight:600;
+  }
   .sidebar-foot{
-    padding:14px 22px 18px 22px; border-top:1px solid rgba(255,255,255,0.1); font-size:11.5px; color:#7fa39b; display:flex; flex-direction:column; gap:10px;
+    padding:14px 22px 18px 22px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    font-size:11.5px;
+    color:#7fa39b;
+    display:flex; flex-direction:column; gap:10px;
   }
   .sidebar-foot .month-chip{
-    display:inline-flex;align-items:center;gap:6px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
-    padding:5px 10px;border-radius:20px; color:#f2fbf8; font-weight:600; font-size:12px; width:fit-content;
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.14);
+    padding:5px 10px;border-radius:20px;
+    color:#f2fbf8; font-weight:600; font-size:12px;
+    width:fit-content;
   }
-  .save-status{ display:flex; align-items:center; gap:7px; font-size:11px; color:#7fa39b; }
-  .save-status .dot{ width:6px; height:6px; border-radius:50%; background:var(--pal-mint); flex-shrink:0; }
+  .save-status{
+    display:flex; align-items:center; gap:7px; font-size:11px; color:#7fa39b;
+  }
+  .save-status .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--pal-mint); flex-shrink:0;
+  }
   .save-status.error{ cursor:pointer; }
   .save-status.error .dot{ background:#ff9d9d; }
   .save-status.saving .dot{ background:var(--pal-teal); }
@@ -101,33 +208,66 @@
   /* ---------- MAIN ---------- */
   .main{ flex:1; min-width:0; }
   .topbar{
-    position:sticky; top:0; z-index:5; background:rgba(220,238,234,0.92); backdrop-filter:blur(6px);
-    border-bottom:1px solid var(--rule); padding:20px 36px; display:flex; align-items:center; justify-content:space-between; gap:20px;
+    position:sticky; top:0; z-index:5;
+    background:rgba(220,238,234,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--rule);
+    padding:20px 36px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
   }
-  .topbar h2{ font-family:'Inter',serif; font-size:24px; font-weight:700; margin:0; color:var(--ink); }
+  .topbar h2{
+    font-family:'Inter',serif;
+    font-size:24px; font-weight:700; margin:0; color:var(--ink);
+  }
   .topbar .sub{ color:var(--slate); font-size:12.5px; margin-top:2px;}
   .content{ padding:28px 36px 60px 36px; max-width:1180px; }
 
   .month-select{
-    display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--rule); border-radius:20px; padding:6px 6px 6px 14px;
+    display:flex; align-items:center; gap:8px;
+    background:var(--card); border:1px solid var(--rule);
+    border-radius:20px; padding:6px 6px 6px 14px;
   }
   .month-select label{ font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate-soft); }
   .month-select select{
-    border:none; background:none; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--ink); padding:4px 6px; cursor:pointer;
+    border:none; background:none; font-family:'IBM Plex Mono',monospace;
+    font-size:13px; font-weight:600; color:var(--ink); padding:4px 6px; cursor:pointer;
   }
 
   /* ---------- CARDS / COMMON ---------- */
-  .card{ background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius); box-shadow:var(--shadow); }
-  .card-header{ padding:16px 20px; border-bottom:1px solid var(--rule-soft); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule-soft);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+  .card-header{
+    padding:16px 20px; border-bottom:1px solid var(--rule-soft);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
   .card-header h3{ font-family:'Inter',serif; font-size:16.5px; margin:0; font-weight:700; color:var(--ink);}
   .card-body{ padding:20px; }
 
   .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;}
+  .section-divider{
+    display:flex; align-items:center; gap:12px; margin:8px 0 16px 0;
+  }
+  .section-divider h3{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--brass-dark); margin:0; white-space:nowrap;
+  }
+  .section-divider::after{
+    content:""; flex:1; height:1px; background:var(--rule);
+  }
+  .attendance-compact .card-header h3{ font-size:14px; }
+  .attendance-compact input[type=number]{ padding:7px 8px; text-align:center; }
+  .attendance-compact .field-label{ font-size:10px; margin-bottom:4px; }
   .stat-card{
     background:var(--card); border:1px solid var(--rule-soft); border-radius:var(--radius);
     padding:18px 20px; box-shadow:var(--shadow); position:relative; overflow:hidden;
   }
-  .stat-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--brass); }
+  .stat-card::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--brass);
+  }
   .stat-card .label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--slate-soft); font-weight:600;}
   .stat-card .value{ font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; color:var(--ink); margin-top:6px;}
   .stat-card .value small{ font-size:14px; color:var(--slate); font-weight:500;}
@@ -136,14 +276,14 @@
   table{ width:100%; border-collapse:collapse; font-size:13px;}
   th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em;
-    color:var(--slate-soft); font-weight:700; padding:9px 12px; border-bottom:2px solid var(--rule); white-space:nowrap;
+    color:var(--slate-soft); font-weight:700; padding:9px 12px; border-bottom:2px solid var(--rule);
+    white-space:nowrap;
   }
   td{ padding:11px 12px; border-bottom:1px solid var(--rule-soft); vertical-align:middle; }
   tr:last-child td{ border-bottom:none; }
   tbody tr:hover{ background:rgba(169,121,58,0.045); }
   .num{ font-family:'IBM Plex Mono',monospace; }
   .agent-name{ font-style:italic; font-weight:500; color:var(--slate); }
-  .row-total td{ font-weight:700; background:var(--paper-deep); border-top:2px solid var(--rule); }
 
   .badge{
     display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace;
@@ -158,8 +298,6 @@
     font-family:inherit; font-weight:600; font-size:13px; border-radius:var(--radius-sm); cursor:pointer;
     padding:9px 16px; border:1px solid transparent; transition:all 0.12s;
   }
-  button.btn.primary{ background:var(--ink); color:#eafaf5; }
-  button.btn.primary:hover{ background:var(--ink-2); }
   button.btn.brass{ background:var(--brass); color:#fff; }
   button.btn.brass:hover{ background:var(--brass-dark); }
   button.btn.ghost{ background:transparent; border:1px solid var(--rule); color:var(--ink-text); }
@@ -167,7 +305,6 @@
   button.btn.danger{ background:transparent; color:var(--red); border:1px solid var(--red-bg); }
   button.btn.danger:hover{ background:var(--red-bg); }
   button.btn.sm{ padding:5px 11px; font-size:12px; }
-  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
   .icon-btn{
     background:none; border:none; cursor:pointer; color:var(--slate); padding:6px; border-radius:var(--radius-sm);
     display:inline-flex; align-items:center; justify-content:center;
@@ -186,61 +323,13 @@
   .field-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
   .field-hint{ font-size:11.5px; color:var(--slate-soft); margin-top:5px; }
 
-  .crit-card{
-    border:1px solid var(--rule-soft); border-left:3px solid var(--rule);
-    border-radius:12px; padding:14px 16px; margin-bottom:12px; background:var(--card); transition:border-color 0.15s, background 0.15s;
+  .letterhead{
+    border:1px solid var(--rule); border-radius:var(--radius); overflow:hidden; background:var(--card);
   }
-  .crit-card:last-child{ margin-bottom:0; }
-  .crit-card[data-band="unscored"]{ border-left-color:var(--rule); }
-  .crit-card[data-band="0"]{ border-left-color:var(--red); background:color-mix(in srgb, var(--red-bg) 40%, var(--card)); }
-  .crit-card[data-band="1"]{ border-left-color:var(--amber); background:color-mix(in srgb, var(--amber-bg) 40%, var(--card)); }
-  .crit-card[data-band="2"]{ border-left-color:var(--green); background:color-mix(in srgb, var(--green-bg) 40%, var(--card)); }
-  .crit-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-  .crit-head .crit-info{ flex:1; min-width:200px; }
-  .crit-name{ font-weight:600; color:var(--ink-text); font-size:13.5px; }
-  .crit-desc{ font-size:12px; color:var(--slate-soft); margin-top:3px; line-height:1.45; }
-  .seg{ display:flex; border:1px solid var(--rule); border-radius:20px; overflow:hidden; background:var(--card); flex-shrink:0; }
-  .seg button{
-    border:none; background:none; padding:8px 14px; font-family:'IBM Plex Mono',monospace;
-    font-size:11.5px; font-weight:600; color:var(--slate); cursor:pointer; border-right:1px solid var(--rule); white-space:nowrap;
+  .letterhead .lh-band{
+    background:var(--ink); color:#eafaf5; padding:16px 22px;
+    display:flex; align-items:center; justify-content:space-between;
   }
-  .seg button:last-child{ border-right:none; }
-  .seg button.sel-0.active{ background:var(--red-bg); color:var(--red); }
-  .seg button.sel-1.active{ background:var(--amber-bg); color:var(--amber-dark,var(--amber)); }
-  .seg button.sel-2.active{ background:var(--green-bg); color:var(--green); }
-  .crit-note{ margin-top:10px; }
-  .crit-note textarea{ min-height:52px; font-size:12.5px; padding:8px 10px; background:var(--card); }
-  .crit-note .note-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--slate-soft); font-weight:600; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
-  .crit-note .note-label .req-dot{ width:5px; height:5px; border-radius:50%; background:var(--rule); display:inline-block; }
-  .crit-card[data-band="0"] .note-label .req-dot{ background:var(--red); }
-  .crit-card[data-band="1"] .note-label .req-dot{ background:var(--amber); }
-  .crit-card[data-band="2"] .note-label .req-dot{ background:var(--green); }
-  .crit-info-toggle{ background:none; border:none; cursor:pointer; font-family:inherit; font-size:11px; font-weight:600; color:var(--brass); padding:6px 0 0 0; letter-spacing:0.02em; }
-  .crit-info-toggle:hover{ color:var(--brass-dark); text-decoration:underline; }
-  .crit-info-panel{ display:none; margin-top:8px; background:var(--neutral-bg); border:1px solid var(--rule); border-radius:var(--radius-sm); padding:10px 13px; font-size:11.5px; line-height:1.6; color:var(--neutral-ink); white-space:pre-line; }
-  .crit-info-panel.open{ display:block; }
-  .prev-reviews{ background:var(--brass-tint); border:1px solid var(--rule); border-radius:var(--radius); padding:14px 18px; margin:18px 0; font-size:13px; }
-  .prev-reviews .prev-title{ font-size:11px; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--brass-dark); margin-bottom:8px; }
-  .prev-reviews .prev-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0; border-top:1px solid rgba(0,0,0,0.06); }
-  .prev-reviews .prev-item:first-of-type{ border-top:none; }
-  .prev-reviews .prev-item .agent-name{ color:var(--slate); }
-  .summary-actions{
-    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
-    background:var(--paper-deep); border:1px solid var(--rule-soft); border-radius:var(--radius); padding:14px 18px; margin-bottom:18px;
-  }
-  .summary-actions p{ margin:0; font-size:12.5px; color:var(--slate); max-width:520px; }
-  .gen-note{ font-size:11.5px; color:var(--slate-soft); margin-top:8px; }
-
-  .total-strip{
-    display:flex; align-items:center; justify-content:space-between; gap:16px;
-    background:var(--ink); color:#eafaf5; border-radius:12px; padding:16px 22px; margin:20px 0;
-  }
-  .total-strip .tlabel{ font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:#9dc3ba;}
-  .total-strip .tval{ font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:700; }
-  .total-strip .tval small{ font-size:14px; font-weight:500; color:#a9d3c9;}
-
-  .letterhead{ border:1px solid var(--rule); border-radius:var(--radius); overflow:hidden; background:var(--card); }
-  .letterhead .lh-band{ background:var(--ink); color:#eafaf5; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; }
   .letterhead .lh-band h4{ margin:0; font-family:'Inter',serif; font-size:16px; font-weight:700;}
   .letterhead .lh-body{ padding:20px 22px; }
   .kv-table{ width:100%; border-collapse:collapse; }
@@ -248,10 +337,15 @@
   .kv-table td.k{ background:var(--paper-deep); font-weight:700; width:210px; text-transform:uppercase; font-size:11px; letter-spacing:0.04em; color:var(--slate); }
 
   .section-block{ margin-top:18px; }
-  .section-block h5{ font-family:'Inter',serif; font-size:14px; margin:0 0 6px 0; color:var(--ink); font-weight:700; border-bottom:1.5px solid var(--brass); padding-bottom:5px; display:inline-block; }
+  .section-block h5{
+    font-family:'Inter',serif; font-size:14px; margin:0 0 6px 0; color:var(--ink); font-weight:700;
+    border-bottom:1.5px solid var(--brass); padding-bottom:5px; display:inline-block;
+  }
   .section-block p{ margin:8px 0 0 0; color:var(--ink-text); white-space:pre-wrap; }
 
-  .empty-state{ text-align:center; padding:56px 20px; color:var(--slate-soft); }
+  .empty-state{
+    text-align:center; padding:56px 20px; color:var(--slate-soft);
+  }
   .empty-state svg{ opacity:0.5; margin-bottom:12px; }
   .empty-state h4{ font-family:'Inter',serif; color:var(--ink); font-size:17px; margin:0 0 6px 0; }
   .empty-state p{ font-size:13px; margin:0 0 18px 0; }
@@ -259,7 +353,9 @@
   .toast-wrap{ position:fixed; bottom:24px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px;}
   .toast{
     background:var(--ink); color:#eafaf5; padding:12px 18px; border-radius:10px; font-size:13px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px; border-left:3px solid var(--brass); animation: slidein 0.25s ease-out;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25); display:flex; align-items:center; gap:10px;
+    border-left:3px solid var(--brass);
+    animation: slidein 0.25s ease-out;
   }
   @keyframes slidein{ from{ opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
@@ -267,38 +363,25 @@
     position:fixed; inset:0; background:rgba(20,29,49,0.55); display:flex; align-items:flex-start;
     justify-content:center; padding:40px 20px; z-index:100; overflow-y:auto;
   }
-  .modal{ background:var(--paper); border-radius:5px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.35); border:1px solid var(--rule); }
-  .modal-head{ padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between; }
+  .modal{
+    background:var(--paper); border-radius:5px; width:100%; max-width:680px; box-shadow:0 20px 60px rgba(0,0,0,0.35);
+    border:1px solid var(--rule);
+  }
+  .modal-head{
+    padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between;
+  }
   .modal-head h3{ font-family:'Inter',serif; margin:0; font-size:18px;}
   .modal-body{ padding:22px 24px; max-height:70vh; overflow-y:auto;}
   .modal-foot{ padding:16px 24px; border-top:1px solid var(--rule); display:flex; justify-content:flex-end; gap:10px;}
 
-  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
-  .support-chip{
-    display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--rule-soft);
-    padding:9px 8px 9px 14px; border-radius:20px; font-size:13px; font-weight:600; box-shadow:var(--shadow);
-  }
-  .support-chip .initial{
-    width:22px;height:22px;border-radius:50%; background:var(--ink); color:#eafaf5; display:flex;
-    align-items:center; justify-content:center; font-size:10.5px; font-family:'Inter',serif; font-weight:700;
-  }
-
-  .filter-bar{ display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;}
-  .filter-bar select, .filter-bar input{ width:auto; }
-
-  .count-table th:not(:first-child){ text-align:center; }
-  .count-table td.num{ text-align:center; }
-  .target-input{
-    width:76px !important; text-align:center; padding:6px 4px !important; font-family:'IBM Plex Mono',monospace;
-    font-weight:600; display:inline-block;
-  }
-
   .loading-screen{
-    position:fixed; inset:0; background:var(--paper); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; z-index:999;
+    position:fixed; inset:0; background:var(--paper); display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; z-index:999;
   }
   .loading-screen .seal-lg{
-    width:52px;height:52px;border-radius:50%; border:2px solid var(--brass); display:flex; align-items:center; justify-content:center;
-    font-family:'Inter',serif; font-weight:700; font-size:20px; color:var(--brass); animation: pulse 1.4s ease-in-out infinite;
+    width:52px;height:52px;border-radius:50%; border:2px solid var(--brass); display:flex; align-items:center;
+    justify-content:center; font-family:'Inter',serif; font-weight:700; font-size:20px; color:var(--brass);
+    animation: pulse 1.4s ease-in-out infinite;
   }
   @keyframes pulse{ 0%,100%{ opacity:1;} 50%{ opacity:0.4;} }
   .loading-screen p{ color:var(--slate); font-size:13px; letter-spacing:0.04em;}
@@ -324,7 +407,7 @@
 
 <div id="loading" class="loading-screen">
   <div class="seal-lg">SP</div>
-  <p>Loading Supervisor Workspace…</p>
+  <p>Loading your saved reviews…</p>
 </div>
 
 <div class="app" id="app" style="display:none;">
@@ -334,7 +417,8 @@
         <div class="seal">SP</div>
         <h1>Support Performance</h1>
       </div>
-      <div class="tagline">Supervisor Ledger</div>
+      <div class="tagline">Support Workspace</div>
+      <div id="viewerPickerWrap"></div>
     </div>
     <nav class="navlist" id="navlist"></nav>
     <div class="sidebar-foot">
@@ -346,8 +430,8 @@
   <main class="main">
     <div class="topbar">
       <div>
-        <h2 id="pageTitle">Dashboard</h2>
-        <div class="sub" id="pageSub">Automatic scoring and monthly averages across the team</div>
+        <h2 id="pageTitle">Support Performance</h2>
+        <div class="sub" id="pageSub">Your SEQAS scores and Agent Review progress in one place</div>
       </div>
       <div class="month-select">
         <label>Month</label>
@@ -362,46 +446,7 @@
 <div id="modalRoot"></div>
 
 <script>
-const CRITERIA = [
-  { key:'identification', name:'Identification', max:2,
-    desc:'Reviewed the template before responding; used the correct sub-template; verified the contract.',
-    details:`•  Do not ask questions that are already answered in the template; support must carefully review the template before responding.
-•  If the answer is not in the template, proceed with proper diagnosis.
-•  Ensure the correct sub-template is used.
-•  Verify the contract is valid and correctly interpreted.` },
-  { key:'relationship', name:'Maintaining Customer Relationship', max:2,
-    desc:'Guided the agent through troubleshooting; encouraged independent problem-solving.',
-    details:`•  Guides agents through troubleshooting instead of only giving solutions.
-•  Encourages independent problem-solving by asking clarifying questions.
-•  Demonstrates patience and approachability when agents need help.` },
-  { key:'diagnosis', name:'Diagnosis', max:2,
-    desc:'Asked targeted probing questions; reviewed case notes; reached a clear understanding of the issue.',
-    details:`Did the support agent demonstrate expertise in identifying the root cause of the issue by:
-•  Asking targeted and relevant probing questions
-•  Making sure the issue has been recreated, if applicable
-•  Analyzing account details thoroughly
-•  Reviewing and leveraging previous case notes
-•  Gaining a clear and comprehensive understanding of the issue` },
-  { key:'accuracy', name:'Accuracy of Solution', max:2,
-    desc:'Consistently provided accurate answers to the agent\u2019s questions.',
-    details:`Consistently provides accurate answers to agent questions.` },
-  { key:'communication', name:'Clear Communication', max:2,
-    desc:'Explained technical or complex issues in a simple, understandable way.',
-    details:`Explains technical or complex issues in a simple, understandable way.` },
-  { key:'resource', name:'Resource Utilization', max:2,
-    desc:'Referenced KB articles and used available systems to validate the diagnosis.',
-    details:`The support effectively leveraged available resources to support the diagnostic process and ensure the accuracy of the solution.` },
-  { key:'logging', name:'Call Logging', max:2,
-    desc:'Completed the dispatch and log pull; informed the agent of any chat transfer.',
-    details:`•  They properly completed the dispatch and log pull, ensuring that support informed the agent when a chat needed to be transferred.` },
-  { key:'efficiency', name:'Interaction Handling / Agent Efficiency', max:2,
-    desc:'Consistently provided timely answers to the agent.',
-    details:`•  Consistently provides timely answers to agent questions.` },
-  { key:'compliance', name:'Compliance and Professional Conduct', max:1,
-    desc:'Adhered to data privacy, policy and process \u2014 no chat avoidance, abuse, or fabricated notes.',
-    details:`Did the agent adhere to data privacy regulations, company policies, and established processes.` },
-];
-const MAX_SCORE = CRITERIA.reduce((s,c)=>s+c.max,0); // 17
+const MAX_SCORE = 17;
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
@@ -421,9 +466,8 @@ let STATE = {
   historicalDuplicatesCleaned: false,
   deletedAgentReviewIds: []
 };
-let currentView = 'dashboard';
+let currentView = 'myDashboard';
 let currentMonth = monthKey(new Date());
-let editingRecordId = null;
 
 function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
 function monthLabel(mk){ const [y,m]=mk.split('-').map(Number); return MONTH_NAMES[m-1]+' '+y; }
@@ -691,10 +735,9 @@ async function saveState(){
 
 function allMonthsUsed(){
   const set = new Set(STATE.records.map(r=>r.month));
-  for(let i=1; i<=12; i++){
-    set.add(`2026-${String(i).padStart(2,'0')}`);
-  }
   set.add(currentMonth);
+  const now = new Date();
+  set.add(monthKey(now));
   return Array.from(set).sort();
 }
 function recordsFor(month, supportId){
@@ -707,10 +750,6 @@ function avgPercent(recs){
 }
 function sortedSupports(){
   return [...STATE.supports].sort((a,b)=>a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
-}
-function getTarget(month){
-  if(STATE.targets[month] !== undefined) return STATE.targets[month];
-  return 16;
 }
 function personalTargetKey(supportId, month){ return `${supportId}:${month}`; }
 function getPersonalTarget(supportId, month){
@@ -749,120 +788,6 @@ function scoreBadgeClass(pct){
   return 'red';
 }
 function pctStr(p){ return p===null||p===undefined ? '—' : Math.round(p*100)+'%'; }
-function notePlaceholder(c, val){
-  if(val===0) return `What was missed or done incorrectly for ${c.name.toLowerCase()}?`;
-  if(val===1) return `What was partially done, and what's still missing?`;
-  if(val===c.max) return `What did support do well here?`;
-  return `Score this criterion first, then explain why.`;
-}
-function buildSummary(scores, notes){
-  const notMet=[], partial=[], met=[];
-  CRITERIA.forEach(c=>{
-    const val = scores[c.key];
-    const note = (notes[c.key]||'').trim();
-    const entry = { name:c.name, note, val };
-    if(val===0) notMet.push(entry);
-    else if(val===c.max) met.push(entry);
-    else partial.push(entry);
-  });
-  const gaps = [...notMet, ...partial];
-  const lower = s=>s.charAt(0).toLowerCase()+s.slice(1);
-  const list = arr => arr.length<=1 ? (arr[0]||'') : arr.slice(0,-1).join(', ')+' and '+arr[arr.length-1];
-  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-
-  if(!met.length && !gaps.length){
-    return { supportAction:'Score each criterion above, then generate the summary.', commitment:'', additional:'', tlNotes:'' };
-  }
-
-  const saParts = [];
-  if(met.length){
-    saParts.push(pick([
-      `Support ${gaps.length?'demonstrated good':'demonstrated strong'} reasoning by handling ${list(met.map(m=>lower(m.name)))} well on this case.`,
-      `Support showed solid, confident work in ${list(met.map(m=>lower(m.name)))} throughout this interaction.`,
-      `This case highlighted real strength in ${list(met.map(m=>lower(m.name)))}.`,
-      `Support brought good instincts to ${list(met.map(m=>lower(m.name)))} here.`,
-    ]));
-    met.filter(m=>m.note).forEach(m=>saParts.push(m.note));
-  }
-  if(gaps.length){
-    saParts.push(pick([
-      met.length ? `${pick(['That said','On the other hand','Alongside that'])}, there ${gaps.length>1?'were':'was'} a few spots to build on around ${list(gaps.map(g=>lower(g.name)))}.`
-                 : `There ${gaps.length>1?'were':'was'} a few spots to build on around ${list(gaps.map(g=>lower(g.name)))}.`,
-      met.length ? `The main opportunity here is around ${list(gaps.map(g=>lower(g.name)))}.`
-                 : `The main opportunity in this case is around ${list(gaps.map(g=>lower(g.name)))}.`,
-    ]));
-    gaps.forEach(g=>{ if(g.note) saParts.push(g.note); });
-  }
-  const supportAction = saParts.join(' ');
-
-  const cParts = [];
-  if(met.length){
-    cParts.push(pick([
-      `Support showed good ownership here, staying engaged and handling ${list(met.map(m=>lower(m.name)))} the right way.`,
-      `There was strong follow-through in this case, particularly in ${list(met.map(m=>lower(m.name)))}.`,
-      `Support stayed on top of ${list(met.map(m=>lower(m.name)))}, which reflects well on how this case was handled.`,
-    ]));
-  }
-  if(gaps.length){
-    let p2 = pick([
-      `However, there was an opportunity to strengthen ${list(gaps.map(g=>lower(g.name)))}.`,
-      `That said, ${list(gaps.map(g=>lower(g.name)))} is worth a closer look going forward.`,
-      `Looking ahead, ${list(gaps.map(g=>lower(g.name)))} is where the next bit of growth can happen.`,
-    ]);
-    const notedGaps = gaps.filter(g=>g.note).map(g=>g.note);
-    if(notedGaps.length) p2 += ' ' + notedGaps.join(' ');
-    p2 += ' ' + pick([
-      `This is a good chance to build a stronger habit here for next time.`,
-      `Keeping an eye on this on the next few cases should help it stick.`,
-      `Nothing dramatic \u2014 just something worth being a little more deliberate about going forward.`,
-    ]);
-    cParts.push(p2);
-  } else {
-    cParts.push(`Nothing else to flag here \u2014 the goal now is just to keep this same level of consistency going.`);
-  }
-  const commitment = cParts.join('\n\n');
-
-  let additional;
-  if(!gaps.length){
-    additional = pick([
-      'Nothing extra needed here \u2014 everything in this case was handled the right way.',
-      'No additional actions to flag. This is a good one to hold up as an example.',
-    ]);
-  } else {
-    additional = gaps.map(g=>{
-      const base = g.note ? g.note : `Take a closer look at ${lower(g.name)} on the next similar case.`;
-      return `* ${base}`;
-    }).join('\n\n');
-  }
-
-  const tParts = [];
-  if(gaps.length){
-    tParts.push(pick([
-      `I'll walk through ${list(gaps.map(g=>lower(g.name)))} with support directly, using this case as a real, concrete example rather than a hypothetical.`,
-      `I'll sit down with support and go over ${list(gaps.map(g=>lower(g.name)))} together, so the expectation is clear for next time.`,
-      `I'll take a few minutes with support to talk through ${list(gaps.map(g=>lower(g.name)))}, framing it as a growth area rather than a miss.`,
-    ]));
-    tParts.push(pick([
-      `We'll go over what good looks like here, and I'll check in on the next couple of cases to see how it's landing.`,
-      `The goal is just to build the habit \u2014 I'll keep an eye on upcoming cases and follow up if it's needed.`,
-      `I want this to feel like coaching, not criticism, so I'll frame it around what support can add next time, not what went wrong this time.`,
-    ]));
-    if(met.length){
-      tParts.push(pick([
-        `I'll also make a point of recognizing the strong work in ${list(met.map(m=>lower(m.name)))}, since that's worth reinforcing.`,
-        `Worth calling out too: ${list(met.map(m=>lower(m.name)))} was handled well, and I want support to know that landed.`,
-      ]));
-    }
-  } else {
-    tParts.push(pick([
-      `Nothing to coach here \u2014 I'll make sure support hears that this case reflects the standard we want to see more of.`,
-      `No coaching needed this time. I'll recognize the consistent work and use this as a positive example for the team.`,
-    ]));
-  }
-  const tlNotes = tParts.join(' ');
-
-  return { supportAction: supportAction.trim(), commitment: commitment.trim(), additional: additional.trim(), tlNotes: tlNotes.trim() };
-}
 
 function toast(msg, isError){
   const wrap = document.getElementById('toastWrap');
@@ -886,17 +811,21 @@ function toastRetry(msg){
 }
 
 const PAGE_META = {
-  dashboard: ['Dashboard', 'Automatic scoring and monthly averages across the team'],
-  counts: ['Review Count & Target', 'Track how many evaluations were completed against the monthly goal'],
-  new: ['New Feedback', 'Score a SEQAS evaluation and capture coaching notes'],
-  records: ['Records', 'Every evaluation on file, filterable by month and support'],
-  supports: ['Manage Supports', 'Add or remove people from the active roster'],
+  myDashboard: ['Support Performance', 'Your SEQAS scores and Agent Review progress in one place'],
+  myRecords: ['SEQAS Records', 'Search your own past evaluations'],
   agentReviews: ['Agent Review', 'Log commendations and feedback from agents you\u2019ve helped'],
 };
 
-function setView(view, opts={}){
+const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
+const AGENT_COMMENDATION_CATEGORIES = ['Exceptional Customer Service','Technical Excellence','Process & Policy Adherence','Efficiency & Productivity','Team Collaboration','Going Above & Beyond'];
+const SEVERITY_LEVELS = ['Low','Medium','High','Critical'];
+const IMPACT_LEVELS = ['Low','Medium','High','Significant'];
+let agentReviewKind = 'review';
+let editingAgentReviewId = null;
+
+function setView(view){
   currentView = view;
-  if(!opts.keepEditing) editingRecordId = null;
+  if(view !== 'agentReviews') editingAgentReviewId = null;
   renderNav();
   const meta = PAGE_META[view];
   document.getElementById('pageTitle').textContent = meta[0];
@@ -911,26 +840,19 @@ function populateGlobalMonth(){
   document.getElementById('sidebarMonthChip').textContent = monthLabel(currentMonth);
 }
 
-const NAV_SUPERVISOR = [
-  { group:'Overview', items:[
-    { view:'dashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
-    { view:'counts', label:'Review Count & Target', icon:'<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>' },
+const NAV_SUPPORT = [
+  { group:'My Overview', items:[
+    { view:'myDashboard', label:'Dashboard', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
   ]},
-  { group:'Evaluations', items:[
-    { view:'new', label:'New Feedback', icon:'<path d="M12 5v14M5 12h14"/>' },
-    { view:'records', label:'Records', icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>' },
-  ]},
-  { group:'Feedback', items:[
-    { view:'agentReviews', label:'Agent Reviews', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
-  ]},
-  { group:'Admin', items:[
-    { view:'supports', label:'Manage Supports', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' },
+  { group:'My Cases', items:[
+    { view:'myRecords', label:'SEQAS Records', icon:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>' },
+    { view:'agentReviews', label:'Agent Review', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
   ]},
 ];
 
 function renderNav(){
   const nav = document.getElementById('navlist');
-  nav.innerHTML = NAV_SUPERVISOR.map(g=>`
+  nav.innerHTML = NAV_SUPPORT.map(g=>`
     <div class="navgroup-label">${esc(g.group)}</div>
     ${g.items.map(item=>`<button data-view="${item.view}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${item.icon}</svg>${esc(item.label)}</button>`).join('')}
   `).join('');
@@ -938,843 +860,627 @@ function renderNav(){
     b.classList.toggle('active', b.dataset.view===currentView);
     b.addEventListener('click', ()=>setView(b.dataset.view));
   });
+  renderViewerPicker();
+}
+
+function renderViewerPicker(){
+  const wrap = document.getElementById('viewerPickerWrap');
+  if(!STATE.supports.length){ wrap.innerHTML=''; return; }
+  const options = sortedSupports().map(s=>`<option value="${s.id}" ${s.id===STATE.viewerSupportId?'selected':''}>${esc(s.name)}</option>`).join('');
+  wrap.innerHTML = `
+    <div class="viewer-picker">
+      <label>Viewing as</label>
+      <select id="viewerSelect">${options}</select>
+    </div>`;
+  document.getElementById('viewerSelect').addEventListener('change', async (e)=>{
+    STATE.viewerSupportId = e.target.value;
+    await saveState();
+    render();
+  });
+}
+function ensureViewerSupport(){
+  if(!STATE.supports.length) return null;
+  if(!STATE.viewerSupportId || !STATE.supports.find(s=>s.id===STATE.viewerSupportId)){
+    STATE.viewerSupportId = sortedSupports()[0].id;
+  }
+  return STATE.viewerSupportId;
 }
 
 function render(){
   populateGlobalMonth();
   const c = document.getElementById('content');
-  if(currentView==='dashboard') c.innerHTML = renderDashboard();
-  else if(currentView==='counts') c.innerHTML = renderCounts();
-  else if(currentView==='new') c.innerHTML = renderNewFeedback();
-  else if(currentView==='records') c.innerHTML = renderRecords();
-  else if(currentView==='supports') c.innerHTML = renderSupports();
+  if(currentView==='myDashboard') c.innerHTML = renderMyDashboard();
+  else if(currentView==='myRecords') c.innerHTML = renderMyRecords();
   else if(currentView==='agentReviews') c.innerHTML = renderAgentReviews();
   attachViewHandlers();
 }
 
-function renderDashboard(){
-  const months = allMonthsUsed();
-  const thisMonthRecs = recordsFor(currentMonth);
-  const target = getTarget(currentMonth);
-
-  const seqasReviewedCount = thisMonthRecs.length;
-  const seqasTargetStr = `${seqasReviewedCount}/${target}`;
-  const seqasRawRate = target > 0 ? seqasReviewedCount / target : null;
-  const seqasCompletionRate = seqasRawRate === null ? null : Math.min(1, seqasRawRate);
-
-  const thisMonthAgentReviews = STATE.agentReviews.filter(a => (a.date || '').slice(0,7) === currentMonth);
-  let totalAgentProgressSum = 0;
-  let supportsCount = STATE.supports.length;
-
-  if (supportsCount > 0) {
-    STATE.supports.forEach(s => {
-      const adjTarget = getAdjustedTarget(s.id, currentMonth);
-      const sReviewsCount = thisMonthAgentReviews.filter(a => a.supportId === s.id).length;
-      if (adjTarget !== null && adjTarget > 0) {
-        totalAgentProgressSum += Math.min(1, sReviewsCount / adjTarget);
-      } else if (target > 0) {
-        totalAgentProgressSum += Math.min(1, sReviewsCount / target);
-      }
-    });
-  }
-  const avgAgentReviewProgress = supportsCount > 0 ? Math.min(1, totalAgentProgressSum / supportsCount) : null;
-  const teamMonthAvg = avgPercent(thisMonthRecs);
-
-  const rows = sortedSupports().map(sup=>{
-    const cells = months.map(m=>{
-      const recs = recordsFor(m, sup.id);
-      const avg = avgPercent(recs);
-      if(!recs.length) return `<td class="num" style="color:var(--slate-soft);">—</td>`;
-      return `<td class="num"><span class="badge ${scoreBadgeClass(avg)}">${pctStr(avg)}</span> <span style="color:var(--slate-soft); font-size:11px;">(${recs.length})</span></td>`;
-    }).join('');
-    const supAll = recordsFor(null, sup.id).length ? STATE.records.filter(r=>r.supportId===sup.id) : [];
-    const overallAvg = avgPercent(supAll);
-    return `<tr><td style="font-weight:600;">${esc(sup.name)}</td>${cells}<td class="num"><span class="badge ${scoreBadgeClass(overallAvg)}">${pctStr(overallAvg)}</span></td></tr>`;
-  }).join('');
-
-  const teamOverallAvg = avgPercent(STATE.records);
-
-  const bySupportRows = sortedSupports().map(s=>{
-    const mine = STATE.agentReviews.filter(a=>a.supportId===s.id);
-    const rc = mine.filter(a=>a.mode==='review').length;
-    const cc = mine.filter(a=>a.mode==='commendation').length;
-    const monthCount = mine.filter(a=>a.date && a.date.slice(0,7)===currentMonth).length;
-    const adjusted = getAdjustedTarget(s.id, currentMonth);
-    const rate = (adjusted!==null && adjusted>0) ? Math.min(1, monthCount/adjusted) : (target>0 ? Math.min(1, monthCount/target) : null);
-    return `<tr>
-      <td style="font-weight:600;">${esc(s.name)}</td>
-      <td class="num">${rc}</td>
-      <td class="num">${cc}</td>
-      <td class="num">${rc+cc}</td>
-      <td class="num">${rate===null ? '<span style="color:var(--slate-soft);">No target set</span>' : `<span class="badge ${rate>=1?'green':'neutral'}">${Math.round(rate*100)}%</span>`}</td>
-    </tr>`;
-  }).join('');
-
-  return `
-  <div class="stat-row" style="grid-template-columns: repeat(2, 1fr);">
-    <div class="stat-card">
-      <div class="label">${monthLabel(currentMonth)} SEQAS Review</div>
-      <div class="value" style="font-size:36px; font-weight:800; color:var(--ink);">
-        ${seqasCompletionRate === null ? '—' : Math.round(seqasCompletionRate * 100) + '%'}
-      </div>
-      <div style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:700; color:var(--slate); margin-top:4px;">
-        ${seqasTargetStr}
-      </div>
-      <div class="delta" style="margin-top:4px;">
-        <span class="badge ${seqasCompletionRate >= 1 ? 'green' : (seqasCompletionRate > 0 ? 'amber' : 'neutral')}">
-          ${seqasReviewedCount} of ${target} evaluations completed
-        </span>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="label">Agent Reviews Completion Average</div>
-      <div class="value" style="font-size:36px; font-weight:800; color:var(--brass-dark);">
-        ${avgAgentReviewProgress === null ? '—' : Math.round(avgAgentReviewProgress * 100) + '%'}
-      </div>
-      <div style="font-size:14px; font-weight:600; color:var(--slate); margin-top:6px;">
-        ${thisMonthAgentReviews.length} total entries logged this month
-      </div>
-      <div class="delta" style="margin-top:4px;">
-        <span class="badge ${avgAgentReviewProgress >= 1 ? 'green' : 'neutral'}">Averages everyone's monthly progress</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <h3>Seqas review Score Summary</h3>
-        <div style="font-size:11.5px; color:var(--slate-soft); margin-top:2px;">
-          ${monthLabel(currentMonth)} Average Score: <strong>${pctStr(teamMonthAvg)}</strong> (${thisMonthRecs.length} review${thisMonthRecs.length===1?'':'s'}) &middot; Overall Average: <strong>${pctStr(teamOverallAvg)}</strong>
-        </div>
-      </div>
-    </div>
-    <div class="card-body" style="overflow-x:auto;">
-      ${STATE.supports.length ? `
-      <table>
-        <thead><tr><th>Support</th>${months.map(m=>`<th>${monthLabel(m).slice(0,3).toUpperCase()} '${m.slice(2,4)}</th>`).join('')}<th>Overall</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin scoring.', 'supports','Add supports')}
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:20px;">
-    <div class="card-header">
-      <h3>Support Agent Review</h3>
-      <span style="font-size:11.5px; color:var(--slate-soft);">Reviews and commendations submitted by each support for ${monthLabel(currentMonth)}</span>
-    </div>
-    <div class="card-body" style="overflow-x:auto;">
-      ${STATE.supports.length ? `
-      <table>
-        <thead><tr><th>Support</th><th>Reviews</th><th>Commendations</th><th>Total</th><th>Progress</th></tr></thead>
-        <tbody>${bySupportRows}</tbody>
-      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
-    </div>
-  </div>
-  `;
-}
-
-function renderCounts(){
-  const thisMonthRecs = recordsFor(currentMonth);
-  const target = getTarget(currentMonth);
-  const rate = target > 0 ? Math.min(1, thisMonthRecs.length / target) : null;
-
-  const rows = sortedSupports().map(sup=>{
-    const recCount = recordsFor(currentMonth, sup.id).length;
-    return `<tr>
-      <td style="font-weight:600;">${esc(sup.name)}</td>
-      <td class="num">${recCount || '<span style="color:var(--slate-soft);">0</span>'}</td>
-    </tr>`;
-  }).join('');
-
-  const personalTargetRows = sortedSupports().map(sup=>{
-    const key = personalTargetKey(sup.id, currentMonth);
-    const stored = STATE.personalTargets[key];
-    const val = (stored===undefined||stored===null||stored==='') ? '' : stored;
-    return `<tr>
-      <td style="font-weight:600;">${esc(sup.name)}</td>
-      <td class="num"><input type="number" min="0" class="target-input" placeholder="\u2014" data-personal-target-support="${sup.id}" data-personal-target-month="${currentMonth}" value="${val}"></td>
-    </tr>`;
-  }).join('');
-
-  const attendanceRows = sortedSupports().map(sup=>{
-    const att = getAttendance(sup.id, currentMonth);
-    const total = (Number(att.absent)||0)+(Number(att.vl)||0)+(Number(att.ml)||0)+(Number(att.el)||0);
-    return `<tr>
-      <td style="font-weight:600;">${esc(sup.name)}</td>
-      <td class="num">${total ? `A:${att.absent||0} VL:${att.vl||0} ML:${att.ml||0} EL:${att.el||0}` : '<span style="color:var(--slate-soft);">\u2014</span>'}</td>
-    </tr>`;
-  }).join('');
-
-  return `
-  <div class="card">
-    <div class="card-header">
-      <h3>Review Count by Support</h3>
-      <span style="font-size:11.5px; color:var(--slate-soft);">Evaluations logged for ${monthLabel(currentMonth)}</span>
-    </div>
-    <div class="card-body" style="overflow-x:auto;">
-      ${STATE.supports.length ? `
-      <table class="count-table">
-        <thead><tr><th>Support</th><th>${monthShort(currentMonth)}</th></tr></thead>
-        <tbody>${rows}</tbody>
-        <tbody>
-          <tr class="row-total"><td>Total</td><td class="num">${thisMonthRecs.length}</td></tr>
-          <tr><td style="font-weight:600;">Target <span style="font-weight:400; color:var(--slate-soft); font-size:11px;">(editable)</span></td><td class="num"><input type="number" min="0" class="target-input" data-target-month="${currentMonth}" value="${target}"></td></tr>
-          <tr><td style="font-weight:600;">Rate</td><td class="num"><span class="badge ${rate===null?'neutral':(rate>=1?'green':'red')}">${rate===null?'—':Math.round(rate*100)+'%'}</span></td></tr>
-        </tbody>
-      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin tracking.', 'supports','Add supports')}
-    </div>
-  </div>
-  <p class="field-hint" style="margin-top:14px;">Select any month from the top right to switch and set that month's target. Changes save automatically.</p>
-
-  <div class="card" style="margin-top:20px;">
-    <div class="card-header">
-      <h3>Personal Targets (${monthLabel(currentMonth)})</h3>
-      <span style="font-size:11.5px; color:var(--slate-soft);">Set monthly Agent Review goal for ${monthLabel(currentMonth)} \u2014 synced to Support View</span>
-    </div>
-    <div class="card-body" style="overflow-x:auto;">
-      ${STATE.supports.length ? `
-      <table class="count-table">
-        <thead><tr><th>Support</th><th>Target Goal</th></tr></thead>
-        <tbody>${personalTargetRows}</tbody>
-      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin tracking.', 'supports','Add supports')}
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:20px;">
-    <div class="card-header">
-      <h3>Attendance on File (${monthLabel(currentMonth)})</h3>
-      <span style="font-size:11.5px; color:var(--slate-soft);">Read-only \u2014 supports log this from their own dashboard</span>
-    </div>
-    <div class="card-body" style="overflow-x:auto;">
-      ${STATE.supports.length ? `
-      <table class="count-table">
-        <thead><tr><th>Support</th><th>Recorded Leaves</th></tr></thead>
-        <tbody>${attendanceRows}</tbody>
-      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab to begin tracking.', 'supports','Add supports')}
-    </div>
-  </div>
-  `;
-}
-
-function renderNewFeedback(){
-  const editing = editingRecordId ? STATE.records.find(r=>r.id===editingRecordId) : null;
-  const scores = editing ? editing.scores : {};
-  const supOptions = sortedSupports().map(s=>`<option value="${s.id}" ${editing && editing.supportId===s.id ? 'selected':''}>${esc(s.name)}</option>`).join('');
-
+function renderMyDashboard(){
   if(!STATE.supports.length){
-    return emptyState('Add a support first', 'You need at least one support on the roster before logging an evaluation.', 'supports', 'Go to Manage Supports');
+    return emptyState('No supports on the roster yet', 'Ask your supervisor to add you to the roster.', null, null);
   }
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const months = allMonthsUsed();
+  const myAll = STATE.records.filter(r=>r.supportId===viewerId);
+  const overallAvg = avgPercent(myAll);
+  const thisMonthRecs = recordsFor(currentMonth, viewerId);
+  const thisMonthAvg = avgPercent(thisMonthRecs);
 
-  const notes = editing ? (editing.criteriaNotes || {}) : {};
-  const scoreRows = CRITERIA.map(c=>{
-    const val = scores[c.key];
-    const options = c.max===1 ? [0,1] : [0,1,2];
-    const optLabels = c.max===1 ? ['Not Met','Met'] : ['Not Met','Partial','Met'];
-    const segButtons = options.map((o,i)=>`<button type="button" class="sel-${o} ${val===o?'active':''}" data-score-key="${c.key}" data-score-val="${o}">${optLabels[i]}</button>`).join('');
-    const band = val===undefined ? 'unscored' : String(val);
-    const noteVal = notes[c.key] || '';
-    return `
-    <div class="crit-card" data-band="${band}" data-crit-key="${c.key}">
-      <div class="crit-head">
-        <div class="crit-info">
-          <div class="crit-name">${esc(c.name)}</div>
-          <div class="crit-desc">${esc(c.desc)}</div>
-        </div>
-        <div class="seg">${segButtons}</div>
-      </div>
-      <div class="crit-note">
-        <div class="note-label"><span class="req-dot"></span>Why this rating?</div>
-        <textarea data-note-key="${c.key}" placeholder="${notePlaceholder(c, val)}">${esc(noteVal)}</textarea>
-      </div>
-      <button type="button" class="crit-info-toggle" data-crit-toggle="${c.key}">View full criteria \u25BE</button>
-      <div class="crit-info-panel" id="critInfo-${c.key}">${esc(c.details)}</div>
-    </div>`;
+  const rows = months.map(m=>{
+    const recs = recordsFor(m, viewerId);
+    const avg = avgPercent(recs);
+    return `<tr>
+      <td style="font-weight:600;">${monthLabel(m)}</td>
+      <td class="num">${recs.length ? `<span class="badge ${scoreBadgeClass(avg)}">${pctStr(avg)}</span>` : '<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+      <td class="num">${recs.length}</td>
+    </tr>`;
   }).join('');
 
+  const recentRows = myAll.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,5).map(r=>`
+    <tr>
+      <td class="num">${fmtDate(r.dateOfEval)}</td>
+      <td class="agent-name">${esc(r.agentName)}</td>
+      <td class="num">${esc(r.caseNumber)}</td>
+      <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
+    </tr>`).join('');
+
+  const thisMonthTarget = getPersonalTarget(viewerId, currentMonth);
+  const att = getAttendance(viewerId, currentMonth);
+  const leaveDays = (Number(att.absent)||0)+(Number(att.vl)||0)+(Number(att.ml)||0)+(Number(att.el)||0);
+  const adjustedTarget = getAdjustedTarget(viewerId, currentMonth);
+
+  const myAgentAll = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+  const myAgentThisMonth = myAgentAll.filter(a=>a.date && a.date.slice(0,7)===currentMonth);
+  const reviewCount = myAgentAll.filter(a=>a.mode==='review').length;
+  const commendationCount = myAgentAll.filter(a=>a.mode==='commendation').length;
+  const reviewCountMonth = myAgentThisMonth.filter(a=>a.mode==='review').length;
+  const commendationCountMonth = myAgentThisMonth.filter(a=>a.mode==='commendation').length;
+  const completionRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
+
   return `
-  <form id="feedbackForm">
-    <div class="card">
-      <div class="card-header"><h3>${editing?'Edit':'New'} Evaluation</h3><span style="font-size:11.5px; color:var(--slate-soft);">${monthLabel(currentMonth)}</span></div>
-      <div class="card-body">
-        <div class="field-grid">
-          <div class="field">
-            <label class="field-label">Support</label>
-            <select id="f_support" required>${supOptions}</select>
-          </div>
-          <div class="field">
-            <label class="field-label">Month</label>
-            <input type="month" id="f_month" value="${editing?editing.month:currentMonth}" required>
-          </div>
-          <div class="field">
-            <label class="field-label">Date of Evaluation</label>
-            <input type="date" id="f_evalDate" value="${editing?editing.dateOfEval:''}" required>
-          </div>
-          <div class="field">
-            <label class="field-label">Chat Date</label>
-            <input type="date" id="f_chatDate" value="${editing?editing.chatDate:''}" required>
-          </div>
-          <div class="field">
-            <label class="field-label">Agent Name</label>
-            <input type="text" id="f_agent" placeholder="e.g. Maria Fernandez" value="${editing?esc(editing.agentName):''}" required>
-          </div>
-          <div class="field">
-            <label class="field-label">Case Number</label>
-            <input type="text" id="f_case" placeholder="e.g. 13587296" value="${editing?esc(editing.caseNumber):''}" required>
-          </div>
-        </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-body" style="display:flex; align-items:center; gap:14px;">
+      <div class="seal" style="width:40px;height:40px;font-size:15px;">${esc(viewer.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>
+      <div>
+        <div style="font-weight:700; font-size:16px; color:var(--ink-text);">${esc(viewer.name)}</div>
+        <div style="font-size:12px; color:var(--slate-soft);">${myAll.length} SEQAS evaluation${myAll.length===1?'':'s'} &middot; ${myAgentAll.length} agent entr${myAgentAll.length===1?'y':'ies'} on file</div>
       </div>
     </div>
+  </div>
 
-    <div id="previousReviewsPanel"></div>
+  <div class="section-divider"><h3>SEQAS Review</h3></div>
 
-    <div class="card" style="margin-top:20px;">
-      <div class="card-header"><h3>Scoring</h3><span style="font-size:11.5px; color:var(--slate-soft);">Out of ${MAX_SCORE} points</span></div>
-      <div class="card-body" id="scoreArea">${scoreRows}</div>
-      <div style="padding:0 20px 20px 20px;">
-        <div class="total-strip">
-          <div><div class="tlabel">Total Score</div><div class="tval" id="liveTotal">${editing?editing.total:0} <small>/ ${MAX_SCORE}</small></div></div>
-          <div><div class="tlabel">Review Score</div><div class="tval" id="livePercent">${editing?pctStr(editing.percent):'0%'}</div></div>
-        </div>
+  <div class="stat-row" style="grid-template-columns:repeat(2,1fr);">
+    <div class="stat-card">
+      <div class="label">Overall Average</div>
+      <div class="value">${pctStr(overallAvg)}</div>
+      <div class="delta">across ${myAll.length} evaluation${myAll.length===1?'':'s'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">${monthLabel(currentMonth)} Average</div>
+      <div class="value">${pctStr(thisMonthAvg)}</div>
+      <div class="delta">${thisMonthRecs.length} evaluation${thisMonthRecs.length===1?'':'s'} this month</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Score by Month</h3></div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Month</th><th>Average</th><th>Reviews</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><h3>Most Recent Evaluations</h3><span style="font-size:11.5px; color:var(--slate-soft);">See SEQAS Records for the full list</span></div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${recentRows ? `<table><thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Score</th></tr></thead><tbody>${recentRows}</tbody></table>` : emptyState('No evaluations yet', 'Your evaluations will show up here once your supervisor logs one.', null, null)}
+    </div>
+  </div>
+
+  <div class="section-divider"><h3>Agent Review</h3></div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="label">${monthLabel(currentMonth)} Target Progress</div>
+      <div class="value" style="color:${completionRate===null?'inherit':(completionRate>=1?'var(--green)':'var(--ink)')}; ${adjustedTarget===null?'font-size:15px;':''}">${adjustedTarget===null ? 'No target set' : (completionRate===null ? '\u2014' : Math.round(completionRate*100)+'%')}</div>
+      <div class="delta">
+        ${adjustedTarget===null
+          ? 'Ask your supervisor to set your monthly target'
+          : `${myAgentThisMonth.length} of ${adjustedTarget}${leaveDays>0?` (adjusted for ${leaveDays} leave day${leaveDays===1?'':'s'})`:''}`}
+        ${completionRate!==null && completionRate>=1 ? '<span class="badge green" style="margin-left:6px;">Target reached</span>' : ''}
       </div>
     </div>
+    <div class="stat-card">
+      <div class="label">Reviews Submitted</div>
+      <div class="value">${reviewCount}</div>
+      <div class="delta">${reviewCountMonth} this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Commendations Submitted</div>
+      <div class="value">${commendationCount}</div>
+      <div class="delta">${commendationCountMonth} this month</div>
+    </div>
+  </div>
 
-    <div class="card" style="margin-top:20px;">
-      <div class="card-header"><h3>Coaching Notes</h3><span style="font-size:11.5px; color:var(--slate-soft);">Included in the export</span></div>
-      <div class="card-body">
-        <div class="summary-actions">
-          <p>Add a note under each criterion above, then generate a first draft of the four sections below from those notes.</p>
-          <button type="button" class="btn brass sm" id="generateSummaryBtn">Generate Summary</button>
-        </div>
-        <div class="field">
-          <label class="field-label">Support Action</label>
-          <textarea id="f_supportAction" placeholder="What did support do well or miss during troubleshooting?">${editing?esc(editing.supportAction):''}</textarea>
-        </div>
-        <div class="field">
-          <label class="field-label">Commitment Met / Observations</label>
-          <textarea id="f_commitment" placeholder="What will support commit to going forward?">${editing?esc(editing.commitmentObservations):''}</textarea>
-        </div>
-        <div class="field">
-          <label class="field-label">Additional Actions That Could Be Performed</label>
-          <textarea id="f_additional" placeholder="Specific steps that could have been taken">${editing?esc(editing.additionalActions):''}</textarea>
-        </div>
-        <div class="field" style="margin-bottom:8px;">
-          <label class="field-label">TL Commitment and Coaching Notes</label>
-          <textarea id="f_tlNotes" placeholder="How will the team lead reinforce this going forward?">${editing?esc(editing.tlCommitment):''}</textarea>
-        </div>
-        <div class="gen-note">Generated text is a starting draft \u2014 edit any field above before saving.</div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <h3>Agent Entries</h3>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <select id="dashAgentReviewMonthFilter" style="width:auto; font-size:12.5px; padding:6px 8px;"></select>
+        <button class="btn ghost sm" data-goto="agentReviews">Log a new entry</button>
       </div>
     </div>
+    <div class="card-body" id="dashAgentEntriesWrap" style="overflow-x:auto;"></div>
+  </div>
 
-    <div style="display:flex; gap:10px; margin-top:22px;">
-      <button type="submit" class="btn brass">${editing?'Save Changes':'Save Evaluation'}</button>
-      ${editing?'<button type="button" class="btn ghost" id="cancelEdit">Cancel</button>':''}
+  <div class="card attendance-compact">
+    <div class="card-header"><h3>Attendance</h3><span style="font-size:11px; color:var(--slate-soft);">${monthLabel(currentMonth)} \u2014 adjusts your Agent Review target above</span></div>
+    <div class="card-body">
+      <form id="attendanceForm" style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">Absent</label><input type="number" min="0" id="att_absent" value="${att.absent||0}"></div>
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">VL</label><input type="number" min="0" id="att_vl" value="${att.vl||0}"></div>
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">ML</label><input type="number" min="0" id="att_ml" value="${att.ml||0}"></div>
+        <div class="field" style="margin-bottom:0; width:70px;"><label class="field-label">EL</label><input type="number" min="0" id="att_el" value="${att.el||0}"></div>
+        <button type="submit" class="btn brass sm">Save</button>
+      </form>
+      <p class="field-hint" style="margin:10px 0 0 0;">${thisMonthTarget===null ? 'No monthly target has been set for you yet \u2014 attendance will apply once your supervisor sets one.' : `Base target this month: <strong>${thisMonthTarget}</strong>. Days off reduce it proportionally.`}</p>
     </div>
-  </form>
+  </div>
   `;
 }
 
-function renderRecords(){
-  const monthFilterOptions = allMonthsUsed().map(m=>`<option value="${m}" ${m===currentMonth?'selected':''}>${monthLabel(m)}</option>`).join('');
-  const supFilterOptions = sortedSupports().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
-
+function renderMyRecords(){
+  const options = sortedSupports().map(s=>`<option value="${s.id}" ${s.id===STATE.viewerSupportId?'selected':''}>${esc(s.name)}</option>`).join('');
   return `
   <div class="filter-bar">
-    <select id="filterMonth"><option value="">All months</option>${monthFilterOptions}</select>
-    <select id="filterSupport"><option value="">All supports</option>${supFilterOptions}</select>
+    <div class="month-select">
+      <label>Support</label>
+      <select id="myRecordsSupportFilter">${options}</select>
+    </div>
   </div>
   <div class="card">
-    <div class="card-body" id="recordsTableWrap" style="overflow-x:auto;"></div>
+    <div class="card-body" id="myRecordsTableWrap" style="overflow-x:auto;"></div>
   </div>
   `;
 }
-
-function renderRecordsTable(){
-  const monthF = document.getElementById('filterMonth')?.value || '';
-  const supF = document.getElementById('filterSupport')?.value || '';
-  let recs = STATE.records.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  if(monthF) recs = recs.filter(r=>r.month===monthF);
-  if(supF) recs = recs.filter(r=>r.supportId===supF);
-
-  const wrap = document.getElementById('recordsTableWrap');
+function renderMyRecordsTable(){
+  const viewerId = ensureViewerSupport();
+  let recs = STATE.records.filter(r=>r.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const wrap = document.getElementById('myRecordsTableWrap');
   if(!wrap) return;
   if(!recs.length){
-    wrap.innerHTML = emptyState('No evaluations found', 'Try a different filter, or log your first evaluation.', 'new', 'New Feedback');
+    wrap.innerHTML = emptyState('No evaluations found', 'Your evaluations will show up here once logged.', null, null);
     return;
   }
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>Date</th><th>Support</th><th>Agent</th><th>Case #</th><th>Score</th><th style="text-align:right;">Actions</th></tr></thead>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Score</th><th style="text-align:right;">Actions</th></tr></thead>
       <tbody>
         ${recs.map(r=>`
           <tr>
             <td class="num">${fmtDate(r.dateOfEval)}</td>
-            <td style="font-weight:600;">${esc(r.supportName)}</td>
             <td class="agent-name">${esc(r.agentName)}</td>
             <td class="num">${esc(r.caseNumber)}</td>
             <td><span class="badge ${scoreBadgeClass(r.percent)}">${r.total}/${MAX_SCORE} &middot; ${pctStr(r.percent)}</span></td>
             <td style="text-align:right; white-space:nowrap;">
-              <button class="icon-btn" title="Export" data-export="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M6 9l6 6 6-6"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></button>
-              <button class="icon-btn" title="Edit" data-edit="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-              <button class="icon-btn danger" title="Delete" data-delete="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+              <button class="icon-btn" title="View" data-my-view="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="icon-btn" title="Download PDF" data-my-download="${r.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M6 9l6 6 6-6"/><path d="M4 17v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></button>
             </td>
           </tr>`).join('')}
       </tbody>
     </table>
   `;
-  wrap.querySelectorAll('[data-export]').forEach(b=>b.addEventListener('click', ()=>openExportModal(b.dataset.export)));
-  wrap.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>{ editingRecordId=b.dataset.edit; setView('new', {keepEditing:true}); }));
-  wrap.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click', ()=>confirmDeleteRecord(b.dataset.delete)));
+  wrap.querySelectorAll('[data-my-view]').forEach(b=>b.addEventListener('click', ()=>openExportModal(b.dataset.myView)));
+  wrap.querySelectorAll('[data-my-download]').forEach(b=>b.addEventListener('click', ()=>downloadRecordPdf(b.dataset.myDownload)));
 }
 
-function renderSupports(){
-  const chips = sortedSupports().map(s=>{
-    const initials = s.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    const count = STATE.records.filter(r=>r.supportId===s.id).length;
-    return `<div class="support-chip">
-      <span class="initial">${esc(initials)}</span>
-      <span>${esc(s.name)}</span>
-      <span style="color:var(--slate-soft); font-weight:400; font-size:11.5px;">${count} on file</span>
-      <button class="icon-btn danger" data-remove-support="${s.id}" title="Remove"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-    </div>`;
-  }).join('');
-
+function renderAgentReviews(){
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const editingEntry = editingAgentReviewId ? STATE.agentReviews.find(a=>a.id===editingAgentReviewId) : null;
+  const issueOptions = AGENT_REVIEW_TYPES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const categoryOptions = AGENT_COMMENDATION_CATEGORIES.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const severityOptions = SEVERITY_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const impactOptions = IMPACT_LEVELS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const kind = editingEntry ? editingEntry.mode : 'review';
   return `
   <div class="card">
-    <div class="card-header"><h3>Add a Support</h3></div>
+    <div class="card-header">
+      <h3>${editingEntry?'Edit Agent Entry':'Log an Agent Entry'}</h3>
+      <div class="mode-toggle" id="arKindToggle" style="margin:0; background:var(--paper-deep); border-color:var(--rule);">
+        <button type="button" data-ar-kind="review" class="${kind==='review'?'active':''}" style="color:var(--slate);">Agent Review</button>
+        <button type="button" data-ar-kind="commendation" class="${kind==='commendation'?'active':''}" style="color:var(--slate);">Agent Commendation</button>
+      </div>
+    </div>
     <div class="card-body">
-      <form id="addSupportForm" style="display:flex; gap:10px;">
-        <input type="text" id="newSupportName" placeholder="Full name" style="flex:1;" required>
-        <button type="submit" class="btn brass">Add Support</button>
+      <form id="agentReviewForm">
+        <div class="field">
+          <label class="field-label">Support Name</label>
+          <input type="text" value="${esc(viewer ? viewer.name : '')}" disabled>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label">Agent Name</label>
+            <input type="text" id="ar_agent" placeholder="e.g. Dean Clemente" value="${editingEntry?esc(editingEntry.agentName):''}">
+          </div>
+          <div class="field">
+            <label class="field-label">Case Number</label>
+            <input type="text" id="ar_case" placeholder="e.g. 13872622" value="${editingEntry?esc(editingEntry.caseNumber):''}">
+          </div>
+          <div class="field">
+            <label class="field-label" id="ar_categoryLabel">Type of Issue</label>
+            <select id="ar_category">${(kind==='review'?issueOptions:categoryOptions)}</select>
+          </div>
+          <div class="field">
+            <label class="field-label" id="ar_levelLabel">Severity / Impact</label>
+            <select id="ar_level">${(kind==='review'?severityOptions:impactOptions)}</select>
+          </div>
+        </div>
+
+        <div id="ar_reviewSections" style="${kind!=='review'?'display:none;':''}">
+          <div class="field">
+            <label class="field-label">1. Interaction Summary <span style="color:var(--brass);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">What happened \u2014 brief summary of the interaction</div>
+            <textarea id="ar_s1" placeholder="Describe the interaction and reason for review...">${kind==='review'&&editingEntry?esc(editingEntry.section1):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">2. Gap Identified <span style="color:var(--brass);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">What was missed \u2014 policy, KB, or steps not followed</div>
+            <textarea id="ar_s2" placeholder="Outline the gap clearly...">${kind==='review'&&editingEntry?esc(editingEntry.section2):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">3. Opportunities &amp; Recommended Actions <span style="color:var(--brass);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Next steps \u2014 coaching points and expected actions</div>
+            <textarea id="ar_s3" placeholder="State coaching points and recommendations...">${kind==='review'&&editingEntry?esc(editingEntry.section3):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">4. Positive Observations <span style="color:var(--slate-soft); text-transform:none; font-weight:400;">(recommended)</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">What the agent did well \u2014 strengths to reinforce</div>
+            <textarea id="ar_s4" placeholder="Acknowledge strengths and positive behaviors...">${kind==='review'&&editingEntry?esc(editingEntry.section4):''}</textarea>
+          </div>
+        </div>
+
+        <div id="ar_commendationSections" style="${kind==='review'?'display:none;':''}">
+          <div class="field">
+            <label class="field-label">1. What Went Well <span style="color:var(--green);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Interaction summary \u2014 how the agent effectively handled it</div>
+            <textarea id="ar_c1" placeholder="Summarize the interaction and positive outcome...">${kind==='commendation'&&editingEntry?esc(editingEntry.section1):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">2. Key Strengths Displayed <span style="color:var(--green);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Behaviors / KB adherence \u2014 specific strengths demonstrated</div>
+            <textarea id="ar_c2" placeholder="Recognize specific behaviors, processes, or KB articles...">${kind==='commendation'&&editingEntry?esc(editingEntry.section2):''}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">3. Business Impact &amp; Recognition <span style="color:var(--green);">*</span></label>
+            <div class="field-hint" style="margin:0 0 6px 0;">Value / next steps \u2014 impact on CX, efficiency, or business goals</div>
+            <textarea id="ar_c3" placeholder="Explain the positive impact and encourage continued excellence...">${kind==='commendation'&&editingEntry?esc(editingEntry.section3):''}</textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn ghost" id="ar_previewBtn">Generate Preview</button>
+          <button type="submit" class="btn brass" id="ar_saveBtn">${editingEntry?'Save Changes':'Save Entry'}</button>
+          ${editingEntry?'<button type="button" class="btn ghost" id="ar_cancelEditBtn">Cancel</button>':''}
+        </div>
       </form>
     </div>
   </div>
-  <div class="card" style="margin-top:20px;">
-    <div class="card-header"><h3>Active Roster</h3><span style="font-size:11.5px; color:var(--slate-soft);">${STATE.supports.length} people</span></div>
-    <div class="card-body">
-      ${STATE.supports.length ? `<div class="chip-row">${chips}</div>` : emptyState('No supports yet', 'Add your first team member above.', null, null)}
-    </div>
-  </div>
 
-  <div class="card" style="margin-top:20px;">
-    <div class="card-header"><h3>Backup &amp; Restore</h3></div>
-    <div class="card-body">
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button type="button" class="btn brass" id="downloadBackupBtn">Download Backup</button>
-        <button type="button" class="btn ghost" id="restoreBackupBtn">Restore from Backup</button>
-        <input type="file" id="restoreFileInput" accept="application/json" style="display:none;">
-      </div>
-    </div>
+  <div class="card" id="ar_previewCard" style="display:none; margin-top:20px;">
+    <div class="card-header"><h3>Formatted Preview</h3><button type="button" class="btn ghost sm" id="ar_copyBtn">Copy to Clipboard</button></div>
+    <div class="card-body"><pre id="ar_previewText" style="white-space:pre-wrap; font-family:inherit; font-size:13px; line-height:1.6; margin:0; color:var(--ink-text);"></pre></div>
   </div>
 
   <div class="card" style="margin-top:20px;">
     <div class="card-header">
-      <h3>Team Sync</h3>
-      <span class="type-badge ${SYNC_URL ? (lastSyncStatus==='error'?'':'commendation') : ''}">${SYNC_URL ? (lastSyncStatus==='error'?'Sync error':'Connected') : 'Not connected'}</span>
-    </div>
-    <div class="card-body">
-      <div class="field-grid">
-        <div class="field" style="grid-column:1/-1;">
-          <label class="field-label">Sync URL</label>
-          <input type="text" id="syncUrlInput" placeholder="https://your-project-default-rtdb.firebaseio.com" value="${esc(SYNC_URL)}">
-        </div>
-      </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-        <button type="button" class="btn brass" id="saveSyncUrlBtn">Save URL</button>
-        <button type="button" class="btn ghost" id="syncNowBtn" ${SYNC_URL?'':'disabled'}>Sync Now</button>
+      <h3>Your Entries</h3>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="ar_countChip" style="font-size:11.5px; color:var(--slate-soft);"></span>
+        <select id="myAgentReviewMonthFilter" style="width:auto; font-size:12.5px; padding:6px 8px;"></select>
       </div>
     </div>
+    <div class="card-body" id="myAgentReviewsWrap" style="overflow-x:auto;"></div>
   </div>
   `;
 }
 
-function renderAgentReviews(){
-  const supFilterOptions = sortedSupports().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
-
-  return `
-  <div class="filter-bar">
-    <select id="arFilterSupport"><option value="">All supports</option>${supFilterOptions}</select>
-    <select id="arFilterKind"><option value="">All entries</option><option value="review">Agent Reviews</option><option value="commendation">Agent Commendations</option></select>
-    <span id="ar_countChipAll" style="font-size:11.5px; color:var(--slate-soft); margin-left:4px;"></span>
-  </div>
-  <div class="card">
-    <div class="card-body" id="allAgentReviewsWrap" style="overflow-x:auto;"></div>
-  </div>
-  `;
-}
-
-function renderAllAgentReviewsTable(){
-  const wrap = document.getElementById('allAgentReviewsWrap');
-  if(!wrap) return;
-  const supF = document.getElementById('arFilterSupport')?.value || '';
-  const kindF = document.getElementById('arFilterKind')?.value || '';
-  let entries = STATE.agentReviews.filter(a=>(a.date||'').slice(0,7)===currentMonth).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-  const chip = document.getElementById('ar_countChipAll');
-  if(chip){
-    const rc = entries.filter(a=>a.mode==='review').length;
-    const cc = entries.filter(a=>a.mode==='commendation').length;
-    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'} for ${monthLabel(currentMonth)}`;
+function buildAgentEntryText(e){
+  const lines = [];
+  const meta = [];
+  if(e.agentName) meta.push('Agent: '+e.agentName);
+  if(e.caseNumber) meta.push('Case: '+e.caseNumber);
+  if(meta.length){ lines.push(meta.join('   |   ')); lines.push(''); }
+  if(e.mode==='review'){
+    if(e.category) lines.push('Type of Issue: '+e.category);
+    if(e.level) lines.push('Severity: '+e.level);
+    lines.push('');
+    lines.push('1. Interaction Summary'); lines.push(e.section1||'');
+    lines.push('');
+    lines.push('2. Gap Identified'); lines.push(e.section2||'');
+    lines.push('');
+    lines.push('3. Opportunities & Recommended Actions'); lines.push(e.section3||'');
+    if(e.section4){ lines.push(''); lines.push('4. Positive Observations'); lines.push(e.section4); }
+  } else {
+    if(e.category) lines.push('Category: '+e.category);
+    if(e.level) lines.push('Impact Level: '+e.level);
+    lines.push('');
+    lines.push('1. What Went Well'); lines.push(e.section1||'');
+    lines.push('');
+    lines.push('2. Key Strengths Displayed'); lines.push(e.section2||'');
+    lines.push('');
+    lines.push('3. Business Impact & Recognition'); lines.push(e.section3||'');
   }
-  if(supF) entries = entries.filter(a=>a.supportId===supF);
-  if(kindF) entries = entries.filter(a=>a.mode===kindF);
+  return lines.join('\n');
+}
+
+function readAgentReviewForm(){
+  const kind = agentReviewKind;
+  const viewerId = ensureViewerSupport();
+  const viewer = STATE.supports.find(s=>s.id===viewerId);
+  const base = {
+    mode: kind,
+    supportId: viewerId,
+    supportName: viewer ? viewer.name : '',
+    agentName: document.getElementById('ar_agent').value.trim(),
+    caseNumber: document.getElementById('ar_case').value.trim(),
+    category: document.getElementById('ar_category').value,
+    level: document.getElementById('ar_level').value,
+  };
+  if(kind==='review'){
+    base.section1 = document.getElementById('ar_s1').value.trim();
+    base.section2 = document.getElementById('ar_s2').value.trim();
+    base.section3 = document.getElementById('ar_s3').value.trim();
+    base.section4 = document.getElementById('ar_s4').value.trim();
+  } else {
+    base.section1 = document.getElementById('ar_c1').value.trim();
+    base.section2 = document.getElementById('ar_c2').value.trim();
+    base.section3 = document.getElementById('ar_c3').value.trim();
+    base.section4 = '';
+  }
+  return base;
+}
+function validateAgentReviewForm(d){
+  const missing = [];
+  if(!d.category) missing.push(d.mode==='review' ? 'Type of Issue' : 'Category');
+  if(!d.section1) missing.push(d.mode==='review' ? 'Interaction Summary' : 'What Went Well');
+  if(!d.section2) missing.push(d.mode==='review' ? 'Gap Identified' : 'Key Strengths Displayed');
+  if(!d.section3) missing.push(d.mode==='review' ? 'Opportunities & Recommended Actions' : 'Business Impact & Recognition');
+  return missing;
+}
+function updateAgentReviewModeUI(){
+  document.querySelectorAll('#arKindToggle [data-ar-kind]').forEach(btn=>{
+    const active = btn.dataset.arKind === agentReviewKind;
+    btn.classList.toggle('active', active);
+    btn.style.color = active ? (agentReviewKind==='review' ? 'var(--brass-dark)' : 'var(--green)') : 'var(--slate)';
+    btn.style.background = active ? (agentReviewKind==='review' ? 'var(--brass-tint)' : 'var(--green-bg)') : 'none';
+  });
+  const isReview = agentReviewKind==='review';
+  document.getElementById('ar_reviewSections').style.display = isReview ? 'block' : 'none';
+  document.getElementById('ar_commendationSections').style.display = isReview ? 'none' : 'block';
+  document.getElementById('ar_categoryLabel').textContent = isReview ? 'Type of Issue' : 'Category';
+  document.getElementById('ar_levelLabel').textContent = isReview ? 'Severity' : 'Impact';
+  document.getElementById('ar_category').innerHTML = (isReview ? AGENT_REVIEW_TYPES : AGENT_COMMENDATION_CATEGORIES).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  document.getElementById('ar_level').innerHTML = (isReview ? SEVERITY_LEVELS : IMPACT_LEVELS).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  const saveBtn = document.getElementById('ar_saveBtn');
+  if(saveBtn) saveBtn.className = 'btn ' + (isReview ? 'brass' : 'ghost');
+  document.getElementById('ar_previewCard').style.display = 'none';
+}
+
+function renderDashboardAgentEntriesTable(){
+  const viewerId = ensureViewerSupport();
+  const wrap = document.getElementById('dashAgentEntriesWrap');
+  const monthSel = document.getElementById('dashAgentReviewMonthFilter');
+  if(!wrap) return;
+  const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+
+  if(monthSel){
+    const months = Array.from(new Set(all.map(a=>(a.date||'').slice(0,7)).filter(Boolean))).sort().reverse();
+    const prevValue = monthSel.value;
+    monthSel.innerHTML = `<option value="">All months</option>${months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('')}`;
+    if(months.includes(prevValue)) monthSel.value = prevValue;
+  }
+  const monthFilter = monthSel ? monthSel.value : '';
+  const filtered = monthFilter ? all.filter(a=>(a.date||'').slice(0,7)===monthFilter) : all;
+  const entries = filtered.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
   if(!entries.length){
-    wrap.innerHTML = emptyState('No agent review entries found for ' + monthLabel(currentMonth), 'Try selecting a different month from the top right.', null, null);
+    wrap.innerHTML = emptyState('No agent entries yet', monthFilter ? 'Nothing logged for this month yet.' : 'Log your first review or commendation from the Agent Review tab.', 'agentReviews', 'Go to Agent Review');
     return;
   }
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>Date</th><th>Support</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th><th style="text-align:right;">Actions</th></tr></thead>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th></tr></thead>
       <tbody>
         ${entries.map(a=>`
           <tr>
             <td class="num">${fmtDate(a.date)}</td>
-            <td style="font-weight:600;">${esc(a.supportName)}</td>
             <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
             <td class="num">${esc(a.caseNumber)||'\u2014'}</td>
             <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
             <td>${esc(a.category)||'\u2014'}</td>
-            <td style="max-width:280px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
+            <td style="max-width:300px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+function renderMyAgentReviewsTable(){
+  const viewerId = ensureViewerSupport();
+  const wrap = document.getElementById('myAgentReviewsWrap');
+  const chip = document.getElementById('ar_countChip');
+  const monthSel = document.getElementById('myAgentReviewMonthFilter');
+  if(!wrap) return;
+  const all = STATE.agentReviews.filter(a=>a.supportId===viewerId);
+
+  if(monthSel){
+    const months = Array.from(new Set(all.map(a=>(a.date||'').slice(0,7)).filter(Boolean))).sort().reverse();
+    const prevValue = monthSel.value;
+    monthSel.innerHTML = `<option value="">All months</option>${months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('')}`;
+    if(months.includes(prevValue)) monthSel.value = prevValue;
+  }
+  const monthFilter = monthSel ? monthSel.value : '';
+  const filtered = monthFilter ? all.filter(a=>(a.date||'').slice(0,7)===monthFilter) : all;
+  const entries = filtered.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  if(chip){
+    const rc = filtered.filter(a=>a.mode==='review').length;
+    const cc = filtered.filter(a=>a.mode==='commendation').length;
+    chip.textContent = `${rc} review${rc===1?'':'s'} \u00b7 ${cc} commendation${cc===1?'':'s'}`;
+  }
+  if(!entries.length){
+    wrap.innerHTML = emptyState('No entries yet', monthFilter ? 'Nothing logged for this month yet.' : 'Add your first agent review or commendation using the form above.', null, null);
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>Agent</th><th>Case #</th><th>Entry</th><th>Category</th><th>Summary</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        ${entries.map(a=>`
+          <tr>
+            <td class="num">${fmtDate(a.date)}</td>
+            <td class="agent-name">${esc(a.agentName)||'\u2014'}</td>
+            <td class="num">${esc(a.caseNumber)||'\u2014'}</td>
+            <td><span class="type-badge ${a.mode==='commendation'?'commendation':''}">${a.mode==='commendation'?'Commendation':'Review'}</span></td>
+            <td>${esc(a.category)||'\u2014'}</td>
+            <td style="max-width:260px;">${esc((a.section1||'').slice(0,90))}${(a.section1||'').length>90?'\u2026':''}</td>
             <td style="text-align:right; white-space:nowrap;">
-              <button class="icon-btn" title="View Details" data-view-entry="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="icon-btn" title="Edit" data-ar-edit="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+              <button class="icon-btn danger" title="Delete" data-ar-delete="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
             </td>
           </tr>`).join('')}
       </tbody>
     </table>
   `;
-
-  wrap.querySelectorAll('[data-view-entry]').forEach(btn=>{
-    btn.addEventListener('click', ()=>openAgentReviewDetailModal(btn.dataset.viewEntry));
+  wrap.querySelectorAll('[data-ar-edit]').forEach(b=>{
+    b.addEventListener('click', ()=>{ editingAgentReviewId = b.dataset.arEdit; setView('agentReviews'); });
+  });
+  wrap.querySelectorAll('[data-ar-delete]').forEach(b=>{
+    b.addEventListener('click', ()=>deleteAgentReviewEntry(b.dataset.arDelete, renderMyAgentReviewsTable));
   });
 }
+async function deleteAgentReviewEntry(id, refreshFn){
+  const entry = STATE.agentReviews.find(a=>a.id===id);
+  if(!entry) return;
+  if(!confirm('Delete this entry? This can\u2019t be undone.')) return;
+  STATE.agentReviews = STATE.agentReviews.filter(a=>a.id!==id);
+  STATE.deletedAgentReviewIds = STATE.deletedAgentReviewIds || [];
+  if(!STATE.deletedAgentReviewIds.includes(id)) STATE.deletedAgentReviewIds.push(id);
+  if(refreshFn) refreshFn();
+  const ok = await saveState();
+  if(ok){
+    toast('Entry deleted for good \u2014 it won\u2019t come back on refresh.');
+  } else {
+    toastRetry('Deleted here, but the save failed \u2014 tap to retry so it stays deleted.');
+  }
+}
 
-function openAgentReviewDetailModal(entryId){
-  const item = STATE.agentReviews.find(a=>a.id===entryId);
-  if(!item) return;
-
-  const isReview = item.mode === 'review';
-  const root = document.getElementById('modalRoot');
-  root.innerHTML = `
-  <div class="modal-backdrop" id="entryDetailBackdrop">
-    <div class="modal" style="max-width:680px;">
-      <div class="modal-head">
-        <h3>${isReview ? 'Agent Review Details' : 'Agent Commendation Details'}</h3>
-        <button class="icon-btn" id="closeEntryDetailModal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-      </div>
-      <div class="modal-body">
-        <div class="letterhead">
-          <div class="lh-band">
-            <h4>${esc(item.supportName)} \u2014 ${isReview ? 'Feedback' : 'Commendation'}</h4>
-            <span class="type-badge ${!isReview ? 'commendation' : ''}">${isReview ? 'Review' : 'Commendation'}</span>
-          </div>
-          <div class="lh-body">
-            <table class="kv-table">
-              <tr><td class="k">Date</td><td>${fmtDate(item.date)}</td></tr>
-              <tr><td class="k">Support Lead</td><td>${esc(item.supportName)}</td></tr>
-              <tr><td class="k">Agent Name</td><td class="agent-name">${esc(item.agentName)||'\u2014'}</td></tr>
-              <tr><td class="k">Case Number</td><td class="num">${esc(item.caseNumber)||'\u2014'}</td></tr>
-              <tr><td class="k">${isReview ? 'Type of Issue' : 'Category'}</td><td>${esc(item.category)||'\u2014'}</td></tr>
-              ${item.level ? `<tr><td class="k">${isReview ? 'Severity' : 'Impact'}</td><td>${esc(item.level)}</td></tr>` : ''}
-            </table>
-
-            ${isReview ? `
-              <div class="section-block"><h5>1. Interaction Summary</h5><p>${esc(item.section1)||'\u2014'}</p></div>
-              <div class="section-block"><h5>2. Gap Identified</h5><p>${esc(item.section2)||'\u2014'}</p></div>
-              <div class="section-block"><h5>3. Opportunities &amp; Recommended Actions</h5><p>${esc(item.section3)||'\u2014'}</p></div>
-              ${item.section4 ? `<div class="section-block"><h5>4. Positive Observations</h5><p>${esc(item.section4)}</p></div>` : ''}
-            ` : `
-              <div class="section-block"><h5>1. What Went Well</h5><p>${esc(item.section1)||'\u2014'}</p></div>
-              <div class="section-block"><h5>2. Key Strengths Displayed</h5><p>${esc(item.section2)||'\u2014'}</p></div>
-              <div class="section-block"><h5>3. Business Impact &amp; Recognition</h5><p>${esc(item.section3)||'\u2014'}</p></div>
-            `}
-          </div>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn ghost" id="closeEntryDetailBtn">Close</button>
-      </div>
-    </div>
+function emptyState(title, sub, gotoView, cta){
+  return `<div class="empty-state">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+    <h4>${esc(title)}</h4>
+    <p>${esc(sub)}</p>
+    ${gotoView?`<button class="btn ghost" data-goto="${gotoView}">${esc(cta)}</button>`:''}
   </div>`;
-
-  document.getElementById('closeEntryDetailModal').addEventListener('click', ()=>root.innerHTML='');
-  document.getElementById('closeEntryDetailBtn').addEventListener('click', ()=>root.innerHTML='');
-  document.getElementById('entryDetailBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='entryDetailBackdrop') root.innerHTML=''; });
 }
 
 function attachViewHandlers(){
   document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click', ()=>setView(b.dataset.goto)));
 
-  if(currentView==='counts'){
-    document.querySelectorAll('[data-target-month]').forEach(inp=>{
-      inp.addEventListener('change', async ()=>{
-        const m = inp.dataset.targetMonth;
-        const v = Math.max(0, parseInt(inp.value)||0);
-        STATE.targets[m] = v;
+  if(currentView==='myDashboard'){
+    const form = document.getElementById('attendanceForm');
+    if(form){
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const viewerId = ensureViewerSupport();
+        const key = personalTargetKey(viewerId, currentMonth);
+        STATE.attendance[key] = {
+          absent: Math.max(0, parseInt(document.getElementById('att_absent').value)||0),
+          vl: Math.max(0, parseInt(document.getElementById('att_vl').value)||0),
+          ml: Math.max(0, parseInt(document.getElementById('att_ml').value)||0),
+          el: Math.max(0, parseInt(document.getElementById('att_el').value)||0),
+        };
         await saveState();
         render();
-        toast('Target updated');
+        toast('Attendance saved');
       });
-    });
-    document.querySelectorAll('[data-personal-target-support]').forEach(inp=>{
-      inp.addEventListener('change', async ()=>{
-        const supId = inp.dataset.personalTargetSupport;
-        const m = inp.dataset.personalTargetMonth;
-        const key = personalTargetKey(supId, m);
-        if(inp.value === ''){ delete STATE.personalTargets[key]; }
-        else { STATE.personalTargets[key] = Math.max(0, parseInt(inp.value)||0); }
+    }
+    renderDashboardAgentEntriesTable();
+    const dashMonthFilterEl = document.getElementById('dashAgentReviewMonthFilter');
+    if(dashMonthFilterEl) dashMonthFilterEl.addEventListener('change', renderDashboardAgentEntriesTable);
+  }
+
+  if(currentView==='myRecords'){
+    renderMyRecordsTable();
+    const sel = document.getElementById('myRecordsSupportFilter');
+    if(sel){
+      sel.addEventListener('change', async ()=>{
+        STATE.viewerSupportId = sel.value;
         await saveState();
-        toast('Personal target updated');
-      });
-    });
-  }
-
-  if(currentView==='new'){
-    const existing = editingRecordId ? STATE.records.find(r=>r.id===editingRecordId) : null;
-    let liveScores = existing ? {...existing.scores} : {};
-    let liveNotes = existing ? {...(existing.criteriaNotes||{})} : {};
-
-    function renderPrevReviews(){
-      const panel = document.getElementById('previousReviewsPanel');
-      if(!panel) return;
-      const supId = document.getElementById('f_support').value;
-      const month = document.getElementById('f_month').value;
-      const prior = STATE.records
-        .filter(r=>r.supportId===supId && r.month===month && r.id!==editingRecordId)
-        .sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
-      if(!prior.length){ panel.innerHTML=''; return; }
-      panel.innerHTML = `
-        <div class="prev-reviews">
-          <div class="prev-title">Already on file for ${monthLabel(month)}</div>
-          ${prior.map(p=>`
-            <div class="prev-item">
-              <span>${fmtDate(p.dateOfEval)} &middot; agent <span class="agent-name">${esc(p.agentName)}</span> &middot; case ${esc(p.caseNumber)}</span>
-              <span class="badge ${scoreBadgeClass(p.percent)}">${p.total}/${MAX_SCORE} &middot; ${pctStr(p.percent)}</span>
-            </div>`).join('')}
-        </div>`;
-    }
-    renderPrevReviews();
-    document.getElementById('f_support').addEventListener('change', renderPrevReviews);
-    document.getElementById('f_month').addEventListener('change', renderPrevReviews);
-
-    document.querySelectorAll('[data-score-key]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const key = btn.dataset.scoreKey, val = parseInt(btn.dataset.scoreVal);
-        liveScores[key] = val;
-        document.querySelectorAll(`[data-score-key="${key}"]`).forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        const card = document.querySelector(`.crit-card[data-crit-key="${key}"]`);
-        if(card){
-          card.dataset.band = String(val);
-          const c = CRITERIA.find(cc=>cc.key===key);
-          const ta = card.querySelector('textarea[data-note-key]');
-          if(ta) ta.placeholder = notePlaceholder(c, val);
-        }
-        const total = Object.values(liveScores).reduce((s,v)=>s+v,0);
-        document.getElementById('liveTotal').innerHTML = `${total} <small>/ ${MAX_SCORE}</small>`;
-        document.getElementById('livePercent').textContent = Math.round((total/MAX_SCORE)*100)+'%';
-      });
-    });
-
-    document.querySelectorAll('textarea[data-note-key]').forEach(ta=>{
-      ta.addEventListener('input', ()=>{ liveNotes[ta.dataset.noteKey] = ta.value; });
-    });
-
-    document.querySelectorAll('[data-crit-toggle]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const key = btn.dataset.critToggle;
-        const panel = document.getElementById('critInfo-'+key);
-        const isOpen = panel.classList.toggle('open');
-        btn.textContent = isOpen ? 'Hide full criteria \u25B4' : 'View full criteria \u25BE';
-      });
-    });
-
-    const genBtn = document.getElementById('generateSummaryBtn');
-    if(genBtn){
-      genBtn.addEventListener('click', ()=>{
-        if(Object.keys(liveScores).length < CRITERIA.length){
-          toast('Score every criterion first \u2014 the summary is built from those ratings.', true);
-          return;
-        }
-        const summary = buildSummary(liveScores, liveNotes);
-        document.getElementById('f_supportAction').value = summary.supportAction;
-        document.getElementById('f_commitment').value = summary.commitment;
-        document.getElementById('f_additional').value = summary.additional;
-        document.getElementById('f_tlNotes').value = summary.tlNotes;
-        toast('Summary generated');
+        renderViewerPicker();
+        renderMyRecordsTable();
       });
     }
-
-    document.getElementById('feedbackForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      if(Object.keys(liveScores).length < CRITERIA.length){
-        toast('Please score every criterion before saving.', true);
-        return;
-      }
-      const total = Object.values(liveScores).reduce((s,v)=>s+v,0);
-      const percent = total/MAX_SCORE;
-      const supportId = document.getElementById('f_support').value;
-      const support = STATE.supports.find(s=>s.id===supportId);
-      const record = {
-        id: editingRecordId || uid('rec'),
-        month: document.getElementById('f_month').value || currentMonth,
-        supportId, supportName: support?support.name:'',
-        dateOfEval: document.getElementById('f_evalDate').value,
-        chatDate: document.getElementById('f_chatDate').value,
-        agentName: document.getElementById('f_agent').value,
-        caseNumber: document.getElementById('f_case').value,
-        scores: liveScores, criteriaNotes: liveNotes, total, percent,
-        supportAction: document.getElementById('f_supportAction').value,
-        commitmentObservations: document.getElementById('f_commitment').value,
-        additionalActions: document.getElementById('f_additional').value,
-        tlCommitment: document.getElementById('f_tlNotes').value,
-        createdAt: editingRecordId ? (existing?.createdAt || Date.now()) : Date.now(),
-        updatedAt: Date.now()
-      };
-      if(editingRecordId){
-        const idx = STATE.records.findIndex(r=>r.id===editingRecordId);
-        STATE.records[idx] = record;
-      } else {
-        STATE.records.push(record);
-      }
-      currentMonth = record.month;
-      await saveState();
-      toast(editingRecordId ? 'Evaluation updated' : 'Evaluation saved');
-      editingRecordId = null;
-      setView('records');
-    });
-    const cancelBtn = document.getElementById('cancelEdit');
-    if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingRecordId=null; setView('records'); });
-  }
-
-  if(currentView==='records'){
-    renderRecordsTable();
-    document.getElementById('filterMonth').addEventListener('change', renderRecordsTable);
-    document.getElementById('filterSupport').addEventListener('change', renderRecordsTable);
   }
 
   if(currentView==='agentReviews'){
-    renderAllAgentReviewsTable();
-    document.getElementById('arFilterSupport').addEventListener('change', renderAllAgentReviewsTable);
-    document.getElementById('arFilterKind').addEventListener('change', renderAllAgentReviewsTable);
-  }
-
-  if(currentView==='supports'){
-    document.getElementById('addSupportForm').addEventListener('submit', async (e)=>{
+    const editingEntry = editingAgentReviewId ? STATE.agentReviews.find(a=>a.id===editingAgentReviewId) : null;
+    agentReviewKind = editingEntry ? editingEntry.mode : 'review';
+    updateAgentReviewModeUI();
+    if(editingEntry){
+      document.getElementById('ar_category').value = editingEntry.category || '';
+      document.getElementById('ar_level').value = editingEntry.level || '';
+    }
+    renderMyAgentReviewsTable();
+    const monthFilterEl = document.getElementById('myAgentReviewMonthFilter');
+    if(monthFilterEl) monthFilterEl.addEventListener('change', renderMyAgentReviewsTable);
+    document.querySelectorAll('#arKindToggle [data-ar-kind]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        agentReviewKind = btn.dataset.arKind;
+        updateAgentReviewModeUI();
+      });
+    });
+    document.getElementById('ar_previewBtn').addEventListener('click', ()=>{
+      const d = readAgentReviewForm();
+      const missing = validateAgentReviewForm(d);
+      if(missing.length){ toast('Please complete: ' + missing.join(', '), true); return; }
+      document.getElementById('ar_previewText').textContent = buildAgentEntryText(d);
+      document.getElementById('ar_previewCard').style.display = 'block';
+    });
+    document.getElementById('ar_copyBtn').addEventListener('click', ()=>{
+      const d = readAgentReviewForm();
+      navigator.clipboard.writeText(buildAgentEntryText(d)).then(()=>toast('Copied to clipboard')).catch(()=>toast('Could not copy \u2014 select and copy manually.', true));
+    });
+    const cancelBtn = document.getElementById('ar_cancelEditBtn');
+    if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingAgentReviewId = null; setView('agentReviews'); });
+    document.getElementById('agentReviewForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const inp = document.getElementById('newSupportName');
-      const name = inp.value.trim();
-      if(!name) return;
-      STATE.supports.push({ id: uid('sup'), name });
-      await saveState();
-      inp.value='';
-      render();
-      toast('Support added');
-    });
-    document.querySelectorAll('[data-remove-support]').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const id = btn.dataset.removeSupport;
-        const sup = STATE.supports.find(s=>s.id===id);
-        if(!confirm(`Remove ${sup.name} from the active roster?`)) return;
-        STATE.supports = STATE.supports.filter(s=>s.id!==id);
+      const d = readAgentReviewForm();
+      const missing = validateAgentReviewForm(d);
+      if(missing.length){ toast('Please complete: ' + missing.join(', '), true); return; }
+      if(editingAgentReviewId){
+        const idx = STATE.agentReviews.findIndex(a=>a.id===editingAgentReviewId);
+        if(idx>-1) STATE.agentReviews[idx] = { ...STATE.agentReviews[idx], ...d };
         await saveState();
-        render();
-        toast('Support removed');
-      });
-    });
-
-    document.getElementById('downloadBackupBtn').addEventListener('click', downloadBackup);
-    document.getElementById('restoreBackupBtn').addEventListener('click', ()=>{
-      document.getElementById('restoreFileInput').click();
-    });
-    document.getElementById('restoreFileInput').addEventListener('change', handleRestoreFile);
-
-    document.getElementById('saveSyncUrlBtn').addEventListener('click', async ()=>{
-      const val = document.getElementById('syncUrlInput').value.trim();
-      SYNC_URL = val;
-      try{ localStorage.setItem(SYNC_URL_KEY, SYNC_URL); }catch(e){}
-      if(SYNC_URL){
-        toast('Sync URL saved \u2014 syncing now\u2026');
-        await syncNow();
-        toast(lastSyncStatus==='error' ? 'Saved, but the first sync failed' : 'Connected and synced');
+        editingAgentReviewId = null;
+        toast('Entry updated');
+        setView('agentReviews');
       } else {
-        toast('Sync URL cleared');
+        const entry = { id: uid('ar'), date: new Date().toISOString().slice(0,10), createdAt: Date.now(), ...d };
+        STATE.agentReviews.push(entry);
+        await saveState();
+        e.target.reset();
+        agentReviewKind = 'review';
+        updateAgentReviewModeUI();
+        renderMyAgentReviewsTable();
+        toast(entry.mode==='commendation' ? 'Commendation added' : 'Review added');
       }
-      render();
     });
-    const syncNowBtn = document.getElementById('syncNowBtn');
-    if(syncNowBtn){
-      syncNowBtn.addEventListener('click', async ()=>{
-        toast('Syncing\u2026');
-        await syncNow();
-        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
-        toast(lastSyncStatus==='error' ? 'Sync failed' : 'Synced');
-        render();
-      });
-    }
   }
-}
-
-function downloadBackup(){
-  try{
-    const blob = new Blob([JSON.stringify(STATE, null, 2)], { type:'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const stamp = new Date().toISOString().slice(0,10);
-    a.href = url;
-    a.download = `SEQAS_Review_backup_${stamp}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    toast('Backup downloaded');
-  }catch(e){ toast('Could not create backup file.', true); }
-}
-
-function handleRestoreFile(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev)=>{
-    try{
-      const parsed = JSON.parse(ev.target.result);
-      if(!parsed || !Array.isArray(parsed.records) || !Array.isArray(parsed.supports)){
-        toast('Invalid backup file.', true);
-        return;
-      }
-      if(!confirm(`Restore this backup? (${parsed.records.length} evaluations, ${parsed.supports.length} supports).`)) return;
-      STATE = {
-        supports: parsed.supports || [],
-        targets: parsed.targets || {},
-        records: parsed.records || [],
-        seededAugust2026: !!parsed.seededAugust2026,
-        deletedCaseNumbers: parsed.deletedCaseNumbers || [],
-        augustAccuracyApplied: !!parsed.augustAccuracyApplied,
-        agentReviews: parsed.agentReviews || [],
-        deletedAgentReviewIds: parsed.deletedAgentReviewIds || []
-      };
-      const ok = await saveState();
-      if(ok){ toast('Backup restored'); render(); }
-      else{ toast('Restored here, but save failed', true); render(); }
-    }catch(err){ toast('Could not read backup file.', true); }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-}
-
-async function confirmDeleteRecord(id){
-  const rec = STATE.records.find(r=>r.id===id);
-  if(!rec) return;
-  if(!confirm(`Delete evaluation for ${rec.supportName}?`)) return;
-  STATE.records = STATE.records.filter(r=>r.id!==id);
-  if(rec.caseNumber){
-    STATE.deletedCaseNumbers = STATE.deletedCaseNumbers || [];
-    if(!STATE.deletedCaseNumbers.includes(String(rec.caseNumber))){
-      STATE.deletedCaseNumbers.push(String(rec.caseNumber));
-    }
-  }
-  renderRecordsTable();
-  const ok = await saveState();
-  if(ok) toast('Evaluation deleted');
 }
 
 function downloadRecordPdf(recordId){
@@ -1817,8 +1523,10 @@ function openExportModal(recordId){
             <div class="section-block"><h5>TL Commitment and Coaching Notes</h5><p>${esc(r.tlCommitment)||'\u2014'}</p></div>
           </div>
         </div>
+        <p class="field-hint">Downloading the PDF saves it to your device automatically.</p>
       </div>
       <div class="modal-foot">
+        <button class="btn ghost" id="copyEmailBtn">Copy Email Text</button>
         <button class="btn brass" id="downloadPdfBtn">Download PDF</button>
       </div>
     </div>
@@ -1826,6 +1534,11 @@ function openExportModal(recordId){
 
   document.getElementById('closeExportModal').addEventListener('click', ()=>root.innerHTML='');
   document.getElementById('exportBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='exportBackdrop') root.innerHTML=''; });
+
+  const emailBody = `Hi ${r.supportName},\n\nPlease review the attached SEQAS evaluation.\n\nDATE OF EVALUATION : ${fmtDate(r.dateOfEval)}\nCHAT DATE : ${fmtDate(r.chatDate)}\nSUPPORT NAME : ${r.supportName}\nAGENT NAME : ${r.agentName}\nCASE NUMBER : ${r.caseNumber}\n\n(PDF evaluation attached)`;
+  document.getElementById('copyEmailBtn').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(emailBody).then(()=>toast('Email text copied')).catch(()=>toast('Could not copy', true));
+  });
   document.getElementById('downloadPdfBtn').addEventListener('click', ()=>generatePdf(r, subject));
 }
 
@@ -1902,7 +1615,8 @@ function generatePdf(r, subject){
     doc.save(fname);
     toast('PDF downloaded');
   }catch(e){
-    toast('Could not generate PDF', true);
+    console.error(e);
+    toast('Could not generate the PDF in this browser.', true);
   }
 }
 
@@ -1912,18 +1626,19 @@ async function init(){
     alert('Local storage is not accessible in this browser session.');
     return;
   }
+  ensureViewerSupport();
   document.getElementById('globalMonth').addEventListener('change', (e)=>{ currentMonth = e.target.value; render(); });
   document.getElementById('saveStatus').addEventListener('click', ()=>{
     if(document.getElementById('saveStatus').classList.contains('error')) saveState();
   });
   if(STATE.records.some(r=>r.month==='2026-08')) currentMonth = '2026-08';
-  setView('dashboard');
+  setView('myDashboard');
   document.getElementById('loading').style.display='none';
   document.getElementById('app').style.display='flex';
-
+  
   setInterval(async ()=>{
     if(!SYNC_URL) return;
-    if(currentView==='new') return;
+    if(currentView==='agentReviews') return;
     const before = JSON.stringify(STATE);
     await syncNow();
     if(JSON.stringify(STATE) !== before) render();
