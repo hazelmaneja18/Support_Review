@@ -2218,11 +2218,11 @@ function renderMyRecords(){
 }
 function renderMyRecordsTable(){
   const viewerId = ensureViewerSupport();
-  let recs = STATE.records.filter(r=>r.supportId===viewerId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  let recs = STATE.records.filter(r=>r.supportId===viewerId && r.month===currentMonth).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   const wrap = document.getElementById('myRecordsTableWrap');
   if(!wrap) return;
   if(!recs.length){
-    wrap.innerHTML = emptyState('No evaluations found', 'Your evaluations will show up here once logged.', null, null);
+    wrap.innerHTML = emptyState('No evaluations found', `Nothing logged for ${monthLabel(currentMonth)} yet — try a different month above.`, null, null);
     return;
   }
   wrap.innerHTML = `
