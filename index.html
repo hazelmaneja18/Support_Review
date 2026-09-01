@@ -1847,7 +1847,7 @@ function renderNewFeedback(){
           </div>
           <div class="field">
             <label class="field-label">Month</label>
-            <input type="month" id="f_month" value="${editing?editing.month:currentMonth}" required>
+            <input type="month" id="f_month" value="${editing?editing.month:monthKey(new Date())}" required>
           </div>
           <div class="field">
             <label class="field-label">Date of Evaluation</label>
@@ -2746,6 +2746,14 @@ function attachViewHandlers(){
       currentMonth = record.month;
       localStorage.setItem(LAST_MONTH_KEY, currentMonth);
       await saveState();
+      // Safety net: confirm this evaluation is still present after saveState()
+      // (which may merge with a synced copy). If it's ever missing, put it
+      // back and save again so it can't disappear on refresh.
+      if(!STATE.records.some(r=>r.id===record.id)){
+        STATE.records.push(record);
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
+        await saveState();
+      }
       toast(editingRecordId ? 'Evaluation updated' : 'Evaluation saved');
       editingRecordId = null;
       setView('records');
