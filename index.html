@@ -806,7 +806,8 @@ let STATE = {
   agentReviewDeletionCounts: {},
   agentReviewAugust2026Seeded: false,
   historicalDuplicatesCleaned: false,
-  deletedAgentReviewIds: []
+  deletedAgentReviewIds: [],
+  deletedRecordIds: []
 };
 
 // Session & State Persistence Keys
@@ -901,13 +902,15 @@ function mergeMaxCounts(a, b){
 function mergeStates(local, remote){
   if(!remote || typeof remote !== 'object') return local;
   const deletedCaseNumbers = Array.from(new Set([...(remote.deletedCaseNumbers||[]), ...(local.deletedCaseNumbers||[])].map(String)));
+  const deletedRecordIds = Array.from(new Set([...(remote.deletedRecordIds||[]), ...(local.deletedRecordIds||[])]));
   const deletedAgentReviewIds = Array.from(new Set([...(remote.deletedAgentReviewIds||[]), ...(local.deletedAgentReviewIds||[])]));
   const merged = {
     supports: mergeArraysById(remote.supports, local.supports),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
-    records: mergeArraysById(remote.records, local.records).filter(r=>!deletedCaseNumbers.includes(String(r.caseNumber))),
+    records: mergeArraysById(remote.records, local.records).filter(r=>!deletedRecordIds.includes(r.id)),
     seededAugust2026: !!(local.seededAugust2026 || remote.seededAugust2026),
     deletedCaseNumbers,
+    deletedRecordIds,
     augustAccuracyApplied: !!(local.augustAccuracyApplied || remote.augustAccuracyApplied),
     agentReviews: mergeArraysById(remote.agentReviews, local.agentReviews).filter(a=>!deletedAgentReviewIds.includes(a.id)),
     deletedAgentReviewIds,
@@ -1031,6 +1034,7 @@ async function loadState(){
       STATE.records = parsed.records || [];
       STATE.seededAugust2026 = !!parsed.seededAugust2026;
       STATE.deletedCaseNumbers = parsed.deletedCaseNumbers || [];
+      STATE.deletedRecordIds = parsed.deletedRecordIds || [];
       STATE.augustAccuracyApplied = !!parsed.augustAccuracyApplied;
       STATE.agentReviews = parsed.agentReviews || [];
       STATE.viewerSupportId = parsed.viewerSupportId || null;
@@ -1066,6 +1070,7 @@ async function loadState(){
           records: remote.records || [],
           seededAugust2026: !!remote.seededAugust2026,
           deletedCaseNumbers: remote.deletedCaseNumbers || [],
+          deletedRecordIds: remote.deletedRecordIds || [],
           augustAccuracyApplied: !!remote.augustAccuracyApplied,
           agentReviews: remote.agentReviews || [],
           viewerSupportId: null,
@@ -1147,7 +1152,8 @@ function seedState(){
     agentReviewDeletionCounts: {},
     agentReviewAugust2026Seeded: false,
     historicalDuplicatesCleaned: false,
-    deletedAgentReviewIds: []
+    deletedAgentReviewIds: [],
+    deletedRecordIds: []
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -2969,6 +2975,7 @@ function handleRestoreFile(e){
         records: parsed.records || [],
         seededAugust2026: !!parsed.seededAugust2026,
         deletedCaseNumbers: parsed.deletedCaseNumbers || [],
+        deletedRecordIds: parsed.deletedRecordIds || [],
         augustAccuracyApplied: !!parsed.augustAccuracyApplied
       };
       const ok = await saveState();
@@ -2994,6 +3001,8 @@ async function confirmDeleteRecord(id){
       STATE.deletedCaseNumbers.push(String(rec.caseNumber));
     }
   }
+  STATE.deletedRecordIds = STATE.deletedRecordIds || [];
+  if(!STATE.deletedRecordIds.includes(id)) STATE.deletedRecordIds.push(id);
   renderRecordsTable();
   const ok = await saveState();
   if(ok){
@@ -3214,6 +3223,7 @@ function renderLoadFailureScreen(){
           records: parsed.records || [],
           seededAugust2026: !!parsed.seededAugust2026,
           deletedCaseNumbers: parsed.deletedCaseNumbers || [],
+          deletedRecordIds: parsed.deletedRecordIds || [],
           augustAccuracyApplied: !!parsed.augustAccuracyApplied
         };
         const ok = await saveState();
