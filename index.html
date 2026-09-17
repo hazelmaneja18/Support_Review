@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --pal-navy:#093C5D;
@@ -249,6 +250,7 @@
   .card-body{ padding:20px; }
 
   .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;}
+  .stat-row-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;}
   .section-divider{
     display:flex; align-items:center; gap:12px; margin:8px 0 16px 0;
   }
@@ -508,6 +510,7 @@
     .content{ padding:20px 16px 60px; }
     .topbar{ padding:16px; flex-direction:column; align-items:flex-start; gap:10px;}
     .stat-row{ grid-template-columns:1fr; }
+    .stat-row-4{ grid-template-columns:1fr; }
     .field-grid{ grid-template-columns:1fr; }
     .crit-head{ flex-direction:column; align-items:stretch; }
     .seg{ width:100%; }
@@ -807,7 +810,9 @@ let STATE = {
   agentReviewAugust2026Seeded: false,
   historicalDuplicatesCleaned: false,
   deletedAgentReviewIds: [],
-  deletedRecordIds: []
+  deletedRecordIds: [],
+  surveyScores: [],
+  deletedSurveyUploadIds: []
 };
 
 // Session & State Persistence Keys
@@ -904,6 +909,7 @@ function mergeStates(local, remote){
   const deletedCaseNumbers = Array.from(new Set([...(remote.deletedCaseNumbers||[]), ...(local.deletedCaseNumbers||[])].map(String)));
   const deletedRecordIds = Array.from(new Set([...(remote.deletedRecordIds||[]), ...(local.deletedRecordIds||[])]));
   const deletedAgentReviewIds = Array.from(new Set([...(remote.deletedAgentReviewIds||[]), ...(local.deletedAgentReviewIds||[])]));
+  const deletedSurveyUploadIds = Array.from(new Set([...(remote.deletedSurveyUploadIds||[]), ...(local.deletedSurveyUploadIds||[])]));
   const merged = {
     supports: mergeArraysById(remote.supports, local.supports),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
@@ -920,6 +926,8 @@ function mergeStates(local, remote){
     agentReviewDeletionCounts: mergeMaxCounts(remote.agentReviewDeletionCounts, local.agentReviewDeletionCounts),
     agentReviewAugust2026Seeded: !!(local.agentReviewAugust2026Seeded || remote.agentReviewAugust2026Seeded),
     historicalDuplicatesCleaned: !!(local.historicalDuplicatesCleaned || remote.historicalDuplicatesCleaned),
+    surveyScores: mergeArraysById(remote.surveyScores, local.surveyScores).filter(s=>!deletedSurveyUploadIds.includes(s.uploadId)),
+    deletedSurveyUploadIds,
   };
   return reconcileState(merged);
 }
@@ -948,6 +956,7 @@ function dedupeSupports(state){
   state.supports = cleaned;
   (state.records||[]).forEach(r=>{ r.supportId = remapId(r.supportId); });
   (state.agentReviews||[]).forEach(a=>{ a.supportId = remapId(a.supportId); });
+  (state.surveyScores||[]).forEach(s=>{ s.supportId = remapId(s.supportId); });
   ['personalTargets','attendance'].forEach(field=>{
     const out = {};
     Object.entries(state[field]||{}).forEach(([key,val])=>{
@@ -1044,6 +1053,8 @@ async function loadState(){
       STATE.agentReviewAugust2026Seeded = !!parsed.agentReviewAugust2026Seeded;
       STATE.historicalDuplicatesCleaned = !!parsed.historicalDuplicatesCleaned;
       STATE.deletedAgentReviewIds = parsed.deletedAgentReviewIds || [];
+      STATE.surveyScores = parsed.surveyScores || [];
+      STATE.deletedSurveyUploadIds = parsed.deletedSurveyUploadIds || [];
       STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
@@ -1079,7 +1090,9 @@ async function loadState(){
           agentReviewDeletionCounts: remote.agentReviewDeletionCounts || {},
           agentReviewAugust2026Seeded: !!remote.agentReviewAugust2026Seeded,
           historicalDuplicatesCleaned: !!remote.historicalDuplicatesCleaned,
-          deletedAgentReviewIds: remote.deletedAgentReviewIds || []
+          deletedAgentReviewIds: remote.deletedAgentReviewIds || [],
+          surveyScores: remote.surveyScores || [],
+          deletedSurveyUploadIds: remote.deletedSurveyUploadIds || []
         };
         STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -1153,7 +1166,9 @@ function seedState(){
     agentReviewAugust2026Seeded: false,
     historicalDuplicatesCleaned: false,
     deletedAgentReviewIds: [],
-    deletedRecordIds: []
+    deletedRecordIds: [],
+    surveyScores: [],
+    deletedSurveyUploadIds: []
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -1259,6 +1274,7 @@ async function ensureAgentReviewAugustSeed(){
 /* ---------------------- DERIVED HELPERS ---------------------- */
 function allMonthsUsed(){
   const set = new Set(STATE.records.map(r=>r.month));
+  (STATE.surveyScores||[]).forEach(s=>{ if(s.month) set.add(s.month); });
   set.add(currentMonth);
   const now = new Date();
   set.add(monthKey(now));
@@ -1429,6 +1445,99 @@ function buildSummary(scores, notes){
   const tlNotes = tParts.join(' ');
 
   return { supportAction: supportAction.trim(), commitment: commitment.trim(), additional: additional.trim(), tlNotes: tlNotes.trim() };
+}
+
+/* ---------------------- SURVEY SCORE HELPERS (Customer Survey upload) ---------------------- */
+function surveyEntriesFor(month, supportId){
+  return (STATE.surveyScores||[]).filter(s=> (!month || s.month===month) && (!supportId || s.supportId===supportId) );
+}
+function weightedAvgRating(entries){
+  if(!entries || !entries.length) return null;
+  let sumWeighted = 0, sumWeights = 0;
+  entries.forEach(e=>{
+    const w = Number(e.totalSubmissions) || 0;
+    const r = Number(e.averageRating);
+    if(isNaN(r)) return;
+    if(w>0){ sumWeighted += r*w; sumWeights += w; }
+    else { sumWeighted += r; sumWeights += 1; }
+  });
+  if(sumWeights<=0) return null;
+  return sumWeighted / sumWeights;
+}
+function totalSubmissionsFor(entries){
+  return (entries||[]).reduce((s,e)=> s + (Number(e.totalSubmissions)||0), 0);
+}
+function surveyMonthsUploaded(){
+  const set = new Set();
+  (STATE.surveyScores||[]).forEach(s=>{ if(s.month) set.add(s.month); });
+  return Array.from(set).sort().reverse();
+}
+function surveyUploadBatches(){
+  const map = new Map();
+  (STATE.surveyScores||[]).forEach(s=>{
+    const key = s.uploadId || (s.month+'_legacy');
+    if(!map.has(key)) map.set(key, { uploadId:key, month:s.month, fileName:s.fileName||'', uploadedAt:s.uploadedAt||0, count:0 });
+    map.get(key).count++;
+  });
+  return Array.from(map.values()).sort((a,b)=>(b.uploadedAt||0)-(a.uploadedAt||0));
+}
+function parseSurveyWorkbook(arrayBuffer){
+  const wb = XLSX.read(arrayBuffer, { type:'array' });
+  const firstSheetName = wb.SheetNames[0];
+  const ws = wb.Sheets[firstSheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
+  const out = [];
+  rows.forEach(row=>{
+    const nameKey = Object.keys(row).find(k=>k.trim().toLowerCase()==='support name') || Object.keys(row).find(k=>k.trim().toLowerCase()==='name');
+    const teamKey = Object.keys(row).find(k=>k.trim().toLowerCase()==='team');
+    const subKey = Object.keys(row).find(k=>k.trim().toLowerCase()==='total submissions') || Object.keys(row).find(k=>k.trim().toLowerCase().includes('submission'));
+    const ratingKey = Object.keys(row).find(k=>k.trim().toLowerCase()==='average rating') || Object.keys(row).find(k=>k.trim().toLowerCase().includes('rating'));
+    const name = nameKey ? String(row[nameKey]).trim() : '';
+    if(!name) return;
+    out.push({
+      name,
+      team: teamKey ? String(row[teamKey]).trim() : '',
+      totalSubmissions: subKey ? Number(row[subKey])||0 : 0,
+      averageRating: ratingKey ? Number(row[ratingKey])||0 : 0,
+    });
+  });
+  return out;
+}
+function detectMonthFromFilename(filename){
+  const m = filename && filename.match(/(\d{4})-(\d{2})-\d{2}/);
+  if(m) return `${m[1]}-${m[2]}`;
+  const m2 = filename && filename.match(/(\d{4})-(\d{2})/);
+  if(m2) return `${m2[1]}-${m2[2]}`;
+  return null;
+}
+async function applySurveyUpload(month, rows, fileName){
+  const uploadId = uid('svy');
+  const now = Date.now();
+  STATE.surveyScores = (STATE.surveyScores||[]).filter(s=>s.month!==month);
+  rows.forEach(r=>{
+    const sup = findOrCreateSupport(r.name, []);
+    STATE.surveyScores.push({
+      id: uid('svyrow'),
+      uploadId,
+      month,
+      fileName: fileName||'',
+      supportId: sup.id,
+      supportName: sup.name,
+      team: r.team||'',
+      totalSubmissions: r.totalSubmissions||0,
+      averageRating: r.averageRating||0,
+      uploadedAt: now,
+      createdAt: now
+    });
+  });
+  await saveState();
+  return uploadId;
+}
+async function deleteSurveyUpload(uploadId){
+  STATE.surveyScores = (STATE.surveyScores||[]).filter(s=>s.uploadId!==uploadId);
+  STATE.deletedSurveyUploadIds = STATE.deletedSurveyUploadIds || [];
+  if(!STATE.deletedSurveyUploadIds.includes(uploadId)) STATE.deletedSurveyUploadIds.push(uploadId);
+  await saveState();
 }
 
 /* ---------------------- TOASTS ---------------------- */
@@ -1634,6 +1743,10 @@ function renderDashboard(){
   });
   const avgAgentCompletion = countWithTarget > 0 ? (totalAgentRates / countWithTarget) : null;
 
+  const monthSurveyEntries = surveyEntriesFor(currentMonth);
+  const teamSurveyAvg = weightedAvgRating(monthSurveyEntries);
+  const teamSurveySubmissions = totalSubmissionsFor(monthSurveyEntries);
+
   const rows = sortedSupports().map(sup=>{
     const cells = months.map(m=>{
       const recs = recordsFor(m, sup.id);
@@ -1663,8 +1776,22 @@ function renderDashboard(){
     </tr>`;
   }).join('');
 
+  const surveyRows = sortedSupports().map(s=>{
+    const entries = surveyEntriesFor(currentMonth, s.id);
+    if(!entries.length){
+      return `<tr><td style="font-weight:600;">${esc(s.name)}</td><td class="num" style="color:var(--slate-soft);">—</td><td class="num" style="color:var(--slate-soft);">—</td></tr>`;
+    }
+    const avg = weightedAvgRating(entries);
+    const subs = totalSubmissionsFor(entries);
+    return `<tr>
+      <td style="font-weight:600;">${esc(s.name)}</td>
+      <td class="num">${subs}</td>
+      <td class="num"><span class="badge ${scoreBadgeClass(avg!==null?avg/5:null)}">${avg!==null?avg.toFixed(2):'—'} / 5</span></td>
+    </tr>`;
+  }).join('');
+
   return `
-  <div class="stat-row">
+  <div class="stat-row-4">
     <div class="stat-card">
       <div class="label">Active Supports</div>
       <div class="value">${STATE.supports.length}</div>
@@ -1679,6 +1806,11 @@ function renderDashboard(){
       <div class="label">Agent Reviews Progress</div>
       <div class="value">${avgAgentCompletion===null ? '—' : Math.round(avgAgentCompletion*100)+'%'}</div>
       <div class="delta">team average completion for ${monthLabel(currentMonth)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Customer Survey Score</div>
+      <div class="value">${teamSurveyAvg===null ? '—' : teamSurveyAvg.toFixed(2)+' <small>/ 5</small>'}</div>
+      <div class="delta">${teamSurveyAvg===null ? 'No survey data uploaded for this month' : `${teamSurveySubmissions} submission${teamSurveySubmissions===1?'':'s'} for ${monthLabel(currentMonth)}`}</div>
     </div>
   </div>
 
@@ -1707,6 +1839,21 @@ function renderDashboard(){
         <thead><tr><th>Support</th><th>Reviews</th><th>Commendations</th><th>Progress</th></tr></thead>
         <tbody>${agentReviewRows}</tbody>
       </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Customer Survey Scores</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Uploaded from the Manage Supports tab &middot; ${monthLabel(currentMonth)}</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${STATE.supports.length ? `
+      <table>
+        <thead><tr><th>Support</th><th>Total Submissions</th><th>Average Rating</th></tr></thead>
+        <tbody>${surveyRows}</tbody>
+      </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
+      ${!surveyEntriesFor(currentMonth).length ? `<p class="field-hint" style="margin-top:14px;">No survey file has been uploaded for ${monthLabel(currentMonth)} yet. Upload one from the Manage Supports tab.</p>` : ''}
     </div>
   </div>
   `;
@@ -1992,6 +2139,19 @@ function renderSupports(){
     </div>`;
   }).join('');
 
+  const uploadMonthDefault = detectMonthFromFilename(location.href) || currentMonth;
+  const uploadBatches = surveyUploadBatches();
+  const uploadRows = uploadBatches.map(b=>`
+    <tr>
+      <td style="font-weight:600;">${monthLabel(b.month)}</td>
+      <td>${esc(b.fileName)||'<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+      <td class="num">${b.count}</td>
+      <td class="num">${b.uploadedAt ? new Date(b.uploadedAt).toLocaleString('en-US',{month:'short',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit'}) : '\u2014'}</td>
+      <td style="text-align:right;">
+        <button class="icon-btn danger" title="Remove this upload" data-remove-survey-upload="${b.uploadId}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+      </td>
+    </tr>`).join('');
+
   return `
   <div class="card">
     <div class="card-header"><h3>Add a Support</h3></div>
@@ -2009,6 +2169,36 @@ function renderSupports(){
     </div>
   </div>
   <p class="field-hint" style="margin-top:14px;">Removing a support only removes them from the active roster \u2014 their past evaluations stay on record.</p>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><h3>Upload Customer Survey Scores</h3><span style="font-size:11.5px; color:var(--slate-soft);">.xlsx export with Support Name, Team, Total Submissions, Average Rating</span></div>
+    <div class="card-body">
+      <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Upload the survey score spreadsheet you export from the survey tool. Pick the month it covers below \u2014 that's the month it will show up under on both the Support Dashboard and Supervisor Dashboard. Re-uploading a file for the same month replaces that month's data.</p>
+      <div class="field-grid">
+        <div class="field">
+          <label class="field-label">Month this file covers</label>
+          <input type="month" id="surveyUploadMonth" value="${uploadMonthDefault}">
+        </div>
+        <div class="field">
+          <label class="field-label">Survey Score File (.xlsx)</label>
+          <input type="file" id="surveyUploadFile" accept=".xlsx,.xls">
+        </div>
+      </div>
+      <button type="button" class="btn brass" id="surveyUploadBtn">Upload &amp; Apply</button>
+      <p class="field-hint" id="surveyUploadHint" style="margin-top:12px;"></p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><h3>Survey Uploads on File</h3></div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${uploadBatches.length ? `
+      <table>
+        <thead><tr><th>Month</th><th>File</th><th># Supports</th><th>Uploaded</th><th></th></tr></thead>
+        <tbody>${uploadRows}</tbody>
+      </table>` : emptyState('No survey files uploaded yet', 'Upload your first survey score file above.', null, null)}
+    </div>
+  </div>
 
   <div class="card" style="margin-top:20px;">
     <div class="card-header"><h3>Backup &amp; Restore</h3></div>
@@ -2102,6 +2292,23 @@ function renderMyDashboard(){
   const rawRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
   const completionRate = rawRate !== null ? Math.min(1, rawRate) : null;
 
+  const mySurveyAll = surveyEntriesFor(null, viewerId);
+  const mySurveyMonth = surveyEntriesFor(currentMonth, viewerId);
+  const mySurveyMonthAvg = weightedAvgRating(mySurveyMonth);
+  const mySurveyMonthSubs = totalSubmissionsFor(mySurveyMonth);
+  const mySurveyOverallAvg = weightedAvgRating(mySurveyAll);
+  const surveyMonthsForMe = Array.from(new Set(mySurveyAll.map(e=>e.month))).sort();
+  const surveyRows = surveyMonthsForMe.map(m=>{
+    const entries = surveyEntriesFor(m, viewerId);
+    const avg = weightedAvgRating(entries);
+    const subs = totalSubmissionsFor(entries);
+    return `<tr>
+      <td style="font-weight:600;">${monthLabel(m)}</td>
+      <td class="num"><span class="badge ${scoreBadgeClass(avg!==null?avg/5:null)}">${avg!==null?avg.toFixed(2):'—'} / 5</span></td>
+      <td class="num">${subs}</td>
+    </tr>`;
+  }).join('');
+
   return `
   <div class="card" style="margin-bottom:20px;">
     <div class="card-body" style="display:flex; align-items:center; gap:14px;">
@@ -2181,7 +2388,29 @@ function renderMyDashboard(){
     <div class="card-body" id="dashAgentEntriesWrap" style="overflow-x:auto;"></div>
   </div>
 
-  <div class="card attendance-compact">
+  <div class="section-divider"><h3>Customer Survey</h3></div>
+
+  <div class="stat-row" style="grid-template-columns:repeat(2,1fr);">
+    <div class="stat-card">
+      <div class="label">${monthLabel(currentMonth)} Survey Score</div>
+      <div class="value">${mySurveyMonthAvg===null ? '—' : mySurveyMonthAvg.toFixed(2)+' <small>/ 5</small>'}</div>
+      <div class="delta">${mySurveyMonthAvg===null ? 'No survey data uploaded for this month yet' : `${mySurveyMonthSubs} submission${mySurveyMonthSubs===1?'':'s'} for ${monthLabel(currentMonth)}`}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Overall Survey Average</div>
+      <div class="value">${mySurveyOverallAvg===null ? '—' : mySurveyOverallAvg.toFixed(2)+' <small>/ 5</small>'}</div>
+      <div class="delta">across all months on file</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3>Survey Score by Month</h3><span style="font-size:11.5px; color:var(--slate-soft);">Uploaded by your supervisor</span></div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${surveyRows ? `<table><thead><tr><th>Month</th><th>Average Rating</th><th>Submissions</th></tr></thead><tbody>${surveyRows}</tbody></table>` : emptyState('No survey data yet', 'Your customer survey scores will show up here once your supervisor uploads a file.', null, null)}
+    </div>
+  </div>
+
+  <div class="card attendance-compact" style="margin-top:20px;">
     <div class="card-header"><h3>Attendance</h3><span style="font-size:11px; color:var(--slate-soft);">${monthLabel(currentMonth)} \u2014 adjusts your Agent Review target above</span></div>
     <div class="card-body">
       <form id="attendanceForm" style="display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
@@ -2896,6 +3125,48 @@ function attachViewHandlers(){
     });
     document.getElementById('restoreFileInput').addEventListener('change', handleRestoreFile);
 
+    const surveyBtn = document.getElementById('surveyUploadBtn');
+    if(surveyBtn){
+      surveyBtn.addEventListener('click', async ()=>{
+        const fileInput = document.getElementById('surveyUploadFile');
+        const monthInput = document.getElementById('surveyUploadMonth');
+        const hint = document.getElementById('surveyUploadHint');
+        const file = fileInput.files[0];
+        const month = monthInput.value;
+        if(!file){ hint.style.color='var(--red)'; hint.textContent='Choose a .xlsx file first.'; return; }
+        if(!month){ hint.style.color='var(--red)'; hint.textContent='Choose which month this file covers.'; return; }
+        if(typeof XLSX === 'undefined'){ hint.style.color='var(--red)'; hint.textContent='Spreadsheet reader failed to load \u2014 check your connection and try again.'; return; }
+        try{
+          hint.style.color='var(--slate-soft)'; hint.textContent='Reading file\u2026';
+          const buf = await file.arrayBuffer();
+          const rows = parseSurveyWorkbook(buf);
+          if(!rows.length){
+            hint.style.color='var(--red)';
+            hint.textContent='Couldn\u2019t find any rows with a Support Name column in this file.';
+            return;
+          }
+          await applySurveyUpload(month, rows, file.name);
+          hint.style.color='var(--green)';
+          hint.textContent=`Applied ${rows.length} support row${rows.length===1?'':'s'} to ${monthLabel(month)}.`;
+          fileInput.value='';
+          render();
+          toast('Survey scores uploaded');
+        }catch(err){
+          console.error(err);
+          hint.style.color='var(--red)';
+          hint.textContent='Could not read that file \u2014 make sure it\u2019s a valid .xlsx export.';
+        }
+      });
+    }
+    document.querySelectorAll('[data-remove-survey-upload]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(!confirm('Remove this survey upload? This can\u2019t be undone.')) return;
+        await deleteSurveyUpload(btn.dataset.removeSurveyUpload);
+        render();
+        toast('Survey upload removed');
+      });
+    });
+
     document.getElementById('saveSyncUrlBtn').addEventListener('click', async ()=>{
       const val = document.getElementById('syncUrlInput').value.trim();
       SYNC_URL = val;
@@ -2971,7 +3242,9 @@ function handleRestoreFile(e){
         seededAugust2026: !!parsed.seededAugust2026,
         deletedCaseNumbers: parsed.deletedCaseNumbers || [],
         deletedRecordIds: parsed.deletedRecordIds || [],
-        augustAccuracyApplied: !!parsed.augustAccuracyApplied
+        augustAccuracyApplied: !!parsed.augustAccuracyApplied,
+        surveyScores: parsed.surveyScores || [],
+        deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || []
       };
       const ok = await saveState();
       if(ok){ toast('Backup restored'); render(); }
@@ -3219,7 +3492,9 @@ function renderLoadFailureScreen(){
           seededAugust2026: !!parsed.seededAugust2026,
           deletedCaseNumbers: parsed.deletedCaseNumbers || [],
           deletedRecordIds: parsed.deletedRecordIds || [],
-          augustAccuracyApplied: !!parsed.augustAccuracyApplied
+          augustAccuracyApplied: !!parsed.augustAccuracyApplied,
+          surveyScores: parsed.surveyScores || [],
+          deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || []
         };
         const ok = await saveState();
         if(ok){
