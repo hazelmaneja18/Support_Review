@@ -812,7 +812,8 @@ let STATE = {
   deletedAgentReviewIds: [],
   deletedRecordIds: [],
   surveyScores: [],
-  deletedSurveyUploadIds: []
+  deletedSurveyUploadIds: [],
+  deletedSupportIds: []
 };
 
 // Session & State Persistence Keys
@@ -910,8 +911,9 @@ function mergeStates(local, remote){
   const deletedRecordIds = Array.from(new Set([...(remote.deletedRecordIds||[]), ...(local.deletedRecordIds||[])]));
   const deletedAgentReviewIds = Array.from(new Set([...(remote.deletedAgentReviewIds||[]), ...(local.deletedAgentReviewIds||[])]));
   const deletedSurveyUploadIds = Array.from(new Set([...(remote.deletedSurveyUploadIds||[]), ...(local.deletedSurveyUploadIds||[])]));
+  const deletedSupportIds = Array.from(new Set([...(remote.deletedSupportIds||[]), ...(local.deletedSupportIds||[])]));
   const merged = {
-    supports: mergeArraysById(remote.supports, local.supports),
+    supports: mergeArraysById(remote.supports, local.supports).filter(s=>!deletedSupportIds.includes(s.id)),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
     records: mergeArraysById(remote.records, local.records).filter(r=>!deletedRecordIds.includes(r.id)),
     seededAugust2026: !!(local.seededAugust2026 || remote.seededAugust2026),
@@ -928,6 +930,7 @@ function mergeStates(local, remote){
     historicalDuplicatesCleaned: !!(local.historicalDuplicatesCleaned || remote.historicalDuplicatesCleaned),
     surveyScores: mergeArraysById(remote.surveyScores, local.surveyScores).filter(s=>!deletedSurveyUploadIds.includes(s.uploadId)),
     deletedSurveyUploadIds,
+    deletedSupportIds,
   };
   return reconcileState(merged);
 }
@@ -999,6 +1002,9 @@ function dedupeByKey(list, keyFn, fields){
 }
 function reconcileState(state){
   state = dedupeSupports(state);
+  if(state.deletedSupportIds && state.deletedSupportIds.length){
+    state.supports = (state.supports||[]).filter(s=>!state.deletedSupportIds.includes(s.id));
+  }
   if(!state.historicalDuplicatesCleaned){
     state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
     state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
@@ -1055,6 +1061,7 @@ async function loadState(){
       STATE.deletedAgentReviewIds = parsed.deletedAgentReviewIds || [];
       STATE.surveyScores = parsed.surveyScores || [];
       STATE.deletedSurveyUploadIds = parsed.deletedSurveyUploadIds || [];
+      STATE.deletedSupportIds = parsed.deletedSupportIds || [];
       STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
@@ -1092,7 +1099,8 @@ async function loadState(){
           historicalDuplicatesCleaned: !!remote.historicalDuplicatesCleaned,
           deletedAgentReviewIds: remote.deletedAgentReviewIds || [],
           surveyScores: remote.surveyScores || [],
-          deletedSurveyUploadIds: remote.deletedSurveyUploadIds || []
+          deletedSurveyUploadIds: remote.deletedSurveyUploadIds || [],
+          deletedSupportIds: remote.deletedSupportIds || []
         };
         STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -1168,7 +1176,8 @@ function seedState(){
     deletedAgentReviewIds: [],
     deletedRecordIds: [],
     surveyScores: [],
-    deletedSurveyUploadIds: []
+    deletedSurveyUploadIds: [],
+    deletedSupportIds: []
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -3111,11 +3120,18 @@ function attachViewHandlers(){
       btn.addEventListener('click', async ()=>{
         const id = btn.dataset.removeSupport;
         const sup = STATE.supports.find(s=>s.id===id);
+        if(!sup) return;
         if(!confirm(`Remove ${sup.name} from the active roster? Their past evaluations will stay on record.`)) return;
         STATE.supports = STATE.supports.filter(s=>s.id!==id);
-        await saveState();
+        STATE.deletedSupportIds = STATE.deletedSupportIds || [];
+        if(!STATE.deletedSupportIds.includes(id)) STATE.deletedSupportIds.push(id);
         render();
-        toast('Support removed');
+        const ok = await saveState();
+        if(ok){
+          toast('Support removed for good \u2014 they won\u2019t come back on refresh or sync.');
+        } else {
+          toastRetry('Removed here, but the save failed \u2014 tap to retry so it stays removed.');
+        }
       });
     });
 
@@ -3244,7 +3260,8 @@ function handleRestoreFile(e){
         deletedRecordIds: parsed.deletedRecordIds || [],
         augustAccuracyApplied: !!parsed.augustAccuracyApplied,
         surveyScores: parsed.surveyScores || [],
-        deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || []
+        deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || [],
+        deletedSupportIds: parsed.deletedSupportIds || []
       };
       const ok = await saveState();
       if(ok){ toast('Backup restored'); render(); }
@@ -3494,7 +3511,8 @@ function renderLoadFailureScreen(){
           deletedRecordIds: parsed.deletedRecordIds || [],
           augustAccuracyApplied: !!parsed.augustAccuracyApplied,
           surveyScores: parsed.surveyScores || [],
-          deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || []
+          deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || [],
+          deletedSupportIds: parsed.deletedSupportIds || []
         };
         const ok = await saveState();
         if(ok){
