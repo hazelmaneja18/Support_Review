@@ -5,41 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SUPPORT PERFORMANCE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
-    --pal-navy:#093C5D;
-    --pal-blue:#3B7597;
-    --pal-teal:#6FD1D7;
-    --pal-mint:#5DF8D8;
+    /* Neutral base — clean, modern light theme */
+    --ink:#111827;
+    --ink-2:#1f2937;
+    --ink-soft:#374151;
+    --paper:#f3f5f9;
+    --paper-deep:#e8ebf1;
+    --card:#ffffff;
+    --rule:#e5e9f0;
+    --rule-soft:#eef1f6;
+    --ink-text:#111827;
+    --slate:#475569;
+    --slate-soft:#94a3b8;
 
-    --ink:#093C5D;
-    --ink-2:#3B7597;
-    --ink-soft:#2c5470;
-    --paper:#d9eef0;
-    --paper-deep:#c4e3e6;
-    --card:#f7fdfd;
-    --rule:#b3d8db;
-    --rule-soft:#cbe6e8;
-    --brass:#3B7597;
-    --brass-dark:#26506b;
-    --brass-tint:#d7f2f0;
-    --ink-text:#093C5D;
-    --slate:#365f6e;
-    --slate-soft:#6c959e;
-    --green:#0d6b5c;
-    --green-bg:#8ff0dd;
-    --red:#8f2f2f;
-    --red-bg:#f6c9c9;
-    --amber:#7a5e10;
-    --amber-bg:#f5dd8f;
-    --neutral-ink:#2c5f68;
-    --neutral-bg:#cdeceb;
-    --radius:10px;
-    --radius-sm:6px;
-    --shadow: 0 1px 2px rgba(9,60,93,0.06), 0 4px 16px rgba(9,60,93,0.06);
+    --green:#0f7a5c;
+    --green-bg:#d3f5e5;
+    --red:#b8283a;
+    --red-bg:#fbdde1;
+    --amber:#946b12;
+    --amber-bg:#fdedc3;
+    --neutral-ink:#475569;
+    --neutral-bg:#eef1f6;
+
+    --radius:14px;
+    --radius-sm:9px;
+    --shadow: 0 1px 2px rgba(17,24,39,0.04), 0 10px 28px rgba(17,24,39,0.06);
+
+    /* Accent — defaults to Supervisor (indigo); overridden per mode below */
+    --pal-navy:#312e81;
+    --pal-blue:#4f46e5;
+    --pal-teal:#818cf8;
+    --pal-mint:#a5b4fc;
+    --brass:#4f46e5;
+    --brass-dark:#3730a3;
+    --brass-tint:#eef0fe;
+  }
+  /* Support view — warm teal/emerald identity */
+  body[data-mode="support"]{
+    --pal-navy:#064e3b;
+    --pal-blue:#0d9488;
+    --pal-teal:#5eead4;
+    --pal-mint:#5eead4;
+    --brass:#0d9488;
+    --brass-dark:#0f766e;
+    --brass-tint:#e6fbf7;
+  }
+  /* Supervisor view — cool indigo/violet identity */
+  body[data-mode="supervisor"]{
+    --pal-navy:#312e81;
+    --pal-blue:#4f46e5;
+    --pal-teal:#a5b4fc;
+    --pal-mint:#c7d2fe;
+    --brass:#4f46e5;
+    --brass-dark:#3730a3;
+    --brass-tint:#eef0fe;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -79,7 +103,7 @@
   }
   .brand .seal{
     width:30px;height:30px;border-radius:50%;
-    background:rgba(93,248,216,0.14);
+    background:color-mix(in srgb, var(--pal-mint) 20%, transparent);
     border:1px solid var(--pal-mint);
     display:flex;align-items:center;justify-content:center;
     font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; color:var(--pal-mint);
@@ -211,14 +235,14 @@
   .main{ flex:1; min-width:0; }
   .topbar{
     position:sticky; top:0; z-index:5;
-    background:rgba(220,238,234,0.92);
-    backdrop-filter:blur(6px);
+    background:rgba(255,255,255,0.86);
+    backdrop-filter:blur(8px);
     border-bottom:1px solid var(--rule);
     padding:20px 36px;
     display:flex; align-items:center; justify-content:space-between; gap:20px;
   }
   .topbar h2{
-    font-family:'Inter',serif;
+    font-family:'Lora',serif;
     font-size:24px; font-weight:700; margin:0; color:var(--ink);
   }
   .topbar .sub{ color:var(--slate); font-size:12.5px; margin-top:2px;}
@@ -246,7 +270,7 @@
     padding:16px 20px; border-bottom:1px solid var(--rule-soft);
     display:flex; align-items:center; justify-content:space-between; gap:12px;
   }
-  .card-header h3{ font-family:'Inter',serif; font-size:16.5px; margin:0; font-weight:700; color:var(--ink);}
+  .card-header h3{ font-family:'Lora',serif; font-size:16.5px; margin:0; font-weight:700; color:var(--ink);}
   .card-body{ padding:20px; }
 
   .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;}
@@ -414,6 +438,30 @@
   .total-strip .tval{ font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:700; }
   .total-strip .tval small{ font-size:14px; font-weight:500; color:#a9d3c9;}
 
+  .glance-card{ overflow:hidden; }
+  .glance-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 22px 12px 22px; border-bottom:1px solid var(--rule-soft);
+  }
+  .glance-title{
+    font-family:'Inter',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--brass-dark);
+  }
+  .glance-month{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--slate-soft);
+  }
+  .glance-row{ display:flex; }
+  .glance-item{
+    flex:1; padding:18px 22px; border-right:1px solid var(--rule-soft);
+  }
+  .glance-item:last-child{ border-right:none; }
+  .glance-label{
+    font-size:10.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate-soft); font-weight:600;
+  }
+  .glance-value{ margin:8px 0 6px 0; }
+  .glance-value .badge{ font-size:15px; padding:5px 13px; }
+  .glance-sub{ font-size:11.5px; color:var(--slate-soft); }
+
   .letterhead{
     border:1px solid var(--rule); border-radius:var(--radius); overflow:hidden; background:var(--card);
   }
@@ -421,7 +469,7 @@
     background:var(--ink); color:#eafaf5; padding:16px 22px;
     display:flex; align-items:center; justify-content:space-between;
   }
-  .letterhead .lh-band h4{ margin:0; font-family:'Inter',serif; font-size:16px; font-weight:700;}
+  .letterhead .lh-band h4{ margin:0; font-family:'Lora',serif; font-size:16px; font-weight:700;}
   .letterhead .lh-body{ padding:20px 22px; }
   .kv-table{ width:100%; border-collapse:collapse; }
   .kv-table td{ padding:8px 12px; border:1px solid var(--rule); font-size:13px; }
@@ -429,7 +477,7 @@
 
   .section-block{ margin-top:18px; }
   .section-block h5{
-    font-family:'Inter',serif; font-size:14px; margin:0 0 6px 0; color:var(--ink); font-weight:700;
+    font-family:'Lora',serif; font-size:14px; margin:0 0 6px 0; color:var(--ink); font-weight:700;
     border-bottom:1.5px solid var(--brass); padding-bottom:5px; display:inline-block;
   }
   .section-block p{ margin:8px 0 0 0; color:var(--ink-text); white-space:pre-wrap; }
@@ -438,7 +486,7 @@
     text-align:center; padding:56px 20px; color:var(--slate-soft);
   }
   .empty-state svg{ opacity:0.5; margin-bottom:12px; }
-  .empty-state h4{ font-family:'Inter',serif; color:var(--ink); font-size:17px; margin:0 0 6px 0; }
+  .empty-state h4{ font-family:'Lora',serif; color:var(--ink); font-size:17px; margin:0 0 6px 0; }
   .empty-state p{ font-size:13px; margin:0 0 18px 0; }
 
   .toast-wrap{ position:fixed; bottom:24px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px;}
@@ -461,7 +509,7 @@
   .modal-head{
     padding:18px 24px; border-bottom:1px solid var(--rule); display:flex; align-items:center; justify-content:space-between;
   }
-  .modal-head h3{ font-family:'Inter',serif; margin:0; font-size:18px;}
+  .modal-head h3{ font-family:'Lora',serif; margin:0; font-size:18px;}
   .modal-body{ padding:22px 24px; max-height:70vh; overflow-y:auto;}
   .modal-foot{ padding:16px 24px; border-top:1px solid var(--rule); display:flex; justify-content:flex-end; gap:10px;}
 
@@ -515,6 +563,9 @@
     .crit-head{ flex-direction:column; align-items:stretch; }
     .seg{ width:100%; }
     .seg button{ flex:1; }
+    .glance-row{ flex-direction:column; }
+    .glance-item{ border-right:none; border-bottom:1px solid var(--rule-soft); }
+    .glance-item:last-child{ border-bottom:none; }
   }
 </style>
 </head>
@@ -822,6 +873,7 @@ const APP_MODE_KEY = 'seqas-app-mode';
 const SUPERVISOR_AUTH_KEY = 'seqas-supervisor-unlocked';
 
 let appMode = localStorage.getItem(APP_MODE_KEY) || 'support';
+document.body.dataset.mode = appMode;
 let supervisorUnlocked = localStorage.getItem(SUPERVISOR_AUTH_KEY) === 'true';
 const SUPERVISOR_PASSWORD = 'Verifone123';
 let currentView = appMode === 'supervisor' ? 'dashboard' : 'myDashboard';
@@ -1340,6 +1392,12 @@ function scoreBadgeClass(pct){
   if(pct>=0.70) return 'amber';
   return 'red';
 }
+function progressBadgeClass(rate){
+  if(rate===null || rate===undefined) return 'neutral';
+  if(rate>=0.90) return 'green';
+  if(rate>=0.80) return 'amber';
+  return 'red';
+}
 function pctStr(p){ return p===null||p===undefined ? '—' : Math.round(p*100)+'%'; }
 function notePlaceholder(c, val){
   if(val===0) return `What was missed or done incorrectly for ${c.name.toLowerCase()}?`;
@@ -1704,6 +1762,7 @@ function openSupervisorModal(){
       localStorage.setItem(SUPERVISOR_AUTH_KEY, 'true');
       appMode = 'supervisor';
       localStorage.setItem(APP_MODE_KEY, 'supervisor');
+      document.body.dataset.mode = appMode;
       root.innerHTML = '';
       setView('dashboard');
       toast('Supervisor access unlocked');
@@ -1781,7 +1840,7 @@ function renderDashboard(){
       <td style="font-weight:600;">${esc(s.name)}</td>
       <td class="num">${rc}</td>
       <td class="num">${cc}</td>
-      <td class="num">${rate===null ? '<span style="color:var(--slate-soft);">No target set</span>' : `<span class="badge ${rate>=1?'green':'neutral'}">${Math.round(rate*100)}%</span>`}</td>
+      <td class="num">${rate===null ? '<span style="color:var(--slate-soft);">No target set</span>' : `<span class="badge ${progressBadgeClass(rate)}">${Math.round(rate*100)}%</span>`}</td>
     </tr>`;
   }).join('');
 
@@ -2325,6 +2384,30 @@ function renderMyDashboard(){
       <div>
         <div style="font-weight:700; font-size:16px; color:var(--ink-text);">${esc(viewer.name)}</div>
         <div style="font-size:12px; color:var(--slate-soft);">${myAll.length} SEQAS evaluation${myAll.length===1?'':'s'} &middot; ${myAgentAll.length} agent entr${myAgentAll.length===1?'y':'ies'} on file</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card glance-card" style="margin-bottom:22px;">
+    <div class="glance-head">
+      <span class="glance-title">At a Glance</span>
+      <span class="glance-month">${monthLabel(currentMonth)}</span>
+    </div>
+    <div class="glance-row">
+      <div class="glance-item">
+        <div class="glance-label">SEQAS Score</div>
+        <div class="glance-value"><span class="badge ${scoreBadgeClass(thisMonthAvg)}">${pctStr(thisMonthAvg)}</span></div>
+        <div class="glance-sub">${thisMonthRecs.length} evaluation${thisMonthRecs.length===1?'':'s'}</div>
+      </div>
+      <div class="glance-item">
+        <div class="glance-label">Agent Review Progress</div>
+        <div class="glance-value"><span class="badge ${adjustedTarget===null?'neutral':progressBadgeClass(completionRate)}">${adjustedTarget===null?'No target':(completionRate===null?'\u2014':Math.round(completionRate*100)+'%')}</span></div>
+        <div class="glance-sub">${adjustedTarget===null?'\u2014':`${myAgentThisMonth.length} of ${adjustedTarget}`}</div>
+      </div>
+      <div class="glance-item">
+        <div class="glance-label">Customer Survey</div>
+        <div class="glance-value"><span class="badge ${scoreBadgeClass(mySurveyMonthAvg!==null?mySurveyMonthAvg/5:null)}">${mySurveyMonthAvg!==null?mySurveyMonthAvg.toFixed(2)+' / 5':'\u2014'}</span></div>
+        <div class="glance-sub">${mySurveyMonthSubs?mySurveyMonthSubs+' submission'+(mySurveyMonthSubs===1?'':'s'):'\u2014'}</div>
       </div>
     </div>
   </div>
@@ -3576,6 +3659,7 @@ async function init(){
         if(supervisorUnlocked){
           appMode='supervisor';
           localStorage.setItem(APP_MODE_KEY, 'supervisor');
+          document.body.dataset.mode = appMode;
           setView('dashboard');
         } else {
           openSupervisorModal();
@@ -3583,6 +3667,7 @@ async function init(){
       } else {
         appMode = 'support';
         localStorage.setItem(APP_MODE_KEY, 'support');
+        document.body.dataset.mode = appMode;
         setView('myDashboard');
       }
     });
