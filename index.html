@@ -1581,6 +1581,15 @@ function detectMonthFromFilename(filename){
 async function applySurveyUpload(month, rows, fileName){
   const uploadId = uid('svy');
   const now = Date.now();
+  // Mark any prior upload(s) for this month as deleted so a synced/remote copy
+  // can't resurrect them and double-count Total Submissions / Average Rating.
+  const oldUploadIds = Array.from(new Set(
+    (STATE.surveyScores||[]).filter(s=>s.month===month).map(s=>s.uploadId).filter(Boolean)
+  ));
+  STATE.deletedSurveyUploadIds = STATE.deletedSurveyUploadIds || [];
+  oldUploadIds.forEach(id=>{
+    if(!STATE.deletedSurveyUploadIds.includes(id)) STATE.deletedSurveyUploadIds.push(id);
+  });
   STATE.surveyScores = (STATE.surveyScores||[]).filter(s=>s.month!==month);
   rows.forEach(r=>{
     const sup = findOrCreateSupport(r.name, []);
