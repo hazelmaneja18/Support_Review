@@ -837,6 +837,120 @@ const AGENT_REVIEW_AUGUST_SEED = [
   { mode:'review', date:'2026-08-01', supportName:'Judy Tolentino', aliases:[], agentName:'', caseNumber:'13941140', category:'Knowledge Gap', section1:'Unable to process cards in and out' },
   { mode:'review', date:'2026-08-01', supportName:'Gemmalyn Silvestre', aliases:['Gemmalyn Pamat'], agentName:'Sidrick Mondalo', caseNumber:'13930992', category:'Procedural', section1:'' },
 ];
+
+/* Agent roster seeded from Master_schedule.xlsx — maps each agent to their
+   Team Lead (Supervisor) and Location, used for the Manila/Tucson summary
+   and the Team Lead dashboard. Editable afterwards from Agent Roster settings. */
+const AGENT_ROSTER_SEED = [
+  { name:'AJ Dela Cruz', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Albert Anaya', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'Alexander Hassel', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Amado Villela', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Andres Fimbres', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Anupama Chakrabhavi Manjunath', teamLead:'Vineed Alexander', location:'Bangalore' },
+  { name:'Arlenne Labagala', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Ashley Busch Maynard', teamLead:'Nicole Garcia', location:'Tucson' },
+  { name:'Bench Manuel', teamLead:'Franco Molina', location:'Manila' },
+  { name:'Brian Fisher', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Bryan Capili', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Christian Mark Patdu', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Christian Quimno', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'Christina Caicedo', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Cici Carrell', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Cresencio Nacua', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Cyler David', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Damon McBride', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Daniel Arago', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Davareo Hill', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'David Hilton', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Dean Clemente', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'Dinesh Kumavat', teamLead:'Vineed Alexander', location:'Bangalore' },
+  { name:'Donald Sayers', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'Eljul Maligalig', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Erika Fletcher', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Gemmalyn Silvestre', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'George Munoz', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Gerardo Morales', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'Glory Barbacena', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Gregorio Villalobos', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Gustavo Verdugo', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Harold Reyes', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'Harold Rodilas', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Hazel Bongalos', teamLead:'Franco Molina', location:'Manila' },
+  { name:'James Hodgin', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'James Querubin', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'James Warder', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'Jan Cedric Tarroza', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Jan Karlo Bamba', teamLead:'Nicole Garcia', location:'Tucson' },
+  { name:'Jan Neri', teamLead:'Franco Molina', location:'Manila' },
+  { name:'Japteg Singh', teamLead:'Kristin Manning', location:'Canada' },
+  { name:'Jasmine Comia', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Jayson Derick Camero', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Jeraldyn Relata', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'Jerrold Ramirez', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Jerry Perez', teamLead:'Nicole Garcia', location:'Tucson' },
+  { name:'Jesse McQueary', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'John Drew', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'John Guzman', teamLead:'Franco Molina', location:'Manila' },
+  { name:'Jonathan Morley', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Joneil Obus', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Joshua Clement Fernandez', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Judah Carrillo', teamLead:'Nicole Garcia', location:'Tucson' },
+  { name:'Judy Tolentino', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Justine Santa Cruz', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'Kaligh Gradall', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Katia Ballesteros', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Kevin Christopher', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Kimber Dawson', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'Kimberly Torres', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'Kristian Ong', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Kurt Martin Block', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Kyle Mcginn', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Lowella Alacida', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Luis Armenta', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Madel Negrete', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Mani Ratnam', teamLead:'Vineed Alexander', location:'Bangalore' },
+  { name:'Mark Angelus Biscarra', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Melvin Lagrosa', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Mical-alexandra Warren', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Michael Beaman', teamLead:'Nicole Garcia', location:'Tucson' },
+  { name:'Micheal Morales', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Mickey Gonzales', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Mohammed Tariq', teamLead:'Vineed Alexander', location:'Bangalore' },
+  { name:'Nicolas Varona', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Omar Dominguez', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Paul Bandilla', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Pranav Ranjan', teamLead:'Vineed Alexander', location:'Bangalore' },
+  { name:'Rachelle Rubio', teamLead:'Kyle Brandon Sioson', location:'Manila' },
+  { name:'Raven Guasis', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Raymart John Cabudil', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Rebecca Guthery', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Remond Licayan', teamLead:'Hazel Maneja', location:'Manila' },
+  { name:'Renard Relova', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'Renisha McCrimmon', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Reshma Bhanu', teamLead:'Vineed Alexander', location:'Bangalore' },
+  { name:'Rex Riell', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Rey Caicedo', teamLead:'Nicole Garcia', location:'Tucson' },
+  { name:'Robert Hasson', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'Roi Lumtao', teamLead:'Edwin Cuesta', location:'Manila' },
+  { name:'Ryan Chavez Higel', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Salvador Rubio Jr', teamLead:'Franco Molina', location:'Manila' },
+  { name:'Samuel Shocknesse', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Savannah Caicedo', teamLead:'Nathan Malis', location:'Tucson' },
+  { name:'Sheenam Dhiman', teamLead:'Kristin Manning', location:'Canada' },
+  { name:'Shurray Barnes', teamLead:'Robert Hayes', location:'Tucson' },
+  { name:'Sidrick Mondalo', teamLead:'Franco Molina', location:'Manila' },
+  { name:'Spencer Cockrell', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'Stephanie Webb', teamLead:'Nicole Garcia', location:'Tucson' },
+  { name:'Supriya Shetty', teamLead:'Vineed Alexander', location:'Bangalore' },
+  { name:'Vanessa Aguda', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Welene Escarez', teamLead:'Paul Batol', location:'Manila' },
+  { name:'Wendy Franco', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'William Burns', teamLead:'Andrew Marsh', location:'Tucson' },
+  { name:'William Gendreau', teamLead:'Kristin Manning', location:'Tucson' },
+  { name:'William Potts', teamLead:'Nicole Garcia', location:'Tucson' },
+];
+
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
@@ -865,7 +979,11 @@ let STATE = {
   deletedRecordIds: [],
   surveyScores: [],
   deletedSurveyUploadIds: [],
-  deletedSupportIds: []
+  deletedSupportIds: [],
+  agentRoster: [],
+  deletedAgentRosterIds: [],
+  agentRosterSeeded: false,
+  teamLeadNames: []
 };
 
 // Session & State Persistence Keys
@@ -965,6 +1083,7 @@ function mergeStates(local, remote){
   const deletedAgentReviewIds = Array.from(new Set([...(remote.deletedAgentReviewIds||[]), ...(local.deletedAgentReviewIds||[])]));
   const deletedSurveyUploadIds = Array.from(new Set([...(remote.deletedSurveyUploadIds||[]), ...(local.deletedSurveyUploadIds||[])]));
   const deletedSupportIds = Array.from(new Set([...(remote.deletedSupportIds||[]), ...(local.deletedSupportIds||[])]));
+  const deletedAgentRosterIds = Array.from(new Set([...(remote.deletedAgentRosterIds||[]), ...(local.deletedAgentRosterIds||[])]));
   const merged = {
     supports: mergeArraysById(remote.supports, local.supports).filter(s=>!deletedSupportIds.includes(s.id)),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
@@ -984,6 +1103,10 @@ function mergeStates(local, remote){
     surveyScores: mergeArraysById(remote.surveyScores, local.surveyScores).filter(s=>!deletedSurveyUploadIds.includes(s.uploadId)),
     deletedSurveyUploadIds,
     deletedSupportIds,
+    agentRoster: mergeArraysById(remote.agentRoster, local.agentRoster).filter(a=>!deletedAgentRosterIds.includes(a.id)),
+    deletedAgentRosterIds,
+    agentRosterSeeded: !!(local.agentRosterSeeded || remote.agentRosterSeeded),
+    teamLeadNames: Array.from(new Set([...(remote.teamLeadNames||[]), ...(local.teamLeadNames||[])])),
   };
   return reconcileState(merged);
 }
@@ -1058,6 +1181,9 @@ function reconcileState(state){
   if(state.deletedSupportIds && state.deletedSupportIds.length){
     state.supports = (state.supports||[]).filter(s=>!state.deletedSupportIds.includes(s.id));
   }
+  if(state.deletedAgentRosterIds && state.deletedAgentRosterIds.length){
+    state.agentRoster = (state.agentRoster||[]).filter(a=>!state.deletedAgentRosterIds.includes(a.id));
+  }
   if(!state.historicalDuplicatesCleaned){
     state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
     state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
@@ -1115,6 +1241,10 @@ async function loadState(){
       STATE.surveyScores = parsed.surveyScores || [];
       STATE.deletedSurveyUploadIds = parsed.deletedSurveyUploadIds || [];
       STATE.deletedSupportIds = parsed.deletedSupportIds || [];
+      STATE.agentRoster = parsed.agentRoster || [];
+      STATE.deletedAgentRosterIds = parsed.deletedAgentRosterIds || [];
+      STATE.agentRosterSeeded = !!parsed.agentRosterSeeded;
+      STATE.teamLeadNames = parsed.teamLeadNames || [];
       STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
@@ -1153,7 +1283,11 @@ async function loadState(){
           deletedAgentReviewIds: remote.deletedAgentReviewIds || [],
           surveyScores: remote.surveyScores || [],
           deletedSurveyUploadIds: remote.deletedSurveyUploadIds || [],
-          deletedSupportIds: remote.deletedSupportIds || []
+          deletedSupportIds: remote.deletedSupportIds || [],
+          agentRoster: remote.agentRoster || [],
+          deletedAgentRosterIds: remote.deletedAgentRosterIds || [],
+          agentRosterSeeded: !!remote.agentRosterSeeded,
+          teamLeadNames: remote.teamLeadNames || []
         };
         STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -1230,7 +1364,11 @@ function seedState(){
     deletedRecordIds: [],
     surveyScores: [],
     deletedSurveyUploadIds: [],
-    deletedSupportIds: []
+    deletedSupportIds: [],
+    agentRoster: [],
+    deletedAgentRosterIds: [],
+    agentRosterSeeded: false,
+    teamLeadNames: []
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -1332,6 +1470,26 @@ async function ensureAgentReviewAugustSeed(){
   STATE.agentReviewAugust2026Seeded = true;
   await saveState();
 }
+async function ensureAgentRosterSeed(){
+  if(STATE.agentRosterSeeded) return;
+  const existingNames = new Set((STATE.agentRoster||[]).map(a=>a.name.trim().toLowerCase()));
+  const deletedIds = new Set(STATE.deletedAgentRosterIds||[]);
+  AGENT_ROSTER_SEED.forEach(entry=>{
+    const key = entry.name.trim().toLowerCase();
+    if(existingNames.has(key)) return;
+    const candidateId = 'rost_seed_' + key.replace(/[^a-z0-9]+/g,'_');
+    if(deletedIds.has(candidateId)) return;
+    STATE.agentRoster.push({
+      id: candidateId,
+      name: entry.name,
+      teamLead: entry.teamLead,
+      location: entry.location,
+      createdAt: Date.now()
+    });
+  });
+  STATE.agentRosterSeeded = true;
+  await saveState();
+}
 
 /* ---------------------- DERIVED HELPERS ---------------------- */
 function allMonthsUsed(){
@@ -1352,6 +1510,104 @@ function avgPercent(recs){
 }
 function sortedSupports(){
   return [...STATE.supports].sort((a,b)=>a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
+}
+
+/* ---------------------- AGENT ROSTER / TEAM LEAD HELPERS ---------------------- */
+function sortedAgentRoster(){
+  return [...(STATE.agentRoster||[])].sort((a,b)=>a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
+}
+function rosterLocations(){
+  const set = new Set((STATE.agentRoster||[]).map(a=>a.location).filter(Boolean));
+  ['Manila','Tucson','Bangalore','Canada'].forEach(l=>set.add(l));
+  return Array.from(set).sort();
+}
+function rosterTeamLeads(){
+  const fromRoster = (STATE.agentRoster||[]).map(a=>a.teamLead).filter(Boolean);
+  const fromExtra = (STATE.teamLeadNames||[]).filter(Boolean);
+  return Array.from(new Set([...fromRoster, ...fromExtra])).sort((a,b)=>a.localeCompare(b));
+}
+function nameToken(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
+function nameParts(fullName){ return (fullName||'').trim().split(/\s+/).filter(Boolean); }
+// Matches a freely-typed agent name against the roster: exact name/alias match first,
+// then a unique surname match, then a unique first-name match. Returns null if nothing
+// matches confidently (e.g. multiple roster agents share that first/last name).
+function rosterMatchFor(typedName){
+  const typed = (typedName||'').trim();
+  if(!typed) return null;
+  const roster = STATE.agentRoster||[];
+  const lower = typed.toLowerCase();
+  let match = roster.find(a=> a.name.trim().toLowerCase()===lower || (a.aliases||[]).some(al=>al.trim().toLowerCase()===lower));
+  if(match) return match;
+  const typedParts = nameParts(typed);
+  if(!typedParts.length) return null;
+  const typedLast = nameToken(typedParts[typedParts.length-1]);
+  if(typedLast){
+    const bySurname = roster.filter(a=>{
+      const parts = nameParts(a.name);
+      return parts.length && nameToken(parts[parts.length-1])===typedLast;
+    });
+    if(bySurname.length===1) return bySurname[0];
+  }
+  const typedFirst = nameToken(typedParts[0]);
+  if(typedFirst){
+    const byFirst = roster.filter(a=>{
+      const parts = nameParts(a.name);
+      return parts.length && nameToken(parts[0])===typedFirst;
+    });
+    if(byFirst.length===1) return byFirst[0];
+  }
+  return null;
+}
+// Distinct agents a support has logged an Agent Review/Commendation entry for,
+// grouped by the agent's roster location. Agents that can't be confidently
+// matched to the roster are grouped under "Unmatched".
+function agentLocationSummaryForSupport(supportId, month){
+  const entries = STATE.agentReviews.filter(a=>a.supportId===supportId && (!month || (a.date||'').slice(0,7)===month));
+  const seen = new Set();
+  const counts = {};
+  entries.forEach(e=>{
+    const name = (e.agentName||'').trim();
+    if(!name) return;
+    const key = name.toLowerCase();
+    if(seen.has(key)) return;
+    seen.add(key);
+    const match = rosterMatchFor(name);
+    const label = match ? match.location : 'Unmatched';
+    counts[label] = (counts[label]||0)+1;
+  });
+  return counts;
+}
+// Per team lead: how many agents they own on the roster, and which (and how many)
+// of those agents have at least one logged Agent Review entry in the given month.
+function teamLeadsSummary(month){
+  const byTL = new Map();
+  (STATE.teamLeadNames||[]).forEach(tl=>{
+    if(tl && !byTL.has(tl)) byTL.set(tl, { teamLead: tl, totalAgents: 0, reviewed: new Map() });
+  });
+  sortedAgentRoster().forEach(a=>{
+    const tl = a.teamLead || 'Unassigned';
+    if(!byTL.has(tl)) byTL.set(tl, { teamLead: tl, totalAgents: 0, reviewed: new Map() });
+    byTL.get(tl).totalAgents++;
+  });
+  STATE.agentReviews
+    .filter(a=>a.mode==='review' && (!month || (a.date||'').slice(0,7)===month))
+    .forEach(e=>{
+      const name = (e.agentName||'').trim();
+      if(!name) return;
+      const match = rosterMatchFor(name);
+      const tl = match ? (match.teamLead || 'Unassigned') : 'Unmatched / Not on Roster';
+      if(!byTL.has(tl)) byTL.set(tl, { teamLead: tl, totalAgents: 0, reviewed: new Map() });
+      const bucket = byTL.get(tl);
+      const key = match ? match.id : name.toLowerCase();
+      const displayName = match ? match.name : name;
+      if(!bucket.reviewed.has(key)) bucket.reviewed.set(key, { name: displayName, count: 0, bySupport: new Set() });
+      const rec = bucket.reviewed.get(key);
+      rec.count++;
+      if(e.supportName) rec.bySupport.add(e.supportName);
+    });
+  return Array.from(byTL.values())
+    .map(b=>({ ...b, reviewed: Array.from(b.reviewed.values()).sort((a,b2)=>a.name.localeCompare(b2.name)) }))
+    .sort((a,b)=>a.teamLead.localeCompare(b.teamLead));
 }
 function getTarget(month){
   if(STATE.targets[month] !== undefined) return STATE.targets[month];
@@ -1578,6 +1834,60 @@ function detectMonthFromFilename(filename){
   if(m2) return `${m2[1]}-${m2[2]}`;
   return null;
 }
+// Parses a Master Schedule-style workbook (Agent Name, Supervisor, Location) into
+// plain rows the Agent Roster can consume. "MNL - Manila" style locations are
+// simplified down to just the location name, matching how the roster stores them.
+function parseMasterScheduleWorkbook(arrayBuffer){
+  const wb = XLSX.read(arrayBuffer, { type:'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
+  const out = [];
+  rows.forEach(row=>{
+    const nameKey = Object.keys(row).find(k=>k.trim().toLowerCase()==='agent name') || Object.keys(row).find(k=>k.trim().toLowerCase()==='name');
+    const tlKey = Object.keys(row).find(k=>k.trim().toLowerCase()==='supervisor') || Object.keys(row).find(k=>k.trim().toLowerCase()==='team lead');
+    const locKey = Object.keys(row).find(k=>k.trim().toLowerCase()==='location');
+    const name = nameKey ? String(row[nameKey]).trim() : '';
+    if(!name) return;
+    let location = locKey ? String(row[locKey]).trim() : '';
+    if(location.includes(' - ')) location = location.split(' - ').pop().trim();
+    out.push({
+      name,
+      teamLead: tlKey ? String(row[tlKey]).trim() : '',
+      location
+    });
+  });
+  return out;
+}
+// Adds new agents and updates team lead/location for existing ones (matched by
+// exact name). Never touches evaluations or Agent Review entries already on file.
+async function applyMasterScheduleUpload(rows){
+  STATE.agentRoster = STATE.agentRoster || [];
+  STATE.teamLeadNames = STATE.teamLeadNames || [];
+  let added = 0, updated = 0;
+  rows.forEach(r=>{
+    if(!r.name) return;
+    const existing = STATE.agentRoster.find(a=>a.name.trim().toLowerCase()===r.name.toLowerCase());
+    if(existing){
+      if(r.teamLead) existing.teamLead = r.teamLead;
+      if(r.location) existing.location = r.location;
+      updated++;
+    } else {
+      STATE.agentRoster.push({
+        id: uid('rost'),
+        name: r.name,
+        teamLead: r.teamLead || 'Unassigned',
+        location: r.location || 'Manila',
+        createdAt: Date.now()
+      });
+      added++;
+    }
+    if(r.teamLead && !STATE.teamLeadNames.some(t=>t.toLowerCase()===r.teamLead.toLowerCase())){
+      STATE.teamLeadNames.push(r.teamLead);
+    }
+  });
+  await saveState();
+  return { added, updated };
+}
 async function applySurveyUpload(month, rows, fileName){
   const uploadId = uid('svy');
   const now = Date.now();
@@ -1649,6 +1959,8 @@ const PAGE_META = {
   myDashboard: ['Support Performance', 'Your SEQAS scores and Agent Review progress in one place'],
   myRecords: ['SEQAS Records', 'Search your own past evaluations'],
   agentReviews: ['Agent Reviews', 'Master log of commendations and feedback from agents across the team'],
+  teamLeads: ['Team Leads', 'How many agents each team lead has, and who has been reviewed'],
+  agentRoster: ['Agent Roster', 'Add, update, or remove agents and reassign their team lead or location'],
 };
 
 const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
@@ -1687,9 +1999,11 @@ const NAV_SUPERVISOR = [
   ]},
   { group:'Feedback', items:[
     { view:'agentReviews', label:'Agent Reviews', icon:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>' },
+    { view:'teamLeads', label:'Team Leads', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' },
   ]},
   { group:'Admin', items:[
     { view:'supports', label:'Manage Supports', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' },
+    { view:'agentRoster', label:'Agent Roster', icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v5"/>' },
   ]},
 ];
 const NAV_SUPPORT = [
@@ -1818,6 +2132,8 @@ function render(){
   else if(currentView==='myDashboard') c.innerHTML = renderMyDashboard();
   else if(currentView==='myRecords') c.innerHTML = renderMyRecords();
   else if(currentView==='agentReviews') c.innerHTML = renderAgentReviews();
+  else if(currentView==='teamLeads') c.innerHTML = renderTeamLeads();
+  else if(currentView==='agentRoster') c.innerHTML = renderAgentRosterSettings();
   attachViewHandlers();
 }
 
@@ -1892,6 +2208,20 @@ function renderDashboard(){
     </tr>`;
   }).join('');
 
+  const locationRows = sortedSupports().map(s=>{
+    const counts = agentLocationSummaryForSupport(s.id, currentMonth);
+    const manila = counts['Manila']||0, tucson = counts['Tucson']||0, bangalore = counts['Bangalore']||0, canada = counts['Canada']||0, unmatched = counts['Unmatched']||0;
+    const total = manila+tucson+bangalore+canada+unmatched;
+    return `<tr>
+      <td style="font-weight:600;">${esc(s.name)}</td>
+      <td class="num">${manila || '<span style="color:var(--slate-soft);">0</span>'}</td>
+      <td class="num">${tucson || '<span style="color:var(--slate-soft);">0</span>'}</td>
+      <td class="num">${(bangalore+canada) || '<span style="color:var(--slate-soft);">0</span>'}</td>
+      <td class="num">${unmatched ? `<span class="badge amber">${unmatched}</span>` : '<span style="color:var(--slate-soft);">0</span>'}</td>
+      <td class="num" style="font-weight:600;">${total}</td>
+    </tr>`;
+  }).join('');
+
   return `
   <div class="stat-row-4">
     <div class="stat-card">
@@ -1956,6 +2286,22 @@ function renderDashboard(){
         <tbody>${surveyRows}</tbody>
       </table>` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
       ${!surveyEntriesFor(currentMonth).length ? `<p class="field-hint" style="margin-top:14px;">No survey file has been uploaded for ${monthLabel(currentMonth)} yet. Upload one from the Manage Supports tab.</p>` : ''}
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Agent Location Summary</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Distinct agents reviewed per support for ${monthLabel(currentMonth)}, by location</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${STATE.supports.length ? `
+      <table>
+        <thead><tr><th>Support</th><th>Manila</th><th>Tucson</th><th>Other</th><th>Unmatched</th><th>Total Agents</th></tr></thead>
+        <tbody>${locationRows}</tbody>
+      </table>
+      <p class="field-hint" style="margin-top:14px;">"Unmatched" means the typed agent name couldn\u2019t be confidently matched to the Agent Roster \u2014 check spelling, or add the agent on the Agent Roster tab.</p>
+      ` : emptyState('No supports yet', 'Add your team on the Manage Supports tab.', 'supports','Add supports')}
     </div>
   </div>
   `;
@@ -2303,6 +2649,19 @@ function renderSupports(){
   </div>
 
   <div class="card" style="margin-top:20px;">
+    <div class="card-header"><h3>Upload Master Schedule</h3><span style="font-size:11.5px; color:var(--slate-soft);">.xlsx export with Agent Name, Supervisor, Location</span></div>
+    <div class="card-body">
+      <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Upload the Master Schedule spreadsheet (the same format used to seed the Agent Roster) to quickly add new agents or update an existing agent\u2019s team lead and location in bulk. Matching is by exact agent name \u2014 a name already on the roster gets updated, anything new gets added. This never touches past evaluations or Agent Review entries.</p>
+      <div class="field">
+        <label class="field-label">Master Schedule File (.xlsx)</label>
+        <input type="file" id="masterScheduleFile" accept=".xlsx,.xls">
+      </div>
+      <button type="button" class="btn brass" id="masterScheduleUploadBtn">Upload &amp; Apply</button>
+      <p class="field-hint" id="masterScheduleHint" style="margin-top:12px;"></p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
     <div class="card-header"><h3>Backup &amp; Restore</h3></div>
     <div class="card-body">
       <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Everything here already saves automatically. This is an extra copy you keep yourself \u2014 download it occasionally as a safety net, and use it to restore if you ever need to.</p>
@@ -2394,6 +2753,8 @@ function renderMyDashboard(){
   const rawRate = (adjustedTarget!==null && adjustedTarget>0) ? myAgentThisMonth.length/adjustedTarget : null;
   const completionRate = rawRate !== null ? Math.min(1, rawRate) : null;
 
+  const myLocationCountsMonth = agentLocationSummaryForSupport(viewerId, currentMonth);
+  const myLocationCountsAll = agentLocationSummaryForSupport(viewerId, null);
   const mySurveyAll = surveyEntriesFor(null, viewerId);
   const mySurveyMonth = surveyEntriesFor(currentMonth, viewerId);
   const mySurveyMonthAvg = weightedAvgRating(mySurveyMonth);
@@ -2512,6 +2873,34 @@ function renderMyDashboard(){
       </div>
     </div>
     <div class="card-body" id="dashAgentEntriesWrap" style="overflow-x:auto;"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+      <h3>Agent Location Summary</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Distinct agents you\u2019ve submitted an entry for</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      <table>
+        <thead><tr><th></th><th>Manila</th><th>Tucson</th><th>Other</th><th>Unmatched</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600;">${monthLabel(currentMonth)}</td>
+            <td class="num">${myLocationCountsMonth['Manila']||0}</td>
+            <td class="num">${myLocationCountsMonth['Tucson']||0}</td>
+            <td class="num">${(myLocationCountsMonth['Bangalore']||0)+(myLocationCountsMonth['Canada']||0)}</td>
+            <td class="num">${myLocationCountsMonth['Unmatched'] ? `<span class="badge amber">${myLocationCountsMonth['Unmatched']}</span>` : 0}</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;">All Time</td>
+            <td class="num">${myLocationCountsAll['Manila']||0}</td>
+            <td class="num">${myLocationCountsAll['Tucson']||0}</td>
+            <td class="num">${(myLocationCountsAll['Bangalore']||0)+(myLocationCountsAll['Canada']||0)}</td>
+            <td class="num">${myLocationCountsAll['Unmatched'] ? `<span class="badge amber">${myLocationCountsAll['Unmatched']}</span>` : 0}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="section-divider"><h3>Customer Survey</h3></div>
@@ -2954,6 +3343,134 @@ function renderAllAgentReviewsTable(){
   `;
 }
 
+/* ======================================================================
+   TEAM LEADS (Supervisor)
+   ====================================================================== */
+function renderTeamLeads(){
+  if(!STATE.agentRoster || !STATE.agentRoster.length){
+    return emptyState('No agent roster yet', 'Add agents on the Agent Roster tab so they can be grouped by team lead.', 'agentRoster', 'Go to Agent Roster');
+  }
+  const summary = teamLeadsSummary(currentMonth);
+  const cards = summary.map(tl=>{
+    const pct = tl.totalAgents>0 ? Math.min(1, tl.reviewed.length/tl.totalAgents) : null;
+    const rows = tl.reviewed.map(r=>`
+      <tr>
+        <td style="font-weight:600;">${esc(r.name)}</td>
+        <td class="num">${r.count}</td>
+        <td>${esc(Array.from(r.bySupport).join(', '))||'<span style="color:var(--slate-soft);">\u2014</span>'}</td>
+      </tr>`).join('');
+    return `
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-header">
+        <h3>${esc(tl.teamLead)}</h3>
+        <span class="badge ${progressBadgeClass(pct)}">${tl.reviewed.length} / ${tl.totalAgents} agents reviewed</span>
+      </div>
+      <div class="card-body" style="overflow-x:auto;">
+        ${tl.reviewed.length ? `
+        <table>
+          <thead><tr><th>Agent</th><th>Review Entries</th><th>Reviewed By</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>` : `<p class="field-hint" style="margin:0;">No Agent Review entries logged for ${esc(tl.teamLead)}'s team in ${monthLabel(currentMonth)} yet.</p>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <p class="field-hint" style="margin-bottom:16px;">Showing ${monthLabel(currentMonth)}. Agents are grouped by the Team Lead set on the Agent Roster tab; Agent Review entries are matched to the roster by name (or surname, when the typed name is slightly different).</p>
+  ${cards}
+  `;
+}
+
+/* ======================================================================
+   AGENT ROSTER (Settings: add / edit / delete agents + team lead)
+   ====================================================================== */
+function renderAgentRosterSettings(){
+  const locationOptions = rosterLocations().map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  const teamLeadList = rosterTeamLeads().map(t=>`<option value="${esc(t)}"></option>`).join('');
+  const roster = sortedAgentRoster();
+  const rows = roster.map(a=>`
+    <tr data-roster-row="${a.id}" data-roster-search="${esc(a.name.toLowerCase())}">
+      <td><input type="text" class="roster-edit" data-roster-field="name" data-roster-id="${a.id}" value="${esc(a.name)}"></td>
+      <td><input type="text" class="roster-edit" list="rosterTeamLeadList" data-roster-field="teamLead" data-roster-id="${a.id}" value="${esc(a.teamLead)}"></td>
+      <td>
+        <select class="roster-edit" data-roster-field="location" data-roster-id="${a.id}">
+          ${rosterLocations().map(l=>`<option value="${esc(l)}" ${l===a.location?'selected':''}>${esc(l)}</option>`).join('')}
+        </select>
+      </td>
+      <td style="text-align:right;">
+        <button class="icon-btn danger" title="Remove agent" data-remove-roster="${a.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+      </td>
+    </tr>`).join('');
+
+  return `
+  <datalist id="rosterTeamLeadList">${teamLeadList}</datalist>
+  <div class="field-grid">
+    <div class="card">
+      <div class="card-header"><h3>Add an Agent</h3></div>
+      <div class="card-body">
+        <form id="addRosterForm">
+          <div class="field">
+            <label class="field-label">Agent Name</label>
+            <input type="text" id="newRosterName" placeholder="e.g. Dean Clemente" required>
+          </div>
+          <div class="field">
+            <label class="field-label">Team Lead</label>
+            <input type="text" id="newRosterTeamLead" list="rosterTeamLeadList" placeholder="e.g. Hazel Maneja" required>
+            <div class="field-hint">Type any name \u2014 if it\u2019s not in the list yet, it\u2019ll be added as a new team lead automatically.</div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Location</label>
+            <select id="newRosterLocation">${locationOptions}</select>
+          </div>
+          <button type="submit" class="btn brass" style="margin-top:16px;">Add Agent</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Add a Team Lead</h3></div>
+      <div class="card-body">
+        <p class="field-hint" style="margin:0 0 14px 0;">Register a new team lead before any agents are assigned to them, so their name shows up as a suggestion when adding or editing agents.</p>
+        <form id="addTeamLeadForm">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Team Lead Name</label>
+            <input type="text" id="newTeamLeadName" placeholder="e.g. Hazel Maneja" required>
+          </div>
+          <button type="submit" class="btn brass" style="margin-top:16px;">Add Team Lead</button>
+        </form>
+        ${rosterTeamLeads().length ? `
+        <div class="field-hint" style="margin-top:16px;">
+          <strong>Current team leads:</strong> ${rosterTeamLeads().map(esc).join(', ')}
+        </div>` : ''}
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Agent Roster</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">${roster.length} agent${roster.length===1?'':'s'} &middot; seeded from Master_schedule.xlsx, editable below</span>
+    </div>
+    <div class="card-body">
+      <div class="field" style="max-width:320px;">
+        <label class="field-label">Search by Name</label>
+        <input type="text" id="rosterSearchInput" placeholder="Start typing an agent\u2019s name\u2026">
+      </div>
+      <div style="overflow-x:auto;">
+      ${roster.length ? `
+      <table id="rosterTable">
+        <thead><tr><th>Agent Name</th><th>Team Lead</th><th>Location</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="field-hint" id="rosterSearchEmpty" style="display:none;">No agents match that search.</p>
+      ` : emptyState('No agents yet', 'Add your first agent above.', null, null)}
+      </div>
+    </div>
+  </div>
+  <p class="field-hint" style="margin-top:14px;">Changes save automatically. Deleting an agent here only removes them from this roster \u2014 it doesn\u2019t touch any evaluations or Agent Review entries already on file.</p>
+  `;
+}
+
 /* ---------------------- SHARED EMPTY STATE ---------------------- */
 function emptyState(title, sub, gotoView, cta){
   return `<div class="empty-state">
@@ -3291,6 +3808,38 @@ function attachViewHandlers(){
         }
       });
     }
+
+    const masterScheduleBtn = document.getElementById('masterScheduleUploadBtn');
+    if(masterScheduleBtn){
+      masterScheduleBtn.addEventListener('click', async ()=>{
+        const fileInput = document.getElementById('masterScheduleFile');
+        const hint = document.getElementById('masterScheduleHint');
+        const file = fileInput.files[0];
+        if(!file){ hint.style.color='var(--red)'; hint.textContent='Choose a .xlsx file first.'; return; }
+        if(typeof XLSX === 'undefined'){ hint.style.color='var(--red)'; hint.textContent='Spreadsheet reader failed to load \u2014 check your connection and try again.'; return; }
+        try{
+          hint.style.color='var(--slate-soft)'; hint.textContent='Reading file\u2026';
+          const buf = await file.arrayBuffer();
+          const rows = parseMasterScheduleWorkbook(buf);
+          if(!rows.length){
+            hint.style.color='var(--red)';
+            hint.textContent='Couldn\u2019t find any rows with an Agent Name column in this file.';
+            return;
+          }
+          const { added, updated } = await applyMasterScheduleUpload(rows);
+          hint.style.color='var(--green)';
+          hint.textContent=`Added ${added} new agent${added===1?'':'s'} and updated ${updated} existing agent${updated===1?'':'s'}.`;
+          fileInput.value='';
+          render();
+          toast('Master Schedule applied to the Agent Roster');
+        }catch(err){
+          console.error(err);
+          hint.style.color='var(--red)';
+          hint.textContent='Could not read that file \u2014 make sure it\u2019s a valid .xlsx export.';
+        }
+      });
+    }
+
     document.querySelectorAll('[data-remove-survey-upload]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         if(!confirm('Remove this survey upload? This can\u2019t be undone.')) return;
@@ -3335,6 +3884,104 @@ function attachViewHandlers(){
       });
     }
   }
+
+  if(currentView==='agentRoster'){
+    document.getElementById('addRosterForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const nameInp = document.getElementById('newRosterName');
+      const tlInp = document.getElementById('newRosterTeamLead');
+      const locSel = document.getElementById('newRosterLocation');
+      const name = nameInp.value.trim();
+      const teamLead = tlInp.value.trim();
+      if(!name || !teamLead) return;
+      const dupe = (STATE.agentRoster||[]).find(a=>a.name.trim().toLowerCase()===name.toLowerCase());
+      if(dupe){ toast('That agent is already on the roster.', true); return; }
+      STATE.agentRoster.push({ id: uid('rost'), name, teamLead, location: locSel.value, createdAt: Date.now() });
+      STATE.teamLeadNames = STATE.teamLeadNames || [];
+      if(!STATE.teamLeadNames.some(t=>t.toLowerCase()===teamLead.toLowerCase())){
+        STATE.teamLeadNames.push(teamLead);
+      }
+      await saveState();
+      render();
+      toast('Agent added');
+    });
+
+    const addTLForm = document.getElementById('addTeamLeadForm');
+    if(addTLForm){
+      addTLForm.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const inp = document.getElementById('newTeamLeadName');
+        const name = inp.value.trim();
+        if(!name) return;
+        STATE.teamLeadNames = STATE.teamLeadNames || [];
+        const exists = STATE.teamLeadNames.some(t=>t.toLowerCase()===name.toLowerCase())
+          || (STATE.agentRoster||[]).some(a=>(a.teamLead||'').toLowerCase()===name.toLowerCase());
+        if(exists){ toast('That team lead is already in the list.', true); return; }
+        STATE.teamLeadNames.push(name);
+        await saveState();
+        render();
+        toast('Team lead added');
+      });
+    }
+
+    const rosterSearch = document.getElementById('rosterSearchInput');
+    if(rosterSearch){
+      rosterSearch.addEventListener('input', ()=>{
+        const term = rosterSearch.value.trim().toLowerCase();
+        const tableRows = document.querySelectorAll('#rosterTable tbody tr[data-roster-row]');
+        let visibleCount = 0;
+        tableRows.forEach(row=>{
+          const matches = !term || (row.dataset.rosterSearch||'').includes(term);
+          row.style.display = matches ? '' : 'none';
+          if(matches) visibleCount++;
+        });
+        const emptyMsg = document.getElementById('rosterSearchEmpty');
+        if(emptyMsg) emptyMsg.style.display = visibleCount===0 ? 'block' : 'none';
+      });
+    }
+
+    document.querySelectorAll('.roster-edit').forEach(inp=>{
+      inp.addEventListener('change', async ()=>{
+        const id = inp.dataset.rosterId;
+        const field = inp.dataset.rosterField;
+        const agent = (STATE.agentRoster||[]).find(a=>a.id===id);
+        if(!agent) return;
+        const val = inp.value.trim();
+        if((field==='name' || field==='teamLead') && !val){
+          toast('This field can\u2019t be empty.', true);
+          inp.value = agent[field];
+          return;
+        }
+        agent[field] = val;
+        const ok = await saveState();
+        if(ok){
+          toast('Agent updated');
+          if(field==='teamLead' || field==='location') render();
+        } else {
+          toastRetry('Updated here, but the save failed \u2014 tap to retry.');
+        }
+      });
+    });
+
+    document.querySelectorAll('[data-remove-roster]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.dataset.removeRoster;
+        const agent = (STATE.agentRoster||[]).find(a=>a.id===id);
+        if(!agent) return;
+        if(!confirm(`Remove ${agent.name} from the agent roster? Past evaluations and Agent Review entries for them stay on file, but they\u2019ll show as "Unmatched" going forward.`)) return;
+        STATE.agentRoster = (STATE.agentRoster||[]).filter(a=>a.id!==id);
+        STATE.deletedAgentRosterIds = STATE.deletedAgentRosterIds || [];
+        if(!STATE.deletedAgentRosterIds.includes(id)) STATE.deletedAgentRosterIds.push(id);
+        render();
+        const ok = await saveState();
+        if(ok){
+          toast('Agent removed for good \u2014 they won\u2019t come back on refresh or sync.');
+        } else {
+          toastRetry('Removed here, but the save failed \u2014 tap to retry so it stays removed.');
+        }
+      });
+    });
+  }
 }
 
 function downloadBackup(){
@@ -3378,7 +4025,11 @@ function handleRestoreFile(e){
         augustAccuracyApplied: !!parsed.augustAccuracyApplied,
         surveyScores: parsed.surveyScores || [],
         deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || [],
-        deletedSupportIds: parsed.deletedSupportIds || []
+        deletedSupportIds: parsed.deletedSupportIds || [],
+        agentRoster: parsed.agentRoster || [],
+        deletedAgentRosterIds: parsed.deletedAgentRosterIds || [],
+        agentRosterSeeded: !!parsed.agentRosterSeeded,
+        teamLeadNames: parsed.teamLeadNames || []
       };
       const ok = await saveState();
       if(ok){ toast('Backup restored'); render(); }
@@ -3629,7 +4280,11 @@ function renderLoadFailureScreen(){
           augustAccuracyApplied: !!parsed.augustAccuracyApplied,
           surveyScores: parsed.surveyScores || [],
           deletedSurveyUploadIds: parsed.deletedSurveyUploadIds || [],
-          deletedSupportIds: parsed.deletedSupportIds || []
+          deletedSupportIds: parsed.deletedSupportIds || [],
+          agentRoster: parsed.agentRoster || [],
+          deletedAgentRosterIds: parsed.deletedAgentRosterIds || [],
+          agentRosterSeeded: !!parsed.agentRosterSeeded,
+          teamLeadNames: parsed.teamLeadNames || []
         };
         const ok = await saveState();
         if(ok){
@@ -3676,6 +4331,7 @@ async function init(){
   await ensureAugustNotes();
   await ensureAugustAccuracy();
   await ensureAgentReviewAugustSeed();
+  await ensureAgentRosterSeed();
   ensureViewerSupport();
 
   // Remember month selection on change
@@ -3720,7 +4376,7 @@ async function init(){
 function startBackgroundSync(){
   setInterval(async ()=>{
     if(!SYNC_URL) return;
-    const safeViews = ['myDashboard','myRecords','dashboard','counts','records','supports','agentReviews'];
+    const safeViews = ['myDashboard','myRecords','dashboard','counts','records','supports','agentReviews','teamLeads'];
     if(!safeViews.includes(currentView)) return;
     if(currentView==='agentReviews' && appMode==='support') return;
     if(currentView==='new') return;
