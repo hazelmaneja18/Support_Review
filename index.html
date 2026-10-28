@@ -246,7 +246,8 @@
     font-size:24px; font-weight:700; margin:0; color:var(--ink);
   }
   .topbar .sub{ color:var(--slate); font-size:12.5px; margin-top:2px;}
-  .content{ padding:28px 36px 60px 36px; max-width:1180px; }
+  .content{ padding:28px 36px 60px 36px; max-width:1600px; }
+  .content.content-wide{ max-width:none; }
 
   .month-select{
     display:flex; align-items:center; gap:8px;
@@ -983,7 +984,12 @@ let STATE = {
   agentRoster: [],
   deletedAgentRosterIds: [],
   agentRosterSeeded: false,
-  teamLeadNames: []
+  teamLeadNames: [],
+  attendanceLogs: [],
+  attendanceUploadMeta: null,
+  deletedAttendanceLogIds: [],
+  attendancePolicyOverrides: {},
+  attendanceNotes: {}
 };
 
 // Session & State Persistence Keys
@@ -1084,6 +1090,7 @@ function mergeStates(local, remote){
   const deletedSurveyUploadIds = Array.from(new Set([...(remote.deletedSurveyUploadIds||[]), ...(local.deletedSurveyUploadIds||[])]));
   const deletedSupportIds = Array.from(new Set([...(remote.deletedSupportIds||[]), ...(local.deletedSupportIds||[])]));
   const deletedAgentRosterIds = Array.from(new Set([...(remote.deletedAgentRosterIds||[]), ...(local.deletedAgentRosterIds||[])]));
+  const deletedAttendanceLogIds = Array.from(new Set([...(remote.deletedAttendanceLogIds||[]), ...(local.deletedAttendanceLogIds||[])]));
   const merged = {
     supports: mergeArraysById(remote.supports, local.supports).filter(s=>!deletedSupportIds.includes(s.id)),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
@@ -1107,6 +1114,13 @@ function mergeStates(local, remote){
     deletedAgentRosterIds,
     agentRosterSeeded: !!(local.agentRosterSeeded || remote.agentRosterSeeded),
     teamLeadNames: Array.from(new Set([...(remote.teamLeadNames||[]), ...(local.teamLeadNames||[])])),
+    attendanceLogs: mergeArraysById(remote.attendanceLogs, local.attendanceLogs).filter(r=>!deletedAttendanceLogIds.includes(r.id)),
+    deletedAttendanceLogIds,
+    attendanceUploadMeta: (local.attendanceUploadMeta && remote.attendanceUploadMeta)
+      ? ((local.attendanceUploadMeta.uploadedAt||0) >= (remote.attendanceUploadMeta.uploadedAt||0) ? local.attendanceUploadMeta : remote.attendanceUploadMeta)
+      : (local.attendanceUploadMeta || remote.attendanceUploadMeta || null),
+    attendancePolicyOverrides: { ...(remote.attendancePolicyOverrides||{}), ...(local.attendancePolicyOverrides||{}) },
+    attendanceNotes: { ...(remote.attendanceNotes||{}), ...(local.attendanceNotes||{}) },
   };
   return reconcileState(merged);
 }
@@ -1184,6 +1198,9 @@ function reconcileState(state){
   if(state.deletedAgentRosterIds && state.deletedAgentRosterIds.length){
     state.agentRoster = (state.agentRoster||[]).filter(a=>!state.deletedAgentRosterIds.includes(a.id));
   }
+  if(state.deletedAttendanceLogIds && state.deletedAttendanceLogIds.length){
+    state.attendanceLogs = (state.attendanceLogs||[]).filter(r=>!state.deletedAttendanceLogIds.includes(r.id));
+  }
   if(!state.historicalDuplicatesCleaned){
     state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
     state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
@@ -1245,6 +1262,11 @@ async function loadState(){
       STATE.deletedAgentRosterIds = parsed.deletedAgentRosterIds || [];
       STATE.agentRosterSeeded = !!parsed.agentRosterSeeded;
       STATE.teamLeadNames = parsed.teamLeadNames || [];
+      STATE.attendanceLogs = parsed.attendanceLogs || [];
+      STATE.attendanceUploadMeta = parsed.attendanceUploadMeta || null;
+      STATE.deletedAttendanceLogIds = parsed.deletedAttendanceLogIds || [];
+      STATE.attendancePolicyOverrides = parsed.attendancePolicyOverrides || {};
+      STATE.attendanceNotes = parsed.attendanceNotes || {};
       STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
@@ -1287,7 +1309,12 @@ async function loadState(){
           agentRoster: remote.agentRoster || [],
           deletedAgentRosterIds: remote.deletedAgentRosterIds || [],
           agentRosterSeeded: !!remote.agentRosterSeeded,
-          teamLeadNames: remote.teamLeadNames || []
+          teamLeadNames: remote.teamLeadNames || [],
+          attendanceLogs: remote.attendanceLogs || [],
+          attendanceUploadMeta: remote.attendanceUploadMeta || null,
+          deletedAttendanceLogIds: remote.deletedAttendanceLogIds || [],
+          attendancePolicyOverrides: remote.attendancePolicyOverrides || {},
+          attendanceNotes: remote.attendanceNotes || {}
         };
         STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -1368,7 +1395,12 @@ function seedState(){
     agentRoster: [],
     deletedAgentRosterIds: [],
     agentRosterSeeded: false,
-    teamLeadNames: []
+    teamLeadNames: [],
+    attendanceLogs: [],
+    attendanceUploadMeta: null,
+    deletedAttendanceLogIds: [],
+    attendancePolicyOverrides: {},
+    attendanceNotes: {}
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -1495,6 +1527,7 @@ async function ensureAgentRosterSeed(){
 function allMonthsUsed(){
   const set = new Set(STATE.records.map(r=>r.month));
   (STATE.surveyScores||[]).forEach(s=>{ if(s.month) set.add(s.month); });
+  (STATE.attendanceLogs||[]).forEach(r=>{ if(r.month) set.add(r.month); });
   set.add(currentMonth);
   const now = new Date();
   set.add(monthKey(now));
@@ -1557,6 +1590,37 @@ function rosterMatchFor(typedName){
     if(byFirst.length===1) return byFirst[0];
   }
   return null;
+}
+function nameTokenSet(fullName){ return new Set(nameParts(fullName).map(nameToken).filter(Boolean)); }
+// Matches an attendance log's "SURNAME First Middle" style name against the
+// roster's "First Last" style name by comparing the set of name tokens,
+// order-independent (so word order / multi-word surnames don't matter). Falls
+// back to a subset match (one name missing a middle name) when the sets
+// aren't identical, but only when it's unambiguous.
+function rosterMatchForAttendanceName(empName){
+  const empSet = nameTokenSet(empName);
+  if(!empSet.size) return null;
+  const roster = STATE.agentRoster||[];
+  const exact = roster.filter(a=>{
+    const rSet = nameTokenSet(a.name);
+    if(rSet.size !== empSet.size) return false;
+    for(const t of empSet) if(!rSet.has(t)) return false;
+    return true;
+  });
+  if(exact.length===1) return exact[0];
+  if(exact.length>1) return null;
+  const scored = roster.map(a=>{
+    const rSet = nameTokenSet(a.name);
+    const smaller = empSet.size<=rSet.size ? empSet : rSet;
+    const larger = empSet.size<=rSet.size ? rSet : empSet;
+    let overlap = 0;
+    smaller.forEach(t=>{ if(larger.has(t)) overlap++; });
+    return { a, isSubset: overlap===smaller.size, sizeDiff: Math.abs(empSet.size-rSet.size), overlap };
+  }).filter(x=>x.isSubset && x.overlap>=2);
+  if(!scored.length) return null;
+  scored.sort((x,y)=>x.sizeDiff-y.sizeDiff);
+  const tiedBest = scored.filter(x=>x.sizeDiff===scored[0].sizeDiff);
+  return tiedBest.length===1 ? tiedBest[0].a : null;
 }
 // Distinct agents a support has logged an Agent Review/Commendation entry for,
 // grouped by the agent's roster location. Agents that can't be confidently
@@ -1888,6 +1952,313 @@ async function applyMasterScheduleUpload(rows){
   await saveState();
   return { added, updated };
 }
+
+/* ---------------------- ATTENDANCE IMPORT (daily login/remarks log) ---------------------- */
+const ATTENDANCE_CATEGORIES = {
+  PRESENT: 'Present (Login)',
+  RESTDAY: 'Rest Day',
+  VL: 'Vacation Leave',
+  EL: 'Emergency Leave',
+  SL: 'Sick Leave',
+  PL: 'Paternity Leave',
+  HOLIDAY: 'Holiday',
+  ABSENT: 'Absent / No Login',
+  OTHER: 'Other'
+};
+// Normalizes the free-text "Remarks" column from the daily attendance export into
+// one of the categories above. "...-Present" variants mean the person actually
+// logged in that day (on a restday/holiday), so those count as Present, not as
+// the restday/holiday itself.
+function classifyAttendanceRemark(remark){
+  const r = (remark||'').trim().toLowerCase();
+  if(!r) return 'OTHER';
+  if(r.includes('present')) return 'PRESENT';
+  if(r.includes('no logout')) return 'PRESENT';
+  if(r.includes('no login')) return 'NO_LOGIN';
+  if(r === 'absent') return 'ABSENT';
+  if(r.includes('vacation leave')) return 'VL';
+  if(r.includes('emergency leave') || r.startsWith('el')) return 'EL';
+  if(r.includes('sick leave') || r.startsWith('sl')) return 'SL';
+  if(r.includes('paternity leave')) return 'PL';
+  if(r.includes('restday')) return 'RESTDAY';
+  if(r.includes('holiday')) return 'HOLIDAY';
+  return 'OTHER';
+}
+// Converts whatever shape a date cell comes through as (JS Date, Excel serial
+// number, or an already-formatted "YYYY-MM-DD" string) into a plain ISO date.
+function normalizeAttendanceDate(value){
+  if(!value) return null;
+  if(value instanceof Date && !isNaN(value)) return value.toISOString().slice(0,10);
+  if(typeof value === 'number'){
+    const parsed = XLSX.SSF ? XLSX.SSF.parse_date_code(value) : null;
+    if(parsed) return `${parsed.y}-${String(parsed.m).padStart(2,'0')}-${String(parsed.d).padStart(2,'0')}`;
+    return null;
+  }
+  const str = String(value).trim();
+  const m = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  const m2 = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m2) return `${m2[3]}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`;
+  return null;
+}
+// Title-cases a "SURNAME First Middle" style name from the export into something
+// easier to read elsewhere in the UI (display-only, the raw name is still kept).
+function toTitleCaseName(name){
+  return (name||'').toLowerCase().replace(/\b[a-z]/g, c=>c.toUpperCase()).replace(/\s+/g,' ').trim();
+}
+function parseAttendanceWorkbook(arrayBuffer){
+  const wb = XLSX.read(arrayBuffer, { type:'array', cellDates:true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  // Some exports have a title/date row above the real header row, so the header
+  // row isn't always row 1 — scan the first several rows to find the one that
+  // actually contains an EmpName-style column before parsing data from it.
+  const grid = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+  const looksLikeNameHeader = c => {
+    const v = String(c||'').trim().toLowerCase();
+    return v==='empname' || v==='employee name' || v==='emp name' || v==='agent name';
+  };
+  let headerRowIdx = -1;
+  for(let i=0; i<Math.min(grid.length, 15); i++){
+    if((grid[i]||[]).some(looksLikeNameHeader)){ headerRowIdx = i; break; }
+  }
+  if(headerRowIdx===-1) return [];
+  const headers = (grid[headerRowIdx]||[]).map(c=>String(c||'').trim());
+  const findHeader = (...candidates) => headers.find(h=>candidates.includes(h.toLowerCase()));
+  const nameKey = findHeader('empname','employee name','emp name','agent name');
+  const dateKey = findHeader('date1','date','login date','work date');
+  const remarksKey = findHeader('remarks','remark','status','attendance status','dtr remarks');
+  const out = [];
+  for(let i=headerRowIdx+1; i<grid.length; i++){
+    const rawRow = grid[i];
+    if(!rawRow || !rawRow.length) continue;
+    const row = {};
+    headers.forEach((h,idx)=>{ row[h] = rawRow[idx]; });
+    const empName = nameKey ? String(row[nameKey]||'').trim() : '';
+    const date = dateKey ? normalizeAttendanceDate(row[dateKey]) : null;
+    if(!empName || !date) continue;
+    out.push({
+      empName,
+      date,
+      category: classifyAttendanceRemark(remarksKey ? row[remarksKey] : '')
+    });
+  }
+  return out;
+}
+// Full-replace model: the daily export is a cumulative dump across employees and
+// months, so a re-upload replaces the whole attendance log rather than merging
+// month-by-month. Old rows are tracked as deleted (same pattern used for survey
+// uploads) so a synced copy can't resurrect them and double-count attendance.
+async function applyAttendanceUpload(rows, fileName){
+  const uploadId = uid('att');
+  const now = Date.now();
+  STATE.deletedAttendanceLogIds = STATE.deletedAttendanceLogIds || [];
+  (STATE.attendanceLogs||[]).forEach(r=>{
+    if(!STATE.deletedAttendanceLogIds.includes(r.id)) STATE.deletedAttendanceLogIds.push(r.id);
+  });
+  STATE.attendanceLogs = rows.map(r=>({
+    id: uid('alog'),
+    empName: r.empName,
+    date: r.date,
+    month: r.date.slice(0,7),
+    category: r.category,
+    uploadId
+  }));
+  STATE.attendanceUploadMeta = { uploadId, fileName: fileName||'', uploadedAt: now, rowCount: rows.length };
+  await saveState();
+  return { count: rows.length };
+}
+async function clearAttendanceLogs(){
+  STATE.deletedAttendanceLogIds = STATE.deletedAttendanceLogIds || [];
+  (STATE.attendanceLogs||[]).forEach(r=>{
+    if(!STATE.deletedAttendanceLogIds.includes(r.id)) STATE.deletedAttendanceLogIds.push(r.id);
+  });
+  STATE.attendanceLogs = [];
+  STATE.attendanceUploadMeta = null;
+  await saveState();
+}
+function addDaysToDateStr(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+// Groups a sorted list of unique "YYYY-MM-DD" absence dates into consecutive-day
+// runs, so a 3-day stretch of absences shows up as one streak instead of three
+// separate entries. When dayCategoryMap (date -> category) is supplied, a gap
+// made up entirely of Rest Day(s) doesn't break the streak \u2014 e.g. Sick Leave,
+// then a Rest Day, then Absent still counts as one continuous occurrence,
+// since a Rest Day was never a scheduled work day. Any other day in the gap
+// (Present, VL, etc.) still breaks the streak as normal.
+function computeAbsenceStreaks(sortedDates, dayCategoryMap){
+  const streaks = [];
+  let start = null, end = null;
+  sortedDates.forEach(d=>{
+    if(start === null){ start = d; end = d; return; }
+    const gapDays = Math.round((new Date(d+'T00:00:00') - new Date(end+'T00:00:00'))/86400000);
+    let bridges = gapDays === 1;
+    if(!bridges && gapDays > 1 && dayCategoryMap){
+      bridges = true;
+      for(let g=1; g<gapDays; g++){
+        if(dayCategoryMap.get(addDaysToDateStr(end, g)) !== 'RESTDAY'){ bridges = false; break; }
+      }
+    }
+    if(bridges){ end = d; }
+    else { streaks.push({ start, end }); start = d; end = d; }
+  });
+  if(start !== null) streaks.push({ start, end });
+  return streaks;
+}
+// Per-employee attendance summary for a given month (or all months when month is
+// null): login/present days, rest days, VL/EL/SL counts, absence dates, and the
+// absence streaks within that set so repeated/consecutive absences stand out.
+function attendanceSummaryByEmployee(month){
+  const byEmp = new Map();
+  const dayCategoryByEmp = new Map();
+  (STATE.attendanceLogs||[])
+    .filter(r=>!month || r.month===month)
+    .forEach(r=>{
+      if(!byEmp.has(r.empName)) byEmp.set(r.empName, { empName:r.empName, present:0, restday:0, vl:0, el:0, sl:0, pl:0, holiday:0, noLogin:0, other:0, absentDates:[] });
+      const bucket = byEmp.get(r.empName);
+      if(!dayCategoryByEmp.has(r.empName)) dayCategoryByEmp.set(r.empName, new Map());
+      dayCategoryByEmp.get(r.empName).set(r.date, r.category);
+      if(r.category==='PRESENT') bucket.present++;
+      else if(r.category==='RESTDAY') bucket.restday++;
+      else if(r.category==='VL') bucket.vl++;
+      else if(r.category==='EL') bucket.el++;
+      else if(r.category==='SL'){ bucket.sl++; bucket.absentDates.push(r.date); }
+      else if(r.category==='PL') bucket.pl++;
+      else if(r.category==='HOLIDAY') bucket.holiday++;
+      else if(r.category==='ABSENT') bucket.absentDates.push(r.date);
+      else if(r.category==='NO_LOGIN') bucket.noLogin++;
+      else bucket.other++;
+    });
+  return Array.from(byEmp.values()).map(b=>{
+    const sortedAbsences = Array.from(new Set(b.absentDates)).sort();
+    const dayCategoryMap = dayCategoryByEmp.get(b.empName);
+    const streaks = computeAbsenceStreaks(sortedAbsences, dayCategoryMap);
+    const longestStreak = streaks.reduce((max,s)=>{
+      const len = Math.round((new Date(s.end+'T00:00:00') - new Date(s.start+'T00:00:00'))/86400000) + 1;
+      return Math.max(max, len);
+    }, 0);
+    // "Absences" is the number of distinct absence occurrences, not a raw day
+    // count, and is strictly limited to "Absent" and "Sick Leave" remarks \u2014
+    // "No Login" is tracked separately (bucket.noLogin) and never counts here.
+    // A 3-day run of consecutive Absent/Sick Leave days is one occurrence; if
+    // the person is present in between and then absent again, that's a second
+    // occurrence. A Rest Day sitting in between does not break the occurrence
+    // (it's not a scheduled work day), but a Present or VL day in between does.
+    return { ...b, absentDates: sortedAbsences, totalAbsentDays: sortedAbsences.length, absences: streaks.length, streaks, longestStreak };
+  }).sort((a,b)=>a.empName.localeCompare(b.empName));
+}
+// Distinct months actually present in the uploaded attendance log, sorted
+// ascending — used to populate the From/To range pickers for the trend view.
+function attendanceMonthsAvailable(){
+  return Array.from(new Set((STATE.attendanceLogs||[]).map(r=>r.month).filter(Boolean))).sort();
+}
+// Per-employee absence occurrence counts for each month in [fromMonth, toMonth],
+// reusing attendanceSummaryByEmployee's occurrence logic for every month in the
+// range so the monthly trend view and the single-month summary always agree.
+function attendanceTrendData(fromMonth, toMonth){
+  const allMonths = attendanceMonthsAvailable();
+  const months = allMonths.filter(m => (!fromMonth || m>=fromMonth) && (!toMonth || m<=toMonth));
+  const byEmp = new Map();
+  months.forEach(m=>{
+    attendanceSummaryByEmployee(m).forEach(emp=>{
+      if(!byEmp.has(emp.empName)) byEmp.set(emp.empName, { empName: emp.empName, perMonth:{}, perMonthStreaks:{}, total:0 });
+      const bucket = byEmp.get(emp.empName);
+      bucket.perMonth[m] = emp.absences;
+      bucket.perMonthStreaks[m] = emp.streaks;
+      bucket.total += emp.absences;
+    });
+  });
+  const employees = Array.from(byEmp.values()).sort((a,b)=> b.total-a.total || a.empName.localeCompare(b.empName));
+  return { months, employees };
+}
+function absenceCountBadgeClass(n){ return n>=2 ? 'red' : (n===1 ? 'amber' : 'neutral'); }
+// Turns a list of absence streaks into a short, readable string of dates/
+// ranges, e.g. "Aug 1, 2026, Aug 10 \u2013 Aug 12, 2026 (3d)" \u2014 used for hover
+// tooltips and for explaining why the onsite policy triggered.
+function formatStreakList(streaks){
+  if(!streaks || !streaks.length) return 'No absences';
+  return streaks.map(s=>{
+    const len = Math.round((new Date(s.end+'T00:00:00') - new Date(s.start+'T00:00:00'))/86400000) + 1;
+    return s.start===s.end ? fmtDate(s.start) : `${fmtDate(s.start)} \u2013 ${fmtDate(s.end)} (${len}d)`;
+  }).join(', ');
+}
+// Attendance/onsite policy: looks at an employee's FULL absence history (not
+// just the months currently shown) and checks every 30-day window ending on
+// an absence occurrence. 2 occurrences in any such window => onsite for two
+// weeks; 3+ => onsite until further notice, monitored for 60 days from the
+// most recent absence before a hybrid recommendation can be made. Takes the
+// employee's all-time entry from attendanceSummaryByEmployee(null) so this
+// doesn't get recomputed once per employee. "clearedThrough" is an optional
+// manual override date (set via the "Mark as OK" button once the onsite
+// requirement has been completed) \u2014 it resets the status to OK as long as
+// no absence newer than that date has shown up since; a fresh absence after
+// the override date re-triggers the flag automatically.
+function evaluateAttendancePolicy(fullHistoryEntry, clearedThrough){
+  if(!fullHistoryEntry || !fullHistoryEntry.streaks.length){
+    return { level:0, label:'OK', reason:'No absence occurrences on file.', monitorUntil:null, canOverride:false, overridden:false };
+  }
+  const occurrences = [...fullHistoryEntry.streaks].sort((a,b)=>a.start.localeCompare(b.start));
+  // Find the worst (highest-count) 30-day window; when multiple windows tie
+  // for that count, keep the most recent one (occurrences are processed in
+  // ascending date order) so the override check below sees the latest
+  // triggering date, not an earlier one.
+  let best = { count:0, occurrences:[] };
+  occurrences.forEach(o=>{
+    const windowStart = addDaysToDateStr(o.start, -29);
+    const windowOcc = occurrences.filter(x=>x.start>=windowStart && x.start<=o.start);
+    if(windowOcc.length >= best.count && windowOcc.length>0) best = { count: windowOcc.length, occurrences: windowOcc };
+  });
+  const lastOccurrenceEnd = occurrences[occurrences.length-1].end;
+  const triggerEnd = best.occurrences.length ? best.occurrences[best.occurrences.length-1].end : null;
+  if(best.count>=2 && clearedThrough && triggerEnd && clearedThrough>=triggerEnd){
+    return {
+      level:0, label:'OK (Resolved)',
+      reason:`Onsite requirement completed \u2014 marked resolved on ${fmtDate(clearedThrough)}. Originally triggered by ${best.count} instance${best.count===1?'':'s'}: ${formatStreakList(best.occurrences)}.`,
+      monitorUntil:null, canOverride:false, overridden:true
+    };
+  }
+  if(best.count>=3){
+    return {
+      level:3, label:'Onsite Until Further Notice',
+      reason:`${best.count} absence instances within a 30-day window: ${formatStreakList(best.occurrences)}.`,
+      monitorUntil: addDaysToDateStr(lastOccurrenceEnd, 60), canOverride:true, overridden:false
+    };
+  }
+  if(best.count===2){
+    return {
+      level:2, label:'Onsite for 2 Weeks',
+      reason:`2 absence instances within a 30-day window: ${formatStreakList(best.occurrences)}.`,
+      monitorUntil: null, canOverride:true, overridden:false
+    };
+  }
+  return {
+    level:0, label:'OK',
+    reason: `${occurrences.length} absence instance${occurrences.length===1?'':'s'} on file \u2014 below the 2-instance threshold.`,
+    monitorUntil:null, canOverride:false, overridden:false
+  };
+}
+// Small inline SVG bar chart (no external chart library) showing one bar per
+// month so an upward run of absences is visible at a glance per employee.
+// Hovering a bar shows that month's actual absence date(s) via the native
+// SVG <title> tooltip.
+function renderAbsenceSparkline(counts, months, streaksPerMonth){
+  const barW = 12, gap = 4, h = 32;
+  const max = Math.max(1, ...counts);
+  const width = Math.max(1, counts.length) * (barW+gap);
+  const bars = counts.map((c,i)=>{
+    const barH = c>0 ? Math.max(3, Math.round((c/max)*h)) : 2;
+    const x = i*(barW+gap);
+    const y = h-barH;
+    const fill = c>=2 ? 'var(--red)' : (c===1 ? 'var(--amber)' : 'var(--rule)');
+    const monthLbl = (months && months[i]) ? monthLabel(months[i]) : '';
+    const dateInfo = (streaksPerMonth && streaksPerMonth[i]) ? formatStreakList(streaksPerMonth[i]) : 'No absences';
+    const tooltip = `${monthLbl}: ${dateInfo}`;
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="2" fill="${fill}"><title>${esc(tooltip)}</title></rect>`;
+  }).join('');
+  return `<svg width="${width}" height="${h}" viewBox="0 0 ${width} ${h}" style="display:block;">${bars}</svg>`;
+}
 async function applySurveyUpload(month, rows, fileName){
   const uploadId = uid('svy');
   const now = Date.now();
@@ -1961,6 +2332,7 @@ const PAGE_META = {
   agentReviews: ['Agent Reviews', 'Master log of commendations and feedback from agents across the team'],
   teamLeads: ['Team Leads', 'How many agents each team lead has, and who has been reviewed'],
   agentRoster: ['Agent Roster', 'Add, update, or remove agents and reassign their team lead or location'],
+  attendanceImport: ['Attendance Import', 'Upload the daily attendance log to see logins, rest days, leaves, and absence streaks by month'],
 };
 
 const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
@@ -1969,6 +2341,10 @@ const SEVERITY_LEVELS = ['Low','Medium','High','Critical'];
 const IMPACT_LEVELS = ['Low','Medium','High','Significant'];
 let agentReviewKind = 'review';
 let editingAgentReviewId = null;
+let attendanceTrendFrom = null;
+let attendanceTrendTo = null;
+let attendanceActiveTab = 'summary';
+let attendanceTrendTeamLeadFilter = '';
 
 function setView(view, opts={}){
   currentView = view;
@@ -2004,6 +2380,7 @@ const NAV_SUPERVISOR = [
   { group:'Admin', items:[
     { view:'supports', label:'Manage Supports', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' },
     { view:'agentRoster', label:'Agent Roster', icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v5"/>' },
+    { view:'attendanceImport', label:'Attendance Import', icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
   ]},
 ];
 const NAV_SUPPORT = [
@@ -2124,6 +2501,7 @@ function openSupervisorModal(){
 function render(){
   populateGlobalMonth();
   const c = document.getElementById('content');
+  c.classList.toggle('content-wide', currentView==='attendanceImport');
   if(currentView==='dashboard') c.innerHTML = renderDashboard();
   else if(currentView==='counts') c.innerHTML = renderCounts();
   else if(currentView==='new') c.innerHTML = renderNewFeedback();
@@ -2134,6 +2512,7 @@ function render(){
   else if(currentView==='agentReviews') c.innerHTML = renderAgentReviews();
   else if(currentView==='teamLeads') c.innerHTML = renderTeamLeads();
   else if(currentView==='agentRoster') c.innerHTML = renderAgentRosterSettings();
+  else if(currentView==='attendanceImport') c.innerHTML = renderAttendanceImport();
   attachViewHandlers();
 }
 
@@ -3471,6 +3850,222 @@ function renderAgentRosterSettings(){
   `;
 }
 
+/* ======================================================================
+   ATTENDANCE IMPORT (Supervisor: upload daily attendance log)
+   ====================================================================== */
+function renderAttendanceImport(){
+  const meta = STATE.attendanceUploadMeta;
+
+  const uploadCard = `
+  <div class="card">
+    <div class="card-header"><h3>Upload Attendance Log</h3><span style="font-size:11.5px; color:var(--slate-soft);">.csv or .xlsx export with EmpName, Date1, Remarks</span></div>
+    <div class="card-body">
+      <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Upload the daily attendance/timekeeping export (the same file used for login and leave tracking). It\u2019s read automatically by employee and date, and summarized by month below using the month selector at the top of the page. Rest Day, Vacation Leave, Emergency Leave, and Present (login) days are counted per employee. Absences is strictly limited to "Absent" and "Sick Leave" remarks \u2014 "No Login" is tracked separately and never counts as an absence, and Present-Late / Present-Undertime / Restday-Present still count as a login day. Uploading a new file replaces the previous attendance data.</p>
+      <div class="field">
+        <label class="field-label">Attendance File (.csv, .xls, .xlsx)</label>
+        <input type="file" id="attendanceUploadFile" accept=".csv,.xls,.xlsx">
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn brass" id="attendanceUploadBtn">Upload &amp; Apply</button>
+        ${meta ? '<button type="button" class="btn danger" id="attendanceClearBtn">Clear Attendance Data</button>' : ''}
+      </div>
+      <p class="field-hint" id="attendanceUploadHint" style="margin-top:12px;"></p>
+      ${meta ? `<p class="field-hint" style="margin-top:6px;">Currently loaded: <strong>${esc(meta.fileName||'attendance file')}</strong> &middot; ${meta.rowCount} rows &middot; uploaded ${new Date(meta.uploadedAt).toLocaleString('en-US',{month:'short',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit'})}</p>` : ''}
+    </div>
+  </div>`;
+
+  const tabBar = `
+  <div style="display:flex; gap:8px; margin-top:20px;">
+    <button type="button" class="btn ${attendanceActiveTab==='trend'?'ghost':'brass'}" data-attendance-tab="summary">Monthly Attendance Summary</button>
+    <button type="button" class="btn ${attendanceActiveTab==='trend'?'brass':'ghost'}" data-attendance-tab="trend">Monthly Absence Trend</button>
+  </div>`;
+
+  const tabContent = attendanceActiveTab==='trend' ? renderAttendanceTrendCard() : renderAttendanceSummaryCard();
+
+  return `${uploadCard}${tabBar}${tabContent}`;
+}
+// Tab 1: per-employee monthly breakdown for the month selected at the top of
+// the page (Present, Rest Day, VL, EL, Absences, Longest Streak, dates).
+function renderAttendanceSummaryCard(){
+  const meta = STATE.attendanceUploadMeta;
+  const summary = attendanceSummaryByEmployee(currentMonth);
+
+  const rows = summary.map(emp=>{
+    const streakBadge = emp.longestStreak>=3 ? 'red' : (emp.longestStreak===2 ? 'amber' : 'neutral');
+    const streakLabel = emp.longestStreak>=2 ? `${emp.longestStreak}-day streak` : (emp.absences ? 'No streak' : '\u2014');
+    const absenceDetail = emp.absentDates.length ? `
+      <details>
+        <summary style="cursor:pointer; color:var(--brass-dark); font-weight:600; font-size:12px;">View dates</summary>
+        <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">
+          ${emp.streaks.map(s=>{
+            const len = Math.round((new Date(s.end+'T00:00:00') - new Date(s.start+'T00:00:00'))/86400000) + 1;
+            const label = s.start===s.end ? fmtDate(s.start) : `${fmtDate(s.start)} \u2013 ${fmtDate(s.end)}`;
+            return `<span class="badge ${len>=2?'red':'neutral'}">${esc(label)}${len>=2?` (${len}d)`:''}</span>`;
+          }).join('')}
+        </div>
+      </details>` : '<span style="color:var(--slate-soft);">\u2014</span>';
+    return `<tr data-attendance-row data-attendance-search="${esc(toTitleCaseName(emp.empName).toLowerCase())}">
+      <td style="font-weight:600;">${esc(toTitleCaseName(emp.empName))}</td>
+      <td class="num">${emp.present}</td>
+      <td class="num">${emp.restday}</td>
+      <td class="num">${emp.vl}</td>
+      <td class="num">${emp.el}</td>
+      <td class="num">${emp.absences ? `<span class="badge ${emp.absences>=2?'amber':'neutral'}">${emp.absences}</span>` : '<span style="color:var(--slate-soft);">0</span>'}</td>
+      <td class="num"><span class="badge ${streakBadge}">${streakLabel}</span></td>
+      <td>${absenceDetail}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Monthly Attendance Summary</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">${monthLabel(currentMonth)} &middot; use the Month selector at the top to change it</span>
+    </div>
+    <div class="card-body">
+      <div class="field" style="max-width:320px;">
+        <label class="field-label">Search by Agent Name</label>
+        <input type="text" id="attendanceSearchInput" placeholder="Start typing an agent\u2019s name\u2026">
+      </div>
+      <div style="overflow-x:auto;">
+      ${summary.length ? `
+      <table id="attendanceTable">
+        <thead><tr><th>Employee</th><th>Present</th><th>Rest Day</th><th>Vacation Leave</th><th>Emergency Leave</th><th>Absences</th><th>Longest Streak</th><th>Absence Dates</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="field-hint" id="attendanceSearchEmpty" style="display:none;">No agents match that search.</p>
+      <p class="field-hint" style="margin-top:14px;">\u201cAbsences\u201d is strictly \u201cAbsent\u201d and \u201cSick Leave\u201d remarks \u2014 \u201cNo Login\u201d is excluded. It also counts occurrences, not raw days: a run of consecutive Absent/Sick Leave days counts as 1. A Rest Day in between doesn\u2019t break the streak (e.g. Sick Leave \u2192 Rest Day \u2192 Absent still counts as 1 occurrence), but a Present or Vacation Leave day in between does \u2014 that starts a new, separate occurrence. \u201cLongest Streak\u201d is the longest single run, in days.</p>
+      ` : emptyState('No attendance data for this month', meta ? `Nothing in the uploaded file falls in ${monthLabel(currentMonth)} \u2014 try a different month above.` : 'Upload an attendance file above to see the monthly breakdown.', null, null)}
+      </div>
+    </div>
+  </div>
+  `;
+}
+// Lets the supervisor pick a month range (e.g. June through October) and see,
+// per agent, how absence occurrences trended across those months \u2014 both as
+// exact counts (colored by severity) and as a small inline bar chart.
+function renderAttendanceTrendCard(){
+  const availableMonths = attendanceMonthsAvailable();
+  if(!availableMonths.length){
+    return `<div class="card" style="margin-top:20px;"><div class="card-body">${emptyState('No attendance data yet', 'Upload an attendance file from the Monthly Attendance Summary tab to see the trend here.', null, null)}</div></div>`;
+  }
+  if(!attendanceTrendFrom || !availableMonths.includes(attendanceTrendFrom)) attendanceTrendFrom = availableMonths[0];
+  if(!attendanceTrendTo || !availableMonths.includes(attendanceTrendTo)) attendanceTrendTo = availableMonths[availableMonths.length-1];
+  if(attendanceTrendFrom > attendanceTrendTo){ const tmp = attendanceTrendFrom; attendanceTrendFrom = attendanceTrendTo; attendanceTrendTo = tmp; }
+
+  const trend = attendanceTrendData(attendanceTrendFrom, attendanceTrendTo);
+  const fromOptions = availableMonths.map(m=>`<option value="${m}" ${m===attendanceTrendFrom?'selected':''}>${monthLabel(m)}</option>`).join('');
+  const toOptions = availableMonths.map(m=>`<option value="${m}" ${m===attendanceTrendTo?'selected':''}>${monthLabel(m)}</option>`).join('');
+
+  const teamLeadFilterOptions = rosterTeamLeads().map(tl=>`<option value="${esc(tl)}" ${attendanceTrendTeamLeadFilter===tl?'selected':''}>${esc(tl)}</option>`).join('');
+
+  // Policy status looks at each employee's FULL absence history (not just the
+  // selected range), computed once here rather than once per employee.
+  const fullHistoryByName = new Map(attendanceSummaryByEmployee(null).map(e=>[e.empName, e]));
+
+  // Resolve each employee's Team Lead once, so it's used consistently for
+  // both display and the Team Lead filter below.
+  const employeesWithTeamLead = trend.employees.map(emp=>{
+    const rosterMatch = rosterMatchForAttendanceName(emp.empName);
+    return { ...emp, teamLead: rosterMatch ? rosterMatch.teamLead : null };
+  });
+  const filteredEmployees = !attendanceTrendTeamLeadFilter ? employeesWithTeamLead
+    : attendanceTrendTeamLeadFilter==='__unmatched__' ? employeesWithTeamLead.filter(e=>!e.teamLead)
+    : employeesWithTeamLead.filter(e=>e.teamLead===attendanceTrendTeamLeadFilter);
+
+  // Fixed pixel widths per column so none of them (especially Notes) get
+  // squeezed down to almost nothing when the table is wider than the visible
+  // area \u2014 the wrapping div scrolls horizontally instead via the table's
+  // min-width below.
+  const trendColWidths = { employee:140, teamLead:130, month:58, total:58, trend:90, onsiteStatus:140, why:240, notes:280 };
+  const trendTableMinWidth = trendColWidths.employee + trendColWidths.teamLead + (trend.months.length*trendColWidths.month) + trendColWidths.total + trendColWidths.trend + trendColWidths.onsiteStatus + trendColWidths.why + trendColWidths.notes + 24;
+
+  const rows = filteredEmployees.map(emp=>{
+    const counts = trend.months.map(m=>emp.perMonth[m]||0);
+    const streaksPerMonth = trend.months.map(m=>emp.perMonthStreaks[m]||[]);
+    const monthCells = trend.months.map((m,i)=>{
+      const c = emp.perMonth[m]||0;
+      const title = c ? formatStreakList(streaksPerMonth[i]) : '';
+      return `<td class="num" style="padding:11px 6px;">${c ? `<span class="badge ${absenceCountBadgeClass(c)}" title="${esc(title)}">${c}</span>` : '<span style="color:var(--slate-soft);">0</span>'}</td>`;
+    }).join('');
+    const clearedThrough = (STATE.attendancePolicyOverrides||{})[emp.empName]?.overriddenAt || null;
+    const policy = evaluateAttendancePolicy(fullHistoryByName.get(emp.empName), clearedThrough);
+    const policyBadgeClass = policy.level===3 ? 'red' : (policy.level===2 ? 'amber' : 'green');
+    const actionBtn = policy.canOverride
+      ? `<button type="button" class="btn ghost sm" style="margin-top:6px;" data-mark-resolved="${esc(emp.empName)}">Mark as OK</button>`
+      : (policy.overridden
+        ? `<button type="button" class="btn ghost sm" style="margin-top:6px;" data-reopen-status="${esc(emp.empName)}">Reopen</button>`
+        : '');
+    const teamLeadCell = emp.teamLead
+      ? `${esc(emp.teamLead)}`
+      : '<span style="color:var(--slate-soft);">Unmatched</span>';
+    const noteText = (STATE.attendanceNotes||{})[emp.empName]?.text || '';
+    return `<tr>
+      <td style="font-weight:600;">${esc(toTitleCaseName(emp.empName))}</td>
+      <td>${teamLeadCell}</td>
+      ${monthCells}
+      <td class="num" style="font-weight:700; padding:11px 6px;">${emp.total}</td>
+      <td>${renderAbsenceSparkline(counts, trend.months, streaksPerMonth)}</td>
+      <td><span class="badge ${policyBadgeClass}">${esc(policy.label)}</span></td>
+      <td style="font-size:12px; color:var(--slate); white-space:normal; word-wrap:break-word;">${esc(policy.reason)}${policy.monitorUntil ? `<br><span style="color:var(--slate-soft);">Monitor until ${fmtDate(policy.monitorUntil)}, then the lead can recommend hybrid again.</span>` : ''}${actionBtn ? `<br>${actionBtn}` : ''}</td>
+      <td>
+        <textarea class="attendance-note-input" data-emp-name="${esc(emp.empName)}" placeholder="e.g. Done sending onsite requirement to the agent, required to report for onsite work from Sept 24 to Nov 24." style="min-height:80px; font-size:12.5px;">${esc(noteText)}</textarea>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Monthly Absence Trend</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">Choose a month range to see who\u2019s trending up</span>
+    </div>
+    <div class="card-body">
+      <div class="field-grid" style="max-width:780px; grid-template-columns:repeat(3,1fr);">
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">From</label>
+          <select id="attendanceTrendFromSelect">${fromOptions}</select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">To</label>
+          <select id="attendanceTrendToSelect">${toOptions}</select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">Team Lead</label>
+          <select id="attendanceTrendTeamLeadSelect">
+            <option value="">All Team Leads</option>
+            <option value="__unmatched__" ${attendanceTrendTeamLeadFilter==='__unmatched__'?'selected':''}>Unmatched / Not on Roster</option>
+            ${teamLeadFilterOptions}
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto; margin-top:18px;">
+        ${filteredEmployees.length ? `
+        <table style="table-layout:fixed; min-width:${trendTableMinWidth}px;">
+          <colgroup>
+            <col style="width:${trendColWidths.employee}px;">
+            <col style="width:${trendColWidths.teamLead}px;">
+            ${trend.months.map(()=>`<col style="width:${trendColWidths.month}px;">`).join('')}
+            <col style="width:${trendColWidths.total}px;">
+            <col style="width:${trendColWidths.trend}px;">
+            <col style="width:${trendColWidths.onsiteStatus}px;">
+            <col style="width:${trendColWidths.why}px;">
+            <col style="width:${trendColWidths.notes}px;">
+          </colgroup>
+          <thead><tr><th>Employee</th><th>Team Lead</th>${trend.months.map(m=>`<th style="padding:9px 6px;">${monthLabel(m).slice(0,3).toUpperCase()} '${m.slice(2,4)}</th>`).join('')}<th style="padding:9px 6px;">Total</th><th>Trend</th><th>Onsite Status</th><th>Why</th><th>Notes</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="field-hint" style="margin-top:14px;">Sorted by total absence occurrences in the selected range, highest first. Each bar in the Trend column is one month, left to right \u2014 taller and redder means more absence occurrences that month; hover a bar or a month\u2019s count to see the actual absence date(s).</p>
+        <p class="field-hint" style="margin-top:8px;"><strong>Team Lead</strong> is matched automatically from the Agent Roster tab; it shows \u201cUnmatched\u201d if the name on the attendance file can\u2019t be confidently matched there yet. Use the <strong>Team Lead</strong> filter above to check just one lead\u2019s agents at a time.</p>
+        <p class="field-hint" style="margin-top:8px;"><strong>Onsite Status</strong> is based on the employee\u2019s full attendance history, not just the months shown above: 2 absence instances within any 30-day window \u2192 onsite for two weeks (regardless of reason, unless proven emergency); 3 or more within any 30-day window \u2192 onsite until further notice, with the lead monitoring attendance for 60 days from the most recent absence before recommending hybrid again. Once the onsite requirement has been completed, click <strong>Mark as OK</strong> to reset the status \u2014 it\u2019ll flag again automatically if a new absence shows up afterward. Use <strong>Reopen</strong> to undo a resolved status if it was cleared by mistake.</p>
+        <p class="field-hint" style="margin-top:8px;"><strong>Notes</strong> saves automatically as you type and stays on the employee\u2019s row \u2014 use it to log things like when the onsite requirement notice was sent and the dates covered.</p>
+        ` : emptyState('No agents match this filter', attendanceTrendTeamLeadFilter ? 'Try "All Team Leads" above, or a different From/To range.' : 'Try a wider From/To range above.', null, null)}
+      </div>
+    </div>
+  </div>
+  `;
+}
+
 /* ---------------------- SHARED EMPTY STATE ---------------------- */
 function emptyState(title, sub, gotoView, cta){
   return `<div class="empty-state">
@@ -3982,6 +4577,125 @@ function attachViewHandlers(){
       });
     });
   }
+
+  if(currentView==='attendanceImport'){
+    document.querySelectorAll('[data-attendance-tab]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        attendanceActiveTab = btn.dataset.attendanceTab;
+        render();
+      });
+    });
+    const attBtn = document.getElementById('attendanceUploadBtn');
+    if(attBtn){
+      attBtn.addEventListener('click', async ()=>{
+        const fileInput = document.getElementById('attendanceUploadFile');
+        const hint = document.getElementById('attendanceUploadHint');
+        const file = fileInput.files[0];
+        if(!file){ hint.style.color='var(--red)'; hint.textContent='Choose a .csv, .xls, or .xlsx file first.'; return; }
+        if(typeof XLSX === 'undefined'){ hint.style.color='var(--red)'; hint.textContent='Spreadsheet reader failed to load \u2014 check your connection and try again.'; return; }
+        try{
+          hint.style.color='var(--slate-soft)'; hint.textContent='Reading file\u2026';
+          const buf = await file.arrayBuffer();
+          const rows = parseAttendanceWorkbook(buf);
+          if(!rows.length){
+            hint.style.color='var(--red)';
+            hint.textContent='Couldn\u2019t find any rows with EmpName, Date1, and Remarks columns in this file.';
+            return;
+          }
+          const { count } = await applyAttendanceUpload(rows, file.name);
+          hint.style.color='var(--green)';
+          hint.textContent=`Applied ${count} attendance row${count===1?'':'s'}.`;
+          fileInput.value='';
+          render();
+          toast('Attendance log uploaded');
+        }catch(err){
+          console.error(err);
+          hint.style.color='var(--red)';
+          hint.textContent='Could not read that file \u2014 make sure it\u2019s a valid attendance export.';
+        }
+      });
+    }
+    const attClearBtn = document.getElementById('attendanceClearBtn');
+    if(attClearBtn){
+      attClearBtn.addEventListener('click', async ()=>{
+        if(!confirm('Clear all uploaded attendance data? This can\u2019t be undone \u2014 you can always upload the file again.')) return;
+        await clearAttendanceLogs();
+        render();
+        toast('Attendance data cleared');
+      });
+    }
+    const attSearch = document.getElementById('attendanceSearchInput');
+    if(attSearch){
+      attSearch.addEventListener('input', ()=>{
+        const term = attSearch.value.trim().toLowerCase();
+        const tableRows = document.querySelectorAll('#attendanceTable tbody tr[data-attendance-row]');
+        let visibleCount = 0;
+        tableRows.forEach(row=>{
+          const matches = !term || (row.dataset.attendanceSearch||'').includes(term);
+          row.style.display = matches ? '' : 'none';
+          if(matches) visibleCount++;
+        });
+        const emptyMsg = document.getElementById('attendanceSearchEmpty');
+        if(emptyMsg) emptyMsg.style.display = visibleCount===0 ? 'block' : 'none';
+      });
+    }
+    const trendFromSel = document.getElementById('attendanceTrendFromSelect');
+    if(trendFromSel){
+      trendFromSel.addEventListener('change', ()=>{
+        attendanceTrendFrom = trendFromSel.value;
+        render();
+      });
+    }
+    const trendToSel = document.getElementById('attendanceTrendToSelect');
+    if(trendToSel){
+      trendToSel.addEventListener('change', ()=>{
+        attendanceTrendTo = trendToSel.value;
+        render();
+      });
+    }
+    const trendTeamLeadSel = document.getElementById('attendanceTrendTeamLeadSelect');
+    if(trendTeamLeadSel){
+      trendTeamLeadSel.addEventListener('change', ()=>{
+        attendanceTrendTeamLeadFilter = trendTeamLeadSel.value;
+        render();
+      });
+    }
+    document.querySelectorAll('[data-mark-resolved]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const empName = btn.dataset.markResolved;
+        if(!confirm(`Mark ${toTitleCaseName(empName)}\u2019s onsite requirement as completed? Their status will reset to OK unless a new absence shows up after today.`)) return;
+        STATE.attendancePolicyOverrides = STATE.attendancePolicyOverrides || {};
+        STATE.attendancePolicyOverrides[empName] = { overriddenAt: new Date().toISOString().slice(0,10) };
+        await saveState();
+        render();
+        toast('Marked resolved \u2014 status reset to OK');
+      });
+    });
+    document.querySelectorAll('[data-reopen-status]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const empName = btn.dataset.reopenStatus;
+        delete (STATE.attendancePolicyOverrides||{})[empName];
+        await saveState();
+        render();
+        toast('Reopened \u2014 status now reflects attendance on file again');
+      });
+    });
+    document.querySelectorAll('.attendance-note-input').forEach(ta=>{
+      ta.addEventListener('change', async ()=>{
+        const empName = ta.dataset.empName;
+        STATE.attendanceNotes = STATE.attendanceNotes || {};
+        const text = ta.value;
+        if(text.trim()){
+          STATE.attendanceNotes[empName] = { text, updatedAt: Date.now() };
+        } else {
+          delete STATE.attendanceNotes[empName];
+        }
+        const ok = await saveState();
+        if(ok) toast('Note saved');
+        else toastRetry('Note saved here, but the sync failed \u2014 tap to retry.');
+      });
+    });
+  }
 }
 
 function downloadBackup(){
@@ -4029,7 +4743,12 @@ function handleRestoreFile(e){
         agentRoster: parsed.agentRoster || [],
         deletedAgentRosterIds: parsed.deletedAgentRosterIds || [],
         agentRosterSeeded: !!parsed.agentRosterSeeded,
-        teamLeadNames: parsed.teamLeadNames || []
+        teamLeadNames: parsed.teamLeadNames || [],
+        attendanceLogs: parsed.attendanceLogs || [],
+        attendanceUploadMeta: parsed.attendanceUploadMeta || null,
+        deletedAttendanceLogIds: parsed.deletedAttendanceLogIds || [],
+        attendancePolicyOverrides: parsed.attendancePolicyOverrides || {},
+        attendanceNotes: parsed.attendanceNotes || {}
       };
       const ok = await saveState();
       if(ok){ toast('Backup restored'); render(); }
@@ -4284,7 +5003,12 @@ function renderLoadFailureScreen(){
           agentRoster: parsed.agentRoster || [],
           deletedAgentRosterIds: parsed.deletedAgentRosterIds || [],
           agentRosterSeeded: !!parsed.agentRosterSeeded,
-          teamLeadNames: parsed.teamLeadNames || []
+          teamLeadNames: parsed.teamLeadNames || [],
+          attendanceLogs: parsed.attendanceLogs || [],
+          attendanceUploadMeta: parsed.attendanceUploadMeta || null,
+          deletedAttendanceLogIds: parsed.deletedAttendanceLogIds || [],
+          attendancePolicyOverrides: parsed.attendancePolicyOverrides || {},
+          attendanceNotes: parsed.attendanceNotes || {}
         };
         const ok = await saveState();
         if(ok){
