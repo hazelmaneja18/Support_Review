@@ -2131,6 +2131,15 @@ function parseAttendanceWorkbook(arrayBuffer){
   // row isn't always row 1 — scan the first several rows to find the one that
   // actually contains an EmpName-style column before parsing data from it.
   const grid = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+  // A second, formatted-text copy of the same sheet: SchedIn/TimeIn are read
+  // from THIS one instead of the raw grid above. Some exports (particularly
+  // older .xls-format files) convert cleanly to a Date object for some
+  // values but not reliably for others, and a wrong Date conversion there
+  // silently produces a wrong lateness number with no way to tell. Reading
+  // the plain display text instead (e.g. "10/28/2026 18:30:00") sidesteps
+  // that risk entirely, since parseTimeOfDayMinutes handles that text
+  // directly and has been verified against this file's real row data.
+  const textGrid = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false });
   const looksLikeNameHeader = c => {
     const v = String(c||'').trim().toLowerCase();
     return v==='empname' || v==='employee name' || v==='emp name' || v==='agent name';
@@ -2145,7 +2154,13 @@ function parseAttendanceWorkbook(arrayBuffer){
   const nameKey = findHeader('empname','employee name','emp name','agent name');
   const dateKey = findHeader('date1','date','login date','work date');
   const remarksKey = findHeader('remarks','remark','status','attendance status','dtr remarks');
-  const schedInKey = findHeader('schedin','sched in','scheduled in','sched time in','schedule in');
+  // "Schedule" is included here too for exports that show the scheduled
+  // shift as a single combined range like "8:00AM - 5:00PM" rather than a
+  // separate start-time column \u2014 parseTimeOfDayMinutes only reads the FIRST
+  // time it finds in whatever string it's given, so pointing it at that
+  // combined value still correctly pulls out just the 8:00AM start and
+  // ignores the 5:00PM end, even with a "[10/27]" date prefix in front of it.
+  const schedInKey = findHeader('schedin','sched in','scheduled in','sched time in','schedule in','schedule','sched');
   const timeInKey = findHeader('timein','time in','actual time in','login time','actual in');
   const out = [];
   for(let i=headerRowIdx+1; i<grid.length; i++){
@@ -2153,6 +2168,9 @@ function parseAttendanceWorkbook(arrayBuffer){
     if(!rawRow || !rawRow.length) continue;
     const row = {};
     headers.forEach((h,idx)=>{ row[h] = rawRow[idx]; });
+    const textRawRow = textGrid[i] || [];
+    const textRow = {};
+    headers.forEach((h,idx)=>{ textRow[h] = textRawRow[idx]; });
     const empName = nameKey ? String(row[nameKey]||'').trim() : '';
     const date = dateKey ? normalizeAttendanceDate(row[dateKey]) : null;
     if(!empName || !date) continue;
@@ -2161,13 +2179,16 @@ function parseAttendanceWorkbook(arrayBuffer){
     // it's late. SchedIn vs TimeIn is then compared only for those rows, just
     // to work out HOW MANY minutes. The file's own Late column is never used
     // for this at all, since its encoding isn't consistent and was producing
-    // wildly inflated values (close to 1440, a full day). If Remarks doesn't
-    // mention "Late", or Sched/TimeIn can't be read, or the computed gap is
-    // over 10 hours (not a plausible "late but still present" gap), the day
-    // is simply not counted (0 minutes) rather than guessed at.
+    // wildly inflated values (close to 1440, a full day). Holiday remarks
+    // (e.g. "Holiday-Present") are excluded even if "Late" also appears,
+    // since holiday attendance isn't a regular scheduled shift and isn't
+    // subject to the same tardiness policy. If Remarks doesn't mention
+    // "Late", is a Holiday remark, or Sched/TimeIn can't be read, or the
+    // computed gap is over 10 hours (not a plausible "late but still
+    // present" gap), the day is simply not counted (0 minutes).
     const remarksText = remarksKey ? String(row[remarksKey]||'') : '';
-    const remarksSayLate = /late/i.test(remarksText);
-    let lateMinutes = (remarksSayLate && schedInKey && timeInKey) ? computeLateMinutesFromSchedule(row[schedInKey], row[timeInKey]) : null;
+    const remarksSayLate = /\blate\b/i.test(remarksText) && !/holiday/i.test(remarksText);
+    let lateMinutes = (remarksSayLate && schedInKey && timeInKey) ? computeLateMinutesFromSchedule(textRow[schedInKey], textRow[timeInKey]) : null;
     if(lateMinutes===null || lateMinutes>600) lateMinutes = 0;
     out.push({
       empName,
@@ -4249,7 +4270,7 @@ function renderAttendanceImport(){
   <div class="card">
     <div class="card-header"><h3>Upload Attendance Log</h3><span style="font-size:11.5px; color:var(--slate-soft);">.csv or .xlsx export with EmpName, Date1, Remarks</span></div>
     <div class="card-body">
-      <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Upload the daily attendance/timekeeping export (the same file used for login and leave tracking). It\u2019s read automatically by employee and date, and summarized by month below using the month selector at the top of the page. Rest Day, Vacation Leave, Emergency Leave, and Present (login) days are counted per employee. Absences is strictly limited to "Absent" and "Sick Leave" remarks \u2014 "No Login" is tracked separately and never counts as an absence, and Present-Late / Present-Undertime / Restday-Present still count as a login day. The <strong>Tardiness</strong> page counts a day as late only when its <strong>Remarks</strong> says "Late" (e.g. "Present-Late"), then works out how many minutes by comparing <strong>SchedIn</strong> vs <strong>TimeIn</strong> for that day \u2014 the file\u2019s own Late column is not used at all, since its encoding isn\u2019t consistent. Uploading a new file replaces the previous attendance data.</p>
+      <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Upload the daily attendance/timekeeping export (the same file used for login and leave tracking). It\u2019s read automatically by employee and date, and summarized by month below using the month selector at the top of the page. Rest Day, Vacation Leave, Emergency Leave, and Present (login) days are counted per employee. Absences is strictly limited to "Absent" and "Sick Leave" remarks \u2014 "No Login" is tracked separately and never counts as an absence, and Present-Late / Present-Undertime / Restday-Present still count as a login day. The <strong>Tardiness</strong> page counts a day as late only when its <strong>Remarks</strong> says "Late" (e.g. "Present-Late") and isn\u2019t a Holiday remark, then works out how many minutes by comparing <strong>SchedIn</strong> vs <strong>TimeIn</strong> for that day \u2014 the file\u2019s own Late column is not used at all, since its encoding isn\u2019t consistent. Uploading a new file replaces the previous attendance data.</p>
       <div class="field">
         <label class="field-label">Attendance File (.csv, .xls, .xlsx)</label>
         <input type="file" id="attendanceUploadFile" accept=".csv,.xls,.xlsx">
@@ -4481,7 +4502,7 @@ function renderTardiness(){
   const banner = `
   <div class="card">
     <div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-      <p style="margin:0; font-size:13px; color:var(--slate);">Tardiness is tracked from the same attendance file uploaded on <strong>Attendance Import</strong> \u2014 a day counts as late only when its <strong>Remarks</strong> says \u201cLate\u201d, then the minutes are calculated by comparing <strong>SchedIn</strong> vs <strong>TimeIn</strong> for that day, rather than trusting the file\u2019s own Late column. ${meta ? `Currently using <strong>${esc(meta.fileName||'the uploaded file')}</strong> (${meta.rowCount} rows, uploaded ${new Date(meta.uploadedAt).toLocaleString('en-US',{month:'short',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit'})}).` : 'No attendance file has been uploaded yet.'}</p>
+      <p style="margin:0; font-size:13px; color:var(--slate);">Tardiness is tracked from the same attendance file uploaded on <strong>Attendance Import</strong> \u2014 a day counts as late only when its <strong>Remarks</strong> says \u201cLate\u201d and isn\u2019t a Holiday remark, then the minutes are calculated by comparing <strong>SchedIn</strong> vs <strong>TimeIn</strong> for that day, rather than trusting the file\u2019s own Late column. ${meta ? `Currently using <strong>${esc(meta.fileName||'the uploaded file')}</strong> (${meta.rowCount} rows, uploaded ${new Date(meta.uploadedAt).toLocaleString('en-US',{month:'short',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit'})}).` : 'No attendance file has been uploaded yet.'}</p>
       <button type="button" class="btn ghost sm" data-goto="attendanceImport">${meta ? 'Go to Attendance Import' : 'Upload a File'}</button>
     </div>
   </div>`;
@@ -4530,7 +4551,7 @@ function renderTardinessSummaryCard(){
         <thead><tr><th>Employee</th><th>Late Instances</th><th>Total Minutes Late</th><th>Longest Lateness</th><th>Late Dates</th></tr></thead>
         <tbody>${summaryRows}</tbody>
       </table>
-      <p class="field-hint" style="margin-top:14px;">A day counts as a tardiness instance only when its Remarks says "Late" (e.g. "Present-Late") \u2014 the minutes shown are then the SchedIn-to-TimeIn difference for that day.</p>
+      <p class="field-hint" style="margin-top:14px;">A day counts as a tardiness instance only when its Remarks says "Late" (e.g. "Present-Late") and isn\u2019t a Holiday remark \u2014 the minutes shown are then the SchedIn-to-TimeIn difference for that day.</p>
       ` : emptyState('No tardiness on file for this month', 'Either nobody was late, or the uploaded file has no Late column \u2014 try a different month above, or upload a file from Attendance Import.', null, null)}
     </div>
   </div>
