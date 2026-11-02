@@ -2190,53 +2190,110 @@ function formatStreakList(streaks){
 // weeks; 3+ => onsite until further notice, monitored for 60 days from the
 // most recent absence before a hybrid recommendation can be made. Takes the
 // employee's all-time entry from attendanceSummaryByEmployee(null) so this
-// doesn't get recomputed once per employee. "clearedThrough" is an optional
-// manual override date (set via the "Mark as OK" button once the onsite
-// requirement has been completed) \u2014 it resets the status to OK as long as
-// no absence newer than that date has shown up since; a fresh absence after
-// the override date re-triggers the flag automatically.
-function evaluateAttendancePolicy(fullHistoryEntry, clearedThrough){
-  if(!fullHistoryEntry || !fullHistoryEntry.streaks.length){
-    return { level:0, label:'OK', reason:'No absence occurrences on file.', monitorUntil:null, canOverride:false, overridden:false };
-  }
-  const occurrences = [...fullHistoryEntry.streaks].sort((a,b)=>a.start.localeCompare(b.start));
-  // Find the worst (highest-count) 30-day window; when multiple windows tie
-  // for that count, keep the most recent one (occurrences are processed in
-  // ascending date order) so the override check below sees the latest
-  // triggering date, not an earlier one.
+// doesn't get recomputed once per employee.
+//
+// "onsitePeriod" is an optional { start, end } date range the supervisor sets
+// once the onsite requirement notice has gone out:
+//   - Today is before End \u2192 the requirement is currently in effect (level 1,
+//     informational, not flagged red/amber since it's already being handled).
+//   - Today is on/after End \u2192 the period has run its course. If no absence
+//     newer than End has shown up since, it auto-refreshes to OK on its own
+//     (no manual click needed) the next time this is evaluated \u2014 e.g. right
+//     after a new attendance file is uploaded. If a NEW absence landed after
+//     End, the stale period is ignored and the policy re-evaluates fresh from
+//     that newest absence, which is how it "starts again from the last time
+//     absent."
+// Older overrides saved before Start/End existed (just { overriddenAt }) are
+// treated as an instantaneous period (start=end=overriddenAt) for compatibility.
+// Finds the worst (highest-count) 30-day window within a list of occurrences.
+// When multiple windows tie for that count, keeps the most recent one
+// (occurrences are processed in ascending date order).
+function worstAbsenceWindow(occurrences){
   let best = { count:0, occurrences:[] };
   occurrences.forEach(o=>{
     const windowStart = addDaysToDateStr(o.start, -29);
     const windowOcc = occurrences.filter(x=>x.start>=windowStart && x.start<=o.start);
     if(windowOcc.length >= best.count && windowOcc.length>0) best = { count: windowOcc.length, occurrences: windowOcc };
   });
-  const lastOccurrenceEnd = occurrences[occurrences.length-1].end;
-  const triggerEnd = best.occurrences.length ? best.occurrences[best.occurrences.length-1].end : null;
-  if(best.count>=2 && clearedThrough && triggerEnd && clearedThrough>=triggerEnd){
+  return best;
+}
+function evaluateAttendancePolicy(fullHistoryEntry, onsitePeriod){
+  if(onsitePeriod && onsitePeriod.overriddenAt && !onsitePeriod.start){
+    onsitePeriod = { start: onsitePeriod.overriddenAt, end: onsitePeriod.overriddenAt };
+  }
+  if(!fullHistoryEntry || !fullHistoryEntry.streaks.length){
+    return { level:0, label:'OK', reason:'No absence occurrences on file.', monitorUntil:null, canOverride:false, overridden:false, onsitePeriod:null };
+  }
+  const occurrences = [...fullHistoryEntry.streaks].sort((a,b)=>a.start.localeCompare(b.start));
+  const today = new Date().toISOString().slice(0,10);
+
+  if(onsitePeriod && onsitePeriod.end){
+    const stillInEffect = today < onsitePeriod.end;
+    if(stillInEffect){
+      const best = worstAbsenceWindow(occurrences);
+      return {
+        level:1, label:'Onsite (In Effect)',
+        reason:`Onsite requirement in effect from ${fmtDate(onsitePeriod.start)} to ${fmtDate(onsitePeriod.end)}. Originally triggered by ${best.count} instance${best.count===1?'':'s'}: ${formatStreakList(best.occurrences)}.`,
+        monitorUntil: onsitePeriod.end, canOverride:false, overridden:false, onsitePeriod
+      };
+    }
+    // The onsite period has run its course. Restart the clock: only absences
+    // strictly AFTER the End date count from here on \u2014 this is what makes
+    // it "start again from the last time absent" instead of staying stuck on
+    // whatever originally triggered the (now-served) onsite requirement.
+    const postPeriodOccurrences = occurrences.filter(o=>o.start>onsitePeriod.end);
+    if(!postPeriodOccurrences.length){
+      const best = worstAbsenceWindow(occurrences);
+      return {
+        level:0, label:'OK (Completed)',
+        reason:`Onsite requirement completed on ${fmtDate(onsitePeriod.end)} (period: ${fmtDate(onsitePeriod.start)} \u2013 ${fmtDate(onsitePeriod.end)}). Originally triggered by ${best.count} instance${best.count===1?'':'s'}: ${formatStreakList(best.occurrences)}.`,
+        monitorUntil:null, canOverride:false, overridden:true, onsitePeriod
+      };
+    }
+    const freshBest = worstAbsenceWindow(postPeriodOccurrences);
+    const freshLastEnd = postPeriodOccurrences[postPeriodOccurrences.length-1].end;
+    if(freshBest.count>=3){
+      return {
+        level:3, label:'Onsite Until Further Notice',
+        reason:`Onsite period completed ${fmtDate(onsitePeriod.end)}, but ${freshBest.count} new absence instances since then within a 30-day window: ${formatStreakList(freshBest.occurrences)}.`,
+        monitorUntil: addDaysToDateStr(freshLastEnd, 60), canOverride:true, overridden:false, onsitePeriod:null
+      };
+    }
+    if(freshBest.count===2){
+      return {
+        level:2, label:'Onsite for 2 Weeks',
+        reason:`Onsite period completed ${fmtDate(onsitePeriod.end)}, but 2 new absence instances since then within a 30-day window: ${formatStreakList(freshBest.occurrences)}.`,
+        monitorUntil: addDaysToDateStr(freshLastEnd, 14), canOverride:true, overridden:false, onsitePeriod:null
+      };
+    }
     return {
-      level:0, label:'OK (Resolved)',
-      reason:`Onsite requirement completed \u2014 marked resolved on ${fmtDate(clearedThrough)}. Originally triggered by ${best.count} instance${best.count===1?'':'s'}: ${formatStreakList(best.occurrences)}.`,
-      monitorUntil:null, canOverride:false, overridden:true
+      level:0, label:'OK',
+      reason: `Onsite requirement completed on ${fmtDate(onsitePeriod.end)}. ${postPeriodOccurrences.length} absence instance${postPeriodOccurrences.length===1?'':'s'} since then \u2014 below the 2-instance threshold.`,
+      monitorUntil:null, canOverride:false, overridden:false, onsitePeriod:null
     };
   }
+
+  // No onsite period set yet \u2014 evaluate from the full history as usual.
+  const best = worstAbsenceWindow(occurrences);
+  const lastOccurrenceEnd = occurrences[occurrences.length-1].end;
   if(best.count>=3){
     return {
       level:3, label:'Onsite Until Further Notice',
       reason:`${best.count} absence instances within a 30-day window: ${formatStreakList(best.occurrences)}.`,
-      monitorUntil: addDaysToDateStr(lastOccurrenceEnd, 60), canOverride:true, overridden:false
+      monitorUntil: addDaysToDateStr(lastOccurrenceEnd, 60), canOverride:true, overridden:false, onsitePeriod:null
     };
   }
   if(best.count===2){
     return {
       level:2, label:'Onsite for 2 Weeks',
       reason:`2 absence instances within a 30-day window: ${formatStreakList(best.occurrences)}.`,
-      monitorUntil: null, canOverride:true, overridden:false
+      monitorUntil: addDaysToDateStr(lastOccurrenceEnd, 14), canOverride:true, overridden:false, onsitePeriod:null
     };
   }
   return {
     level:0, label:'OK',
     reason: `${occurrences.length} absence instance${occurrences.length===1?'':'s'} on file \u2014 below the 2-instance threshold.`,
-    monitorUntil:null, canOverride:false, overridden:false
+    monitorUntil:null, canOverride:false, overridden:false, onsitePeriod:null
   };
 }
 // Small inline SVG bar chart (no external chart library) showing one bar per
@@ -3988,14 +4045,27 @@ function renderAttendanceTrendCard(){
       const title = c ? formatStreakList(streaksPerMonth[i]) : '';
       return `<td class="num" style="padding:11px 6px;">${c ? `<span class="badge ${absenceCountBadgeClass(c)}" title="${esc(title)}">${c}</span>` : '<span style="color:var(--slate-soft);">0</span>'}</td>`;
     }).join('');
-    const clearedThrough = (STATE.attendancePolicyOverrides||{})[emp.empName]?.overriddenAt || null;
-    const policy = evaluateAttendancePolicy(fullHistoryByName.get(emp.empName), clearedThrough);
-    const policyBadgeClass = policy.level===3 ? 'red' : (policy.level===2 ? 'amber' : 'green');
-    const actionBtn = policy.canOverride
-      ? `<button type="button" class="btn ghost sm" style="margin-top:6px;" data-mark-resolved="${esc(emp.empName)}">Mark as OK</button>`
-      : (policy.overridden
-        ? `<button type="button" class="btn ghost sm" style="margin-top:6px;" data-reopen-status="${esc(emp.empName)}">Reopen</button>`
-        : '');
+    const existingOverride = (STATE.attendancePolicyOverrides||{})[emp.empName] || null;
+    const policy = evaluateAttendancePolicy(fullHistoryByName.get(emp.empName), existingOverride);
+    const policyBadgeClass = policy.level===3 ? 'red' : (policy.level===2 ? 'amber' : (policy.level===1 ? 'neutral' : 'green'));
+    const todayStr = new Date().toISOString().slice(0,10);
+    const periodStart = policy.onsitePeriod ? policy.onsitePeriod.start : todayStr;
+    const periodEnd = policy.onsitePeriod ? policy.onsitePeriod.end : (policy.monitorUntil || addDaysToDateStr(todayStr, 14));
+    const onsiteForm = (policy.canOverride || policy.level===1) ? `
+      <div style="margin-top:8px; display:flex; gap:6px; align-items:flex-end; flex-wrap:wrap;">
+        <div>
+          <label style="font-size:10px; display:block; color:var(--slate-soft); margin-bottom:2px;">Onsite Start</label>
+          <input type="date" class="onsite-start-input" data-emp-name="${esc(emp.empName)}" value="${periodStart}" style="padding:4px 6px; font-size:11px; width:auto;">
+        </div>
+        <div>
+          <label style="font-size:10px; display:block; color:var(--slate-soft); margin-bottom:2px;">Onsite End</label>
+          <input type="date" class="onsite-end-input" data-emp-name="${esc(emp.empName)}" value="${periodEnd}" style="padding:4px 6px; font-size:11px; width:auto;">
+        </div>
+        <button type="button" class="btn ghost sm" data-save-onsite="${esc(emp.empName)}">${policy.level===1?'Update':'Save'}</button>
+      </div>` : '';
+    const actionBtns = [];
+    if(policy.level===1) actionBtns.push(`<button type="button" class="btn ghost sm" data-end-onsite-now="${esc(emp.empName)}">Mark as OK Now</button>`);
+    if(policy.level===1 || policy.overridden) actionBtns.push(`<button type="button" class="btn ghost sm" data-reopen-status="${esc(emp.empName)}">Reopen</button>`);
     const teamLeadCell = emp.teamLead
       ? `${esc(emp.teamLead)}`
       : '<span style="color:var(--slate-soft);">Unmatched</span>';
@@ -4007,7 +4077,7 @@ function renderAttendanceTrendCard(){
       <td class="num" style="font-weight:700; padding:11px 6px;">${emp.total}</td>
       <td>${renderAbsenceSparkline(counts, trend.months, streaksPerMonth)}</td>
       <td><span class="badge ${policyBadgeClass}">${esc(policy.label)}</span></td>
-      <td style="font-size:12px; color:var(--slate); white-space:normal; word-wrap:break-word;">${esc(policy.reason)}${policy.monitorUntil ? `<br><span style="color:var(--slate-soft);">Monitor until ${fmtDate(policy.monitorUntil)}, then the lead can recommend hybrid again.</span>` : ''}${actionBtn ? `<br>${actionBtn}` : ''}</td>
+      <td style="font-size:12px; color:var(--slate); white-space:normal; word-wrap:break-word;">${esc(policy.reason)}${policy.monitorUntil && policy.level===3 ? `<br><span style="color:var(--slate-soft);">Monitor until ${fmtDate(policy.monitorUntil)}, then the lead can recommend hybrid again.</span>` : ''}${onsiteForm}${actionBtns.length ? `<div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">${actionBtns.join('')}</div>` : ''}</td>
       <td>
         <textarea class="attendance-note-input" data-emp-name="${esc(emp.empName)}" placeholder="e.g. Done sending onsite requirement to the agent, required to report for onsite work from Sept 24 to Nov 24." style="min-height:80px; font-size:12.5px;">${esc(noteText)}</textarea>
       </td>
@@ -4057,7 +4127,8 @@ function renderAttendanceTrendCard(){
         </table>
         <p class="field-hint" style="margin-top:14px;">Sorted by total absence occurrences in the selected range, highest first. Each bar in the Trend column is one month, left to right \u2014 taller and redder means more absence occurrences that month; hover a bar or a month\u2019s count to see the actual absence date(s).</p>
         <p class="field-hint" style="margin-top:8px;"><strong>Team Lead</strong> is matched automatically from the Agent Roster tab; it shows \u201cUnmatched\u201d if the name on the attendance file can\u2019t be confidently matched there yet. Use the <strong>Team Lead</strong> filter above to check just one lead\u2019s agents at a time.</p>
-        <p class="field-hint" style="margin-top:8px;"><strong>Onsite Status</strong> is based on the employee\u2019s full attendance history, not just the months shown above: 2 absence instances within any 30-day window \u2192 onsite for two weeks (regardless of reason, unless proven emergency); 3 or more within any 30-day window \u2192 onsite until further notice, with the lead monitoring attendance for 60 days from the most recent absence before recommending hybrid again. Once the onsite requirement has been completed, click <strong>Mark as OK</strong> to reset the status \u2014 it\u2019ll flag again automatically if a new absence shows up afterward. Use <strong>Reopen</strong> to undo a resolved status if it was cleared by mistake.</p>
+        <p class="field-hint" style="margin-top:8px;"><strong>Onsite Status</strong> is based on the employee\u2019s full attendance history, not just the months shown above: 2 absence instances within any 30-day window \u2192 onsite for two weeks (regardless of reason, unless proven emergency); 3 or more within any 30-day window \u2192 onsite until further notice, with the lead monitoring attendance for 60 days from the most recent absence before recommending hybrid again.</p>
+        <p class="field-hint" style="margin-top:8px;">Once flagged, set the <strong>Onsite Start</strong> and <strong>Onsite End</strong> dates (prefilled with a sensible default) and click <strong>Save</strong>. The status shows <span class="badge neutral" style="font-size:10px;">Onsite (In Effect)</span> until the End date; once that date is reached, it <strong>automatically refreshes to OK on its own</strong> \u2014 no need to click anything, it just takes effect the next time the page loads or new attendance data is uploaded. If a new absence shows up after the End date, the status automatically re-triggers and restarts counting from that newest absence. Use <strong>Mark as OK Now</strong> to end the onsite period early (e.g. the agent resigned), or <strong>Reopen</strong> to undo a resolved status if it was set by mistake.</p>
         <p class="field-hint" style="margin-top:8px;"><strong>Notes</strong> saves automatically as you type and stays on the employee\u2019s row \u2014 use it to log things like when the onsite requirement notice was sent and the dates covered.</p>
         ` : emptyState('No agents match this filter', attendanceTrendTeamLeadFilter ? 'Try "All Team Leads" above, or a different From/To range.' : 'Try a wider From/To range above.', null, null)}
       </div>
@@ -4660,12 +4731,30 @@ function attachViewHandlers(){
         render();
       });
     }
-    document.querySelectorAll('[data-mark-resolved]').forEach(btn=>{
+    document.querySelectorAll('[data-save-onsite]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
-        const empName = btn.dataset.markResolved;
-        if(!confirm(`Mark ${toTitleCaseName(empName)}\u2019s onsite requirement as completed? Their status will reset to OK unless a new absence shows up after today.`)) return;
+        const empName = btn.dataset.saveOnsite;
+        const startInput = document.querySelector(`.onsite-start-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const endInput = document.querySelector(`.onsite-end-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const start = startInput ? startInput.value : '';
+        const end = endInput ? endInput.value : '';
+        if(!start || !end){ toast('Please set both an Onsite Start and End date.', true); return; }
+        if(end < start){ toast('Onsite End date can\u2019t be before the Start date.', true); return; }
         STATE.attendancePolicyOverrides = STATE.attendancePolicyOverrides || {};
-        STATE.attendancePolicyOverrides[empName] = { overriddenAt: new Date().toISOString().slice(0,10) };
+        STATE.attendancePolicyOverrides[empName] = { start, end, setAt: Date.now() };
+        await saveState();
+        render();
+        toast(`Onsite period saved \u2014 will auto-refresh to OK after ${fmtDate(end)}`);
+      });
+    });
+    document.querySelectorAll('[data-end-onsite-now]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const empName = btn.dataset.endOnsiteNow;
+        if(!confirm(`Mark ${toTitleCaseName(empName)}\u2019s onsite requirement as completed today? Their status will reset to OK unless a new absence shows up after today.`)) return;
+        STATE.attendancePolicyOverrides = STATE.attendancePolicyOverrides || {};
+        const existing = STATE.attendancePolicyOverrides[empName] || {};
+        const todayStr = new Date().toISOString().slice(0,10);
+        STATE.attendancePolicyOverrides[empName] = { start: existing.start || todayStr, end: todayStr, setAt: Date.now() };
         await saveState();
         render();
         toast('Marked resolved \u2014 status reset to OK');
