@@ -989,7 +989,9 @@ let STATE = {
   attendanceUploadMeta: null,
   deletedAttendanceLogIds: [],
   attendancePolicyOverrides: {},
-  attendanceNotes: {}
+  attendanceNotes: {},
+  deletedAttendancePolicyOverrideKeys: [],
+  deletedAttendanceNoteKeys: []
 };
 
 // Session & State Persistence Keys
@@ -1082,6 +1084,17 @@ function mergeMaxCounts(a, b){
   Object.keys(b||{}).forEach(k=>{ out[k] = Math.max(out[k]||0, b[k]); });
   return out;
 }
+// Merges two plain key->value maps (like attendancePolicyOverrides or
+// attendanceNotes), then removes any key listed as deleted \u2014 without this,
+// deleting an entry locally and then syncing would let a stale remote copy of
+// that same key silently resurrect it, since a plain object spread merge has
+// no way to tell "missing because deleted" apart from "missing because it
+// was never set on that device."
+function mergeKeyedMap(remoteMap, localMap, deletedKeys){
+  const merged = { ...(remoteMap||{}), ...(localMap||{}) };
+  (deletedKeys||[]).forEach(k=>{ delete merged[k]; });
+  return merged;
+}
 function mergeStates(local, remote){
   if(!remote || typeof remote !== 'object') return local;
   const deletedCaseNumbers = Array.from(new Set([...(remote.deletedCaseNumbers||[]), ...(local.deletedCaseNumbers||[])].map(String)));
@@ -1091,6 +1104,8 @@ function mergeStates(local, remote){
   const deletedSupportIds = Array.from(new Set([...(remote.deletedSupportIds||[]), ...(local.deletedSupportIds||[])]));
   const deletedAgentRosterIds = Array.from(new Set([...(remote.deletedAgentRosterIds||[]), ...(local.deletedAgentRosterIds||[])]));
   const deletedAttendanceLogIds = Array.from(new Set([...(remote.deletedAttendanceLogIds||[]), ...(local.deletedAttendanceLogIds||[])]));
+  const deletedAttendancePolicyOverrideKeys = Array.from(new Set([...(remote.deletedAttendancePolicyOverrideKeys||[]), ...(local.deletedAttendancePolicyOverrideKeys||[])]));
+  const deletedAttendanceNoteKeys = Array.from(new Set([...(remote.deletedAttendanceNoteKeys||[]), ...(local.deletedAttendanceNoteKeys||[])]));
   const merged = {
     supports: mergeArraysById(remote.supports, local.supports).filter(s=>!deletedSupportIds.includes(s.id)),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
@@ -1119,8 +1134,10 @@ function mergeStates(local, remote){
     attendanceUploadMeta: (local.attendanceUploadMeta && remote.attendanceUploadMeta)
       ? ((local.attendanceUploadMeta.uploadedAt||0) >= (remote.attendanceUploadMeta.uploadedAt||0) ? local.attendanceUploadMeta : remote.attendanceUploadMeta)
       : (local.attendanceUploadMeta || remote.attendanceUploadMeta || null),
-    attendancePolicyOverrides: { ...(remote.attendancePolicyOverrides||{}), ...(local.attendancePolicyOverrides||{}) },
-    attendanceNotes: { ...(remote.attendanceNotes||{}), ...(local.attendanceNotes||{}) },
+    attendancePolicyOverrides: mergeKeyedMap(remote.attendancePolicyOverrides, local.attendancePolicyOverrides, deletedAttendancePolicyOverrideKeys),
+    deletedAttendancePolicyOverrideKeys,
+    attendanceNotes: mergeKeyedMap(remote.attendanceNotes, local.attendanceNotes, deletedAttendanceNoteKeys),
+    deletedAttendanceNoteKeys,
   };
   return reconcileState(merged);
 }
@@ -1201,6 +1218,14 @@ function reconcileState(state){
   if(state.deletedAttendanceLogIds && state.deletedAttendanceLogIds.length){
     state.attendanceLogs = (state.attendanceLogs||[]).filter(r=>!state.deletedAttendanceLogIds.includes(r.id));
   }
+  if(state.deletedAttendancePolicyOverrideKeys && state.deletedAttendancePolicyOverrideKeys.length){
+    state.attendancePolicyOverrides = { ...(state.attendancePolicyOverrides||{}) };
+    state.deletedAttendancePolicyOverrideKeys.forEach(k=>{ delete state.attendancePolicyOverrides[k]; });
+  }
+  if(state.deletedAttendanceNoteKeys && state.deletedAttendanceNoteKeys.length){
+    state.attendanceNotes = { ...(state.attendanceNotes||{}) };
+    state.deletedAttendanceNoteKeys.forEach(k=>{ delete state.attendanceNotes[k]; });
+  }
   if(!state.historicalDuplicatesCleaned){
     state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
     state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
@@ -1267,6 +1292,8 @@ async function loadState(){
       STATE.deletedAttendanceLogIds = parsed.deletedAttendanceLogIds || [];
       STATE.attendancePolicyOverrides = parsed.attendancePolicyOverrides || {};
       STATE.attendanceNotes = parsed.attendanceNotes || {};
+      STATE.deletedAttendancePolicyOverrideKeys = parsed.deletedAttendancePolicyOverrideKeys || [];
+      STATE.deletedAttendanceNoteKeys = parsed.deletedAttendanceNoteKeys || [];
       STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
@@ -1314,7 +1341,9 @@ async function loadState(){
           attendanceUploadMeta: remote.attendanceUploadMeta || null,
           deletedAttendanceLogIds: remote.deletedAttendanceLogIds || [],
           attendancePolicyOverrides: remote.attendancePolicyOverrides || {},
-          attendanceNotes: remote.attendanceNotes || {}
+          attendanceNotes: remote.attendanceNotes || {},
+          deletedAttendancePolicyOverrideKeys: remote.deletedAttendancePolicyOverrideKeys || [],
+          deletedAttendanceNoteKeys: remote.deletedAttendanceNoteKeys || []
         };
         STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -1400,7 +1429,9 @@ function seedState(){
     attendanceUploadMeta: null,
     deletedAttendanceLogIds: [],
     attendancePolicyOverrides: {},
-    attendanceNotes: {}
+    attendanceNotes: {},
+    deletedAttendancePolicyOverrideKeys: [],
+    deletedAttendanceNoteKeys: []
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -4742,6 +4773,7 @@ function attachViewHandlers(){
         if(end < start){ toast('Onsite End date can\u2019t be before the Start date.', true); return; }
         STATE.attendancePolicyOverrides = STATE.attendancePolicyOverrides || {};
         STATE.attendancePolicyOverrides[empName] = { start, end, setAt: Date.now() };
+        STATE.deletedAttendancePolicyOverrideKeys = (STATE.deletedAttendancePolicyOverrideKeys||[]).filter(k=>k!==empName);
         await saveState();
         render();
         toast(`Onsite period saved \u2014 will auto-refresh to OK after ${fmtDate(end)}`);
@@ -4755,6 +4787,7 @@ function attachViewHandlers(){
         const existing = STATE.attendancePolicyOverrides[empName] || {};
         const todayStr = new Date().toISOString().slice(0,10);
         STATE.attendancePolicyOverrides[empName] = { start: existing.start || todayStr, end: todayStr, setAt: Date.now() };
+        STATE.deletedAttendancePolicyOverrideKeys = (STATE.deletedAttendancePolicyOverrideKeys||[]).filter(k=>k!==empName);
         await saveState();
         render();
         toast('Marked resolved \u2014 status reset to OK');
@@ -4764,20 +4797,29 @@ function attachViewHandlers(){
       btn.addEventListener('click', async ()=>{
         const empName = btn.dataset.reopenStatus;
         delete (STATE.attendancePolicyOverrides||{})[empName];
-        await saveState();
+        STATE.deletedAttendancePolicyOverrideKeys = STATE.deletedAttendancePolicyOverrideKeys || [];
+        if(!STATE.deletedAttendancePolicyOverrideKeys.includes(empName)) STATE.deletedAttendancePolicyOverrideKeys.push(empName);
         render();
-        toast('Reopened \u2014 status now reflects attendance on file again');
+        const ok = await saveState();
+        if(ok){
+          toast('Reopened \u2014 status now reflects attendance on file again');
+        } else {
+          toastRetry('Reopened here, but the save failed \u2014 tap to retry so it stays reopened.');
+        }
       });
     });
     document.querySelectorAll('.attendance-note-input').forEach(ta=>{
       ta.addEventListener('change', async ()=>{
         const empName = ta.dataset.empName;
         STATE.attendanceNotes = STATE.attendanceNotes || {};
+        STATE.deletedAttendanceNoteKeys = STATE.deletedAttendanceNoteKeys || [];
         const text = ta.value;
         if(text.trim()){
           STATE.attendanceNotes[empName] = { text, updatedAt: Date.now() };
+          STATE.deletedAttendanceNoteKeys = STATE.deletedAttendanceNoteKeys.filter(k=>k!==empName);
         } else {
           delete STATE.attendanceNotes[empName];
+          if(!STATE.deletedAttendanceNoteKeys.includes(empName)) STATE.deletedAttendanceNoteKeys.push(empName);
         }
         const ok = await saveState();
         if(ok) toast('Note saved');
@@ -4837,7 +4879,9 @@ function handleRestoreFile(e){
         attendanceUploadMeta: parsed.attendanceUploadMeta || null,
         deletedAttendanceLogIds: parsed.deletedAttendanceLogIds || [],
         attendancePolicyOverrides: parsed.attendancePolicyOverrides || {},
-        attendanceNotes: parsed.attendanceNotes || {}
+        attendanceNotes: parsed.attendanceNotes || {},
+        deletedAttendancePolicyOverrideKeys: parsed.deletedAttendancePolicyOverrideKeys || [],
+        deletedAttendanceNoteKeys: parsed.deletedAttendanceNoteKeys || []
       };
       const ok = await saveState();
       if(ok){ toast('Backup restored'); render(); }
@@ -5097,7 +5141,9 @@ function renderLoadFailureScreen(){
           attendanceUploadMeta: parsed.attendanceUploadMeta || null,
           deletedAttendanceLogIds: parsed.deletedAttendanceLogIds || [],
           attendancePolicyOverrides: parsed.attendancePolicyOverrides || {},
-          attendanceNotes: parsed.attendanceNotes || {}
+          attendanceNotes: parsed.attendanceNotes || {},
+          deletedAttendancePolicyOverrideKeys: parsed.deletedAttendancePolicyOverrideKeys || [],
+          deletedAttendanceNoteKeys: parsed.deletedAttendanceNoteKeys || []
         };
         const ok = await saveState();
         if(ok){
