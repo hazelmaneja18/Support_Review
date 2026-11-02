@@ -991,7 +991,11 @@ let STATE = {
   attendancePolicyOverrides: {},
   attendanceNotes: {},
   deletedAttendancePolicyOverrideKeys: [],
-  deletedAttendanceNoteKeys: []
+  deletedAttendanceNoteKeys: [],
+  tardinessPolicyOverrides: {},
+  deletedTardinessPolicyOverrideKeys: [],
+  tardinessNotes: {},
+  deletedTardinessNoteKeys: []
 };
 
 // Session & State Persistence Keys
@@ -1106,6 +1110,8 @@ function mergeStates(local, remote){
   const deletedAttendanceLogIds = Array.from(new Set([...(remote.deletedAttendanceLogIds||[]), ...(local.deletedAttendanceLogIds||[])]));
   const deletedAttendancePolicyOverrideKeys = Array.from(new Set([...(remote.deletedAttendancePolicyOverrideKeys||[]), ...(local.deletedAttendancePolicyOverrideKeys||[])]));
   const deletedAttendanceNoteKeys = Array.from(new Set([...(remote.deletedAttendanceNoteKeys||[]), ...(local.deletedAttendanceNoteKeys||[])]));
+  const deletedTardinessPolicyOverrideKeys = Array.from(new Set([...(remote.deletedTardinessPolicyOverrideKeys||[]), ...(local.deletedTardinessPolicyOverrideKeys||[])]));
+  const deletedTardinessNoteKeys = Array.from(new Set([...(remote.deletedTardinessNoteKeys||[]), ...(local.deletedTardinessNoteKeys||[])]));
   const merged = {
     supports: mergeArraysById(remote.supports, local.supports).filter(s=>!deletedSupportIds.includes(s.id)),
     targets: { ...(remote.targets||{}), ...(local.targets||{}) },
@@ -1138,6 +1144,10 @@ function mergeStates(local, remote){
     deletedAttendancePolicyOverrideKeys,
     attendanceNotes: mergeKeyedMap(remote.attendanceNotes, local.attendanceNotes, deletedAttendanceNoteKeys),
     deletedAttendanceNoteKeys,
+    tardinessPolicyOverrides: mergeKeyedMap(remote.tardinessPolicyOverrides, local.tardinessPolicyOverrides, deletedTardinessPolicyOverrideKeys),
+    deletedTardinessPolicyOverrideKeys,
+    tardinessNotes: mergeKeyedMap(remote.tardinessNotes, local.tardinessNotes, deletedTardinessNoteKeys),
+    deletedTardinessNoteKeys,
   };
   return reconcileState(merged);
 }
@@ -1226,6 +1236,14 @@ function reconcileState(state){
     state.attendanceNotes = { ...(state.attendanceNotes||{}) };
     state.deletedAttendanceNoteKeys.forEach(k=>{ delete state.attendanceNotes[k]; });
   }
+  if(state.deletedTardinessPolicyOverrideKeys && state.deletedTardinessPolicyOverrideKeys.length){
+    state.tardinessPolicyOverrides = { ...(state.tardinessPolicyOverrides||{}) };
+    state.deletedTardinessPolicyOverrideKeys.forEach(k=>{ delete state.tardinessPolicyOverrides[k]; });
+  }
+  if(state.deletedTardinessNoteKeys && state.deletedTardinessNoteKeys.length){
+    state.tardinessNotes = { ...(state.tardinessNotes||{}) };
+    state.deletedTardinessNoteKeys.forEach(k=>{ delete state.tardinessNotes[k]; });
+  }
   if(!state.historicalDuplicatesCleaned){
     state.records = dedupeByKey(state.records, r=>String(r.caseNumber||'').trim(), ['supportAction','commitmentObservations','additionalActions','tlCommitment']);
     state.agentReviews = dedupeByKey(state.agentReviews, a=> a.caseNumber ? `${a.mode}:${String(a.caseNumber).trim()}` : null, ['agentName','category','section1']);
@@ -1294,6 +1312,10 @@ async function loadState(){
       STATE.attendanceNotes = parsed.attendanceNotes || {};
       STATE.deletedAttendancePolicyOverrideKeys = parsed.deletedAttendancePolicyOverrideKeys || [];
       STATE.deletedAttendanceNoteKeys = parsed.deletedAttendanceNoteKeys || [];
+      STATE.tardinessPolicyOverrides = parsed.tardinessPolicyOverrides || {};
+      STATE.deletedTardinessPolicyOverrideKeys = parsed.deletedTardinessPolicyOverrideKeys || [];
+      STATE.tardinessNotes = parsed.tardinessNotes || {};
+      STATE.deletedTardinessNoteKeys = parsed.deletedTardinessNoteKeys || [];
       STATE = reconcileState(STATE);
       if(SYNC_URL){
         const remote = await pullRemoteState();
@@ -1343,7 +1365,11 @@ async function loadState(){
           attendancePolicyOverrides: remote.attendancePolicyOverrides || {},
           attendanceNotes: remote.attendanceNotes || {},
           deletedAttendancePolicyOverrideKeys: remote.deletedAttendancePolicyOverrideKeys || [],
-          deletedAttendanceNoteKeys: remote.deletedAttendanceNoteKeys || []
+          deletedAttendanceNoteKeys: remote.deletedAttendanceNoteKeys || [],
+          tardinessPolicyOverrides: remote.tardinessPolicyOverrides || {},
+          deletedTardinessPolicyOverrideKeys: remote.deletedTardinessPolicyOverrideKeys || [],
+          tardinessNotes: remote.tardinessNotes || {},
+          deletedTardinessNoteKeys: remote.deletedTardinessNoteKeys || []
         };
         STATE = reconcileState(STATE);
         try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -1431,7 +1457,11 @@ function seedState(){
     attendancePolicyOverrides: {},
     attendanceNotes: {},
     deletedAttendancePolicyOverrideKeys: [],
-    deletedAttendanceNoteKeys: []
+    deletedAttendanceNoteKeys: [],
+    tardinessPolicyOverrides: {},
+    deletedTardinessPolicyOverrideKeys: [],
+    tardinessNotes: {},
+    deletedTardinessNoteKeys: []
   };
 }
 function findOrCreateSupport(canonicalName, aliases){
@@ -2037,6 +2067,63 @@ function normalizeAttendanceDate(value){
 function toTitleCaseName(name){
   return (name||'').toLowerCase().replace(/\b[a-z]/g, c=>c.toUpperCase()).replace(/\s+/g,' ').trim();
 }
+// Converts whatever shape the "Late" column comes through as into whole
+// minutes: a plain number of minutes, an Excel time-duration serial (a
+// fraction of a day, e.g. 15 minutes \u2192 0.0104), or a "H:MM" / "H:MM:SS"
+// string. Anything blank, zero, or unparsable comes back as 0 (not late).
+function normalizeLateMinutes(value){
+  if(value===null || value===undefined || value==='') return 0;
+  if(value instanceof Date && !isNaN(value)) return (value.getUTCHours()*60) + value.getUTCMinutes();
+  if(typeof value === 'number'){
+    if(value>0 && value<1) return Math.round(value*1440);
+    return Math.max(0, Math.round(value));
+  }
+  const str = String(value).trim();
+  if(!str) return 0;
+  const hm = str.match(/^(\d{1,3}):(\d{2})(?::(\d{2}))?$/);
+  if(hm) return (parseInt(hm[1],10)*60) + parseInt(hm[2],10);
+  const num = parseFloat(str);
+  if(!isNaN(num)) return Math.max(0, Math.round(num));
+  return 0;
+}
+// Extracts just the time-of-day (minutes since midnight, seconds truncated
+// \u2014 not rounded \u2014 so "5:23:20 PM" reads as 23 minutes past 5, not 24) from
+// a Date object, a bare/full Excel serial number, a "H:MM(:SS)" 24-hour
+// string, a "H:MM(:SS) AM/PM" string, or a full "MM/DD/YYYY H:MM:SS AM/PM"
+// timestamp string (the TimeIn/SchedIn columns can come through as any of
+// these depending on how the cell was formatted). Returns null if nothing
+// recognizable is found, rather than guessing.
+function parseTimeOfDayMinutes(value){
+  if(value===null || value===undefined || value==='') return null;
+  if(value instanceof Date && !isNaN(value)) return (value.getUTCHours()*60) + value.getUTCMinutes();
+  if(typeof value === 'number'){
+    const frac = value - Math.floor(value);
+    return Math.floor(frac*1440);
+  }
+  const str = String(value).trim();
+  if(!str) return null;
+  const ampm = str.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])/);
+  if(ampm){
+    let h = parseInt(ampm[1],10) % 12;
+    if(ampm[4].toLowerCase()==='pm') h += 12;
+    return h*60 + parseInt(ampm[2],10);
+  }
+  const hm = str.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if(hm) return (parseInt(hm[1],10)*60) + parseInt(hm[2],10);
+  return null;
+}
+// Minutes late = actual TimeIn minus the scheduled SchedIn, comparing just
+// the time-of-day on both sides (so it works whether the cell holds a bare
+// time or a full date+time timestamp). Returns null if either side can't be
+// read, so the caller can fall back to the Late column instead of guessing.
+function computeLateMinutesFromSchedule(schedInValue, timeInValue){
+  const sched = parseTimeOfDayMinutes(schedInValue);
+  const actual = parseTimeOfDayMinutes(timeInValue);
+  if(sched===null || actual===null) return null;
+  let diff = actual - sched;
+  if(diff < -600) diff += 1440; // guards against a rare midnight-boundary wrap
+  return Math.max(0, diff);
+}
 function parseAttendanceWorkbook(arrayBuffer){
   const wb = XLSX.read(arrayBuffer, { type:'array', cellDates:true });
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -2058,6 +2145,9 @@ function parseAttendanceWorkbook(arrayBuffer){
   const nameKey = findHeader('empname','employee name','emp name','agent name');
   const dateKey = findHeader('date1','date','login date','work date');
   const remarksKey = findHeader('remarks','remark','status','attendance status','dtr remarks');
+  const lateKey = findHeader('late','late minutes','tardiness','minutes late');
+  const schedInKey = findHeader('schedin','sched in','scheduled in','sched time in','schedule in');
+  const timeInKey = findHeader('timein','time in','actual time in','login time','actual in');
   const out = [];
   for(let i=headerRowIdx+1; i<grid.length; i++){
     const rawRow = grid[i];
@@ -2067,10 +2157,17 @@ function parseAttendanceWorkbook(arrayBuffer){
     const empName = nameKey ? String(row[nameKey]||'').trim() : '';
     const date = dateKey ? normalizeAttendanceDate(row[dateKey]) : null;
     if(!empName || !date) continue;
+    // Prefer computing lateness directly from SchedIn vs TimeIn \u2014 the Late
+    // column's own encoding varies by export and can come through wildly
+    // inflated, so it's only used as a fallback when Sched/Time In aren't
+    // both present and readable.
+    let lateMinutes = (schedInKey && timeInKey) ? computeLateMinutesFromSchedule(row[schedInKey], row[timeInKey]) : null;
+    if(lateMinutes===null) lateMinutes = lateKey ? normalizeLateMinutes(row[lateKey]) : 0;
     out.push({
       empName,
       date,
-      category: classifyAttendanceRemark(remarksKey ? row[remarksKey] : '')
+      category: classifyAttendanceRemark(remarksKey ? row[remarksKey] : ''),
+      lateMinutes
     });
   }
   return out;
@@ -2092,6 +2189,7 @@ async function applyAttendanceUpload(rows, fileName){
     date: r.date,
     month: r.date.slice(0,7),
     category: r.category,
+    lateMinutes: r.lateMinutes||0,
     uploadId
   }));
   STATE.attendanceUploadMeta = { uploadId, fileName: fileName||'', uploadedAt: now, rowCount: rows.length };
@@ -2331,7 +2429,7 @@ function evaluateAttendancePolicy(fullHistoryEntry, onsitePeriod){
 // month so an upward run of absences is visible at a glance per employee.
 // Hovering a bar shows that month's actual absence date(s) via the native
 // SVG <title> tooltip.
-function renderAbsenceSparkline(counts, months, streaksPerMonth){
+function renderAbsenceSparkline(counts, months, streaksPerMonth, emptyLabel){
   const barW = 12, gap = 4, h = 32;
   const max = Math.max(1, ...counts);
   const width = Math.max(1, counts.length) * (barW+gap);
@@ -2341,11 +2439,201 @@ function renderAbsenceSparkline(counts, months, streaksPerMonth){
     const y = h-barH;
     const fill = c>=2 ? 'var(--red)' : (c===1 ? 'var(--amber)' : 'var(--rule)');
     const monthLbl = (months && months[i]) ? monthLabel(months[i]) : '';
-    const dateInfo = (streaksPerMonth && streaksPerMonth[i]) ? formatStreakList(streaksPerMonth[i]) : 'No absences';
+    const raw = streaksPerMonth && streaksPerMonth[i];
+    const dateInfo = raw ? (typeof raw === 'string' ? raw : formatStreakList(raw)) : (emptyLabel || 'No absences');
     const tooltip = `${monthLbl}: ${dateInfo}`;
     return `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="2" fill="${fill}"><title>${esc(tooltip)}</title></rect>`;
   }).join('');
   return `<svg width="${width}" height="${h}" viewBox="0 0 ${width} ${h}" style="display:block;">${bars}</svg>`;
+}
+
+/* =========================================================================
+   TARDINESS POLICY \u2014 driven by the "Late" column in the attendance export
+   ========================================================================= */
+// Monday-anchored work-week key for a given date, so instances within the
+// same Mon\u2013Sun week group together for the weekly tardiness rules.
+function getWorkWeekKey(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = d.getDay();
+  const diffToMonday = (day===0 ? -6 : 1-day);
+  d.setDate(d.getDate()+diffToMonday);
+  return d.toISOString().slice(0,10);
+}
+// Formats a list of {date, minutes} tardiness instances, e.g.
+// "Oct 03, 2026 (15 min), Oct 10, 2026 (22 min)".
+function describeLateInstances(list){
+  if(!list || !list.length) return 'none';
+  return list.map(i=>`${fmtDate(i.date)} (${i.minutes} min)`).join(', ');
+}
+// Per-employee tardiness instances for a given month (or all months when
+// month is null): every day with Late minutes > 0, sorted by date.
+function tardinessSummaryByEmployee(month){
+  const byEmp = new Map();
+  (STATE.attendanceLogs||[])
+    .filter(r=>!month || r.month===month)
+    .forEach(r=>{
+      const minutes = r.lateMinutes||0;
+      if(minutes<=0) return;
+      if(!byEmp.has(r.empName)) byEmp.set(r.empName, { empName:r.empName, instances:[] });
+      byEmp.get(r.empName).instances.push({ date:r.date, minutes });
+    });
+  return Array.from(byEmp.values()).map(b=>{
+    const sorted = [...b.instances].sort((a,c)=>a.date.localeCompare(c.date));
+    return {
+      empName: b.empName,
+      instances: sorted,
+      count: sorted.length,
+      totalMinutes: sorted.reduce((s,i)=>s+i.minutes,0),
+      longestMinutes: sorted.reduce((m,i)=>Math.max(m,i.minutes),0)
+    };
+  }).sort((a,b)=>a.empName.localeCompare(b.empName));
+}
+// Worst (highest-count) 30-day window within a list of {date,minutes}
+// instances \u2014 same approach as worstAbsenceWindow, for the "5 instances
+// within 30 days" rule.
+function worstLateWindow(instances){
+  let best = { count:0, instances:[] };
+  instances.forEach(o=>{
+    const windowStart = addDaysToDateStr(o.date, -29);
+    const windowInst = instances.filter(x=>x.date>=windowStart && x.date<=o.date);
+    if(windowInst.length >= best.count && windowInst.length>0) best = { count: windowInst.length, instances: windowInst };
+  });
+  return best;
+}
+// The most recent work week that qualifies under either weekly rule: one
+// instance over 10 minutes, or 2+ instances in the same week regardless of
+// how many minutes each one is.
+function worstLateWeek(instances){
+  const byWeek = new Map();
+  instances.forEach(inst=>{
+    const wk = getWorkWeekKey(inst.date);
+    if(!byWeek.has(wk)) byWeek.set(wk, []);
+    byWeek.get(wk).push(inst);
+  });
+  let trigger = null;
+  Array.from(byWeek.keys()).sort().forEach(wk=>{
+    const insts = byWeek.get(wk);
+    const exceeds10 = insts.some(i=>i.minutes>10);
+    if(exceeds10 || insts.length>=2){
+      trigger = { weekStart: wk, instances: insts, reason: exceeds10 ? 'an instance exceeded 10 minutes' : '2 or more instances in the same work week' };
+    }
+  });
+  return trigger;
+}
+function tardinessTrigger(instances){
+  const monthWindow = worstLateWindow(instances);
+  if(monthWindow.count>=5) return { level:3, group: monthWindow.instances };
+  const weekTrigger = worstLateWeek(instances);
+  if(weekTrigger) return { level:2, group: weekTrigger.instances, weekStart: weekTrigger.weekStart, weekReason: weekTrigger.reason };
+  return { level:0, group:[] };
+}
+function describeTardinessTrigger(trig){
+  if(!trig || !trig.group.length) return '';
+  if(trig.level===3) return `Triggered by ${trig.group.length} tardiness instances within a 30-day window: ${describeLateInstances(trig.group)}.`;
+  if(trig.level===2) return `Triggered by the work week of ${fmtDate(trig.weekStart)} \u2014 ${trig.weekReason}: ${describeLateInstances(trig.group)}.`;
+  return '';
+}
+// Tardiness/onsite policy, mirroring evaluateAttendancePolicy's onsite-period
+// mechanics (In Effect \u2192 auto-completes on End date \u2192 restarts from the
+// newest instance if a fresh one lands after End), but driven by the
+// tardiness rules instead of the absence rules:
+//   - 1 instance over 10 minutes in the current work week \u2192 onsite 2 weeks.
+//   - 2+ instances in the same work week (any duration) \u2192 onsite 2 weeks.
+//   - 5+ instances within any 30-day window \u2192 onsite for a month / until
+//     improvement is seen, with the lead recommending hybrid again after.
+function evaluateTardinessPolicy(fullHistoryEntry, onsitePeriod){
+  if(onsitePeriod && onsitePeriod.overriddenAt && !onsitePeriod.start){
+    onsitePeriod = { start: onsitePeriod.overriddenAt, end: onsitePeriod.overriddenAt };
+  }
+  if(!fullHistoryEntry || !fullHistoryEntry.instances.length){
+    return { level:0, label:'OK', reason:'No tardiness instances on file.', monitorUntil:null, canOverride:false, overridden:false, onsitePeriod:null };
+  }
+  const instances = [...fullHistoryEntry.instances].sort((a,b)=>a.date.localeCompare(b.date));
+  const today = new Date().toISOString().slice(0,10);
+
+  if(onsitePeriod && onsitePeriod.end){
+    const stillInEffect = today < onsitePeriod.end;
+    if(stillInEffect){
+      const trig = tardinessTrigger(instances);
+      return {
+        level:1, label:'Onsite (In Effect)',
+        reason:`Onsite requirement (tardiness) in effect from ${fmtDate(onsitePeriod.start)} to ${fmtDate(onsitePeriod.end)}. ${describeTardinessTrigger(trig)}`,
+        monitorUntil: onsitePeriod.end, canOverride:false, overridden:false, onsitePeriod
+      };
+    }
+    const postInstances = instances.filter(i=>i.date>onsitePeriod.end);
+    if(!postInstances.length){
+      const trig = tardinessTrigger(instances);
+      return {
+        level:0, label:'OK (Completed)',
+        reason:`Onsite requirement (tardiness) completed on ${fmtDate(onsitePeriod.end)} (period: ${fmtDate(onsitePeriod.start)} \u2013 ${fmtDate(onsitePeriod.end)}). ${describeTardinessTrigger(trig)}`,
+        monitorUntil:null, canOverride:false, overridden:true, onsitePeriod
+      };
+    }
+    const freshTrig = tardinessTrigger(postInstances);
+    if(freshTrig.level===3){
+      const lastDate = postInstances[postInstances.length-1].date;
+      return {
+        level:3, label:'Onsite for 1 Month (Tardiness)',
+        reason:`Onsite period completed ${fmtDate(onsitePeriod.end)}, but ${freshTrig.group.length} new tardiness instances since then within a 30-day window: ${describeLateInstances(freshTrig.group)}.`,
+        monitorUntil: addDaysToDateStr(lastDate, 30), canOverride:true, overridden:false, onsitePeriod:null
+      };
+    }
+    if(freshTrig.level===2){
+      const lastDate = freshTrig.group[freshTrig.group.length-1].date;
+      return {
+        level:2, label:'Onsite for 2 Weeks (Tardiness)',
+        reason:`Onsite period completed ${fmtDate(onsitePeriod.end)}, but a new tardiness trigger occurred \u2014 work week of ${fmtDate(freshTrig.weekStart)} (${freshTrig.weekReason}): ${describeLateInstances(freshTrig.group)}.`,
+        monitorUntil: addDaysToDateStr(lastDate, 14), canOverride:true, overridden:false, onsitePeriod:null
+      };
+    }
+    return {
+      level:0, label:'OK',
+      reason: `Onsite requirement (tardiness) completed on ${fmtDate(onsitePeriod.end)}. ${postInstances.length} tardiness instance${postInstances.length===1?'':'s'} since then \u2014 below threshold.`,
+      monitorUntil:null, canOverride:false, overridden:false, onsitePeriod:null
+    };
+  }
+
+  const trig = tardinessTrigger(instances);
+  if(trig.level===3){
+    const lastDate = trig.group[trig.group.length-1].date;
+    return {
+      level:3, label:'Onsite for 1 Month (Tardiness)',
+      reason:`${trig.group.length} tardiness instances within a 30-day window: ${describeLateInstances(trig.group)}.`,
+      monitorUntil: addDaysToDateStr(lastDate, 30), canOverride:true, overridden:false, onsitePeriod:null
+    };
+  }
+  if(trig.level===2){
+    const lastDate = trig.group[trig.group.length-1].date;
+    return {
+      level:2, label:'Onsite for 2 Weeks (Tardiness)',
+      reason:`Work week of ${fmtDate(trig.weekStart)} \u2014 ${trig.weekReason}: ${describeLateInstances(trig.group)}.`,
+      monitorUntil: addDaysToDateStr(lastDate, 14), canOverride:true, overridden:false, onsitePeriod:null
+    };
+  }
+  return {
+    level:0, label:'OK',
+    reason: `${instances.length} tardiness instance${instances.length===1?'':'s'} on file \u2014 below threshold.`,
+    monitorUntil:null, canOverride:false, overridden:false, onsitePeriod:null
+  };
+}
+// Per-employee monthly tardiness-instance counts across a From/To month
+// range, mirroring attendanceTrendData.
+function tardinessTrendData(fromMonth, toMonth){
+  const allMonths = attendanceMonthsAvailable();
+  const months = allMonths.filter(m => (!fromMonth || m>=fromMonth) && (!toMonth || m<=toMonth));
+  const byEmp = new Map();
+  months.forEach(m=>{
+    tardinessSummaryByEmployee(m).forEach(emp=>{
+      if(!byEmp.has(emp.empName)) byEmp.set(emp.empName, { empName: emp.empName, perMonth:{}, perMonthInstances:{}, total:0 });
+      const bucket = byEmp.get(emp.empName);
+      bucket.perMonth[m] = emp.count;
+      bucket.perMonthInstances[m] = emp.instances;
+      bucket.total += emp.count;
+    });
+  });
+  const employees = Array.from(byEmp.values()).sort((a,b)=> b.total-a.total || a.empName.localeCompare(b.empName));
+  return { months, employees };
 }
 async function applySurveyUpload(month, rows, fileName){
   const uploadId = uid('svy');
@@ -2421,6 +2709,7 @@ const PAGE_META = {
   teamLeads: ['Team Leads', 'How many agents each team lead has, and who has been reviewed'],
   agentRoster: ['Agent Roster', 'Add, update, or remove agents and reassign their team lead or location'],
   attendanceImport: ['Attendance Import', 'Upload the daily attendance log to see logins, rest days, leaves, and absence streaks by month'],
+  tardiness: ['Tardiness', 'Late-minute tracking and the onsite policy, based on the uploaded attendance log'],
 };
 
 const AGENT_REVIEW_TYPES = ['Procedural','Knowledge Gap','Behaviour','Troubleshooting','Call Handling','Technical'];
@@ -2433,6 +2722,10 @@ let attendanceTrendFrom = null;
 let attendanceTrendTo = null;
 let attendanceActiveTab = 'summary';
 let attendanceTrendTeamLeadFilter = '';
+let tardinessTrendFrom = null;
+let tardinessTrendTo = null;
+let tardinessTrendTeamLeadFilter = '';
+let tardinessActiveTab = 'summary';
 
 function setView(view, opts={}){
   currentView = view;
@@ -2469,6 +2762,7 @@ const NAV_SUPERVISOR = [
     { view:'supports', label:'Manage Supports', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' },
     { view:'agentRoster', label:'Agent Roster', icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 4v5"/>' },
     { view:'attendanceImport', label:'Attendance Import', icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>' },
+    { view:'tardiness', label:'Tardiness', icon:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' },
   ]},
 ];
 const NAV_SUPPORT = [
@@ -2589,7 +2883,7 @@ function openSupervisorModal(){
 function render(){
   populateGlobalMonth();
   const c = document.getElementById('content');
-  c.classList.toggle('content-wide', currentView==='attendanceImport');
+  c.classList.toggle('content-wide', currentView==='attendanceImport' || currentView==='tardiness');
   if(currentView==='dashboard') c.innerHTML = renderDashboard();
   else if(currentView==='counts') c.innerHTML = renderCounts();
   else if(currentView==='new') c.innerHTML = renderNewFeedback();
@@ -2601,6 +2895,7 @@ function render(){
   else if(currentView==='teamLeads') c.innerHTML = renderTeamLeads();
   else if(currentView==='agentRoster') c.innerHTML = renderAgentRosterSettings();
   else if(currentView==='attendanceImport') c.innerHTML = renderAttendanceImport();
+  else if(currentView==='tardiness') c.innerHTML = renderTardiness();
   attachViewHandlers();
 }
 
@@ -3948,7 +4243,7 @@ function renderAttendanceImport(){
   <div class="card">
     <div class="card-header"><h3>Upload Attendance Log</h3><span style="font-size:11.5px; color:var(--slate-soft);">.csv or .xlsx export with EmpName, Date1, Remarks</span></div>
     <div class="card-body">
-      <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Upload the daily attendance/timekeeping export (the same file used for login and leave tracking). It\u2019s read automatically by employee and date, and summarized by month below using the month selector at the top of the page. Rest Day, Vacation Leave, Emergency Leave, and Present (login) days are counted per employee. Absences is strictly limited to "Absent" and "Sick Leave" remarks \u2014 "No Login" is tracked separately and never counts as an absence, and Present-Late / Present-Undertime / Restday-Present still count as a login day. Uploading a new file replaces the previous attendance data.</p>
+      <p style="margin:0 0 14px 0; font-size:13px; color:var(--slate);">Upload the daily attendance/timekeeping export (the same file used for login and leave tracking). It\u2019s read automatically by employee and date, and summarized by month below using the month selector at the top of the page. Rest Day, Vacation Leave, Emergency Leave, and Present (login) days are counted per employee. Absences is strictly limited to "Absent" and "Sick Leave" remarks \u2014 "No Login" is tracked separately and never counts as an absence, and Present-Late / Present-Undertime / Restday-Present still count as a login day. Minutes late for the <strong>Tardiness</strong> page is computed directly from <strong>SchedIn</strong> vs <strong>TimeIn</strong> (not read from the file\u2019s own Late column, which can come through with an unreliable encoding depending on the export). Uploading a new file replaces the previous attendance data.</p>
       <div class="field">
         <label class="field-label">Attendance File (.csv, .xls, .xlsx)</label>
         <input type="file" id="attendanceUploadFile" accept=".csv,.xls,.xlsx">
@@ -3963,8 +4258,8 @@ function renderAttendanceImport(){
   </div>`;
 
   const tabBar = `
-  <div style="display:flex; gap:8px; margin-top:20px;">
-    <button type="button" class="btn ${attendanceActiveTab==='trend'?'ghost':'brass'}" data-attendance-tab="summary">Monthly Attendance Summary</button>
+  <div style="display:flex; gap:8px; margin-top:20px; flex-wrap:wrap;">
+    <button type="button" class="btn ${attendanceActiveTab==='summary'?'brass':'ghost'}" data-attendance-tab="summary">Monthly Attendance Summary</button>
     <button type="button" class="btn ${attendanceActiveTab==='trend'?'brass':'ghost'}" data-attendance-tab="trend">Monthly Absence Trend</button>
   </div>`;
 
@@ -4169,6 +4464,195 @@ function renderAttendanceTrendCard(){
     </div>
   </div>
   `;
+}
+
+/* ======================================================================
+   TARDINESS (standalone page: own tabs, own data drawn from the attendance
+   log uploaded on the Attendance Import page)
+   ====================================================================== */
+function renderTardiness(){
+  const meta = STATE.attendanceUploadMeta;
+  const banner = `
+  <div class="card">
+    <div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <p style="margin:0; font-size:13px; color:var(--slate);">Tardiness is tracked from the same attendance file uploaded on <strong>Attendance Import</strong> \u2014 minutes late are calculated directly from <strong>SchedIn</strong> vs <strong>TimeIn</strong> for each day, rather than trusting the file\u2019s own Late column. ${meta ? `Currently using <strong>${esc(meta.fileName||'the uploaded file')}</strong> (${meta.rowCount} rows, uploaded ${new Date(meta.uploadedAt).toLocaleString('en-US',{month:'short',day:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit'})}).` : 'No attendance file has been uploaded yet.'}</p>
+      <button type="button" class="btn ghost sm" data-goto="attendanceImport">${meta ? 'Go to Attendance Import' : 'Upload a File'}</button>
+    </div>
+  </div>`;
+
+  const tabBar = `
+  <div style="display:flex; gap:8px; margin-top:20px; flex-wrap:wrap;">
+    <button type="button" class="btn ${tardinessActiveTab==='trend'?'ghost':'brass'}" data-tardiness-tab="summary">Monthly Tardiness</button>
+    <button type="button" class="btn ${tardinessActiveTab==='trend'?'brass':'ghost'}" data-tardiness-tab="trend">Tardiness Trend</button>
+  </div>`;
+
+  const tabContent = tardinessActiveTab==='trend' ? renderTardinessTrendCard() : renderTardinessSummaryCard();
+
+  return `${banner}${tabBar}${tabContent}`;
+}
+// Tab 1: per-employee monthly breakdown for the month selected at the top of
+// the page (Late Instances, Total Minutes Late, Longest Lateness, dates).
+function renderTardinessSummaryCard(){
+  const summary = tardinessSummaryByEmployee(currentMonth);
+  const summaryRows = summary.map(emp=>{
+    const longestBadge = emp.longestMinutes>10 ? 'red' : (emp.longestMinutes>0 ? 'amber' : 'neutral');
+    const detail = emp.instances.length ? `
+      <details>
+        <summary style="cursor:pointer; color:var(--brass-dark); font-weight:600; font-size:12px;">View dates</summary>
+        <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">
+          ${emp.instances.map(i=>`<span class="badge ${i.minutes>10?'red':'amber'}">${esc(fmtDate(i.date))} (${i.minutes} min)</span>`).join('')}
+        </div>
+      </details>` : '<span style="color:var(--slate-soft);">\u2014</span>';
+    return `<tr>
+      <td style="font-weight:600;">${esc(toTitleCaseName(emp.empName))}</td>
+      <td class="num">${emp.count ? `<span class="badge ${emp.count>=2?'amber':'neutral'}">${emp.count}</span>` : '<span style="color:var(--slate-soft);">0</span>'}</td>
+      <td class="num">${emp.totalMinutes || '<span style="color:var(--slate-soft);">0</span>'}</td>
+      <td class="num"><span class="badge ${longestBadge}">${emp.longestMinutes || 0} min</span></td>
+      <td>${detail}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3>Monthly Tardiness Summary</h3>
+      <span style="font-size:11.5px; color:var(--slate-soft);">${monthLabel(currentMonth)} &middot; based on the Late column in the uploaded attendance file</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto;">
+      ${summary.length ? `
+      <table>
+        <thead><tr><th>Employee</th><th>Late Instances</th><th>Total Minutes Late</th><th>Longest Lateness</th><th>Late Dates</th></tr></thead>
+        <tbody>${summaryRows}</tbody>
+      </table>
+      <p class="field-hint" style="margin-top:14px;">A day counts as a tardiness instance whenever the computed SchedIn-to-TimeIn difference is greater than 0 minutes, regardless of the Remarks text.</p>
+      ` : emptyState('No tardiness on file for this month', 'Either nobody was late, or the uploaded file has no Late column \u2014 try a different month above, or upload a file from Attendance Import.', null, null)}
+    </div>
+  </div>
+  `;
+}
+// Tab 2: From/To range + Team Lead filter, monthly late-instance counts,
+// trend sparkline, and the tardiness onsite policy (mirrors
+// renderAttendanceTrendCard's structure, applying the tardiness rules).
+function renderTardinessTrendCard(){
+  const availableMonths = attendanceMonthsAvailable();
+  if(!availableMonths.length){
+    return `<div class="card" style="margin-top:20px;"><div class="card-body">${emptyState('No attendance data yet', 'Upload an attendance file from the Attendance Import page to see tardiness trends here.', 'attendanceImport', 'Go to Attendance Import')}</div></div>`;
+  }
+  {
+    if(!tardinessTrendFrom || !availableMonths.includes(tardinessTrendFrom)) tardinessTrendFrom = availableMonths[0];
+    if(!tardinessTrendTo || !availableMonths.includes(tardinessTrendTo)) tardinessTrendTo = availableMonths[availableMonths.length-1];
+    if(tardinessTrendFrom > tardinessTrendTo){ const tmp = tardinessTrendFrom; tardinessTrendFrom = tardinessTrendTo; tardinessTrendTo = tmp; }
+
+    const trend = tardinessTrendData(tardinessTrendFrom, tardinessTrendTo);
+    const fromOptions = availableMonths.map(m=>`<option value="${m}" ${m===tardinessTrendFrom?'selected':''}>${monthLabel(m)}</option>`).join('');
+    const toOptions = availableMonths.map(m=>`<option value="${m}" ${m===tardinessTrendTo?'selected':''}>${monthLabel(m)}</option>`).join('');
+    const teamLeadFilterOptions = rosterTeamLeads().map(tl=>`<option value="${esc(tl)}" ${tardinessTrendTeamLeadFilter===tl?'selected':''}>${esc(tl)}</option>`).join('');
+
+    const fullHistoryByName = new Map(tardinessSummaryByEmployee(null).map(e=>[e.empName, e]));
+    const employeesWithTeamLead = trend.employees.map(emp=>{
+      const rosterMatch = rosterMatchForAttendanceName(emp.empName);
+      return { ...emp, teamLead: rosterMatch ? rosterMatch.teamLead : null };
+    });
+    const filteredEmployees = !tardinessTrendTeamLeadFilter ? employeesWithTeamLead
+      : tardinessTrendTeamLeadFilter==='__unmatched__' ? employeesWithTeamLead.filter(e=>!e.teamLead)
+      : employeesWithTeamLead.filter(e=>e.teamLead===tardinessTrendTeamLeadFilter);
+
+    const colW = { employee:140, teamLead:130, month:58, total:58, trend:90, onsiteStatus:150, why:240, notes:280 };
+    const tableMinWidth = colW.employee + colW.teamLead + (trend.months.length*colW.month) + colW.total + colW.trend + colW.onsiteStatus + colW.why + colW.notes + 24;
+
+    const rows = filteredEmployees.map(emp=>{
+      const counts = trend.months.map(m=>emp.perMonth[m]||0);
+      const instancesPerMonth = trend.months.map(m=>emp.perMonthInstances[m]||[]);
+      const monthCells = trend.months.map((m,i)=>{
+        const c = emp.perMonth[m]||0;
+        const title = c ? describeLateInstances(instancesPerMonth[i]) : '';
+        return `<td class="num" style="padding:11px 6px;">${c ? `<span class="badge ${c>=2?'amber':'neutral'}" title="${esc(title)}">${c}</span>` : '<span style="color:var(--slate-soft);">0</span>'}</td>`;
+      }).join('');
+      const existingOverride = (STATE.tardinessPolicyOverrides||{})[emp.empName] || null;
+      const policy = evaluateTardinessPolicy(fullHistoryByName.get(emp.empName), existingOverride);
+      const policyBadgeClass = policy.level===3 ? 'red' : (policy.level===2 ? 'amber' : (policy.level===1 ? 'neutral' : 'green'));
+      const periodStart = policy.onsitePeriod ? policy.onsitePeriod.start : '';
+      const periodEnd = policy.onsitePeriod ? policy.onsitePeriod.end : '';
+      const onsiteForm = (policy.canOverride || policy.level===1) ? `
+        <div style="margin-top:8px; display:flex; gap:6px; align-items:flex-end; flex-wrap:wrap;">
+          <div>
+            <label style="font-size:10px; display:block; color:var(--slate-soft); margin-bottom:2px;">Onsite Start</label>
+            <input type="date" class="tardiness-start-input" data-emp-name="${esc(emp.empName)}" value="${periodStart}" style="padding:4px 6px; font-size:11px; width:auto;">
+          </div>
+          <div>
+            <label style="font-size:10px; display:block; color:var(--slate-soft); margin-bottom:2px;">Onsite End</label>
+            <input type="date" class="tardiness-end-input" data-emp-name="${esc(emp.empName)}" value="${periodEnd}" style="padding:4px 6px; font-size:11px; width:auto;">
+          </div>
+          <button type="button" class="btn ghost sm tardiness-save-btn" data-save-tardiness="${esc(emp.empName)}" ${(!periodStart || !periodEnd) ? 'disabled' : ''}>${policy.level===1?'Update':'Save'}</button>
+        </div>` : '';
+      const actionBtns = [];
+      if(policy.level===1) actionBtns.push(`<button type="button" class="btn ghost sm" data-end-tardiness-now="${esc(emp.empName)}">Mark as OK Now</button>`);
+      if(policy.level===1 || policy.overridden) actionBtns.push(`<button type="button" class="btn ghost sm" data-reopen-tardiness-status="${esc(emp.empName)}">Reopen</button>`);
+      const teamLeadCell = emp.teamLead ? `${esc(emp.teamLead)}` : '<span style="color:var(--slate-soft);">Unmatched</span>';
+      const noteText = (STATE.tardinessNotes||{})[emp.empName]?.text || '';
+      return `<tr>
+        <td style="font-weight:600;">${esc(toTitleCaseName(emp.empName))}</td>
+        <td>${teamLeadCell}</td>
+        ${monthCells}
+        <td class="num" style="font-weight:700; padding:11px 6px;">${emp.total}</td>
+        <td>${renderAbsenceSparkline(counts, trend.months, instancesPerMonth.map(describeLateInstances), 'No tardiness')}</td>
+        <td><span class="badge ${policyBadgeClass}">${esc(policy.label)}</span></td>
+        <td style="font-size:12px; color:var(--slate); white-space:normal; word-wrap:break-word;">${esc(policy.reason)}${onsiteForm}${actionBtns.length ? `<div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">${actionBtns.join('')}</div>` : ''}</td>
+        <td>
+          <textarea class="tardiness-note-input" data-emp-name="${esc(emp.empName)}" placeholder="e.g. Verbal warning given for tardiness, required to report onsite from Oct 20 to Nov 03." style="min-height:80px; font-size:12.5px;">${esc(noteText)}</textarea>
+        </td>
+      </tr>`;
+    }).join('');
+
+    return `
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header">
+        <h3>Tardiness Trend &amp; Onsite Policy</h3>
+        <span style="font-size:11.5px; color:var(--slate-soft);">Choose a month range to see who\u2019s trending up</span>
+      </div>
+      <div class="card-body">
+        <div class="field-grid" style="max-width:780px; grid-template-columns:repeat(3,1fr);">
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">From</label>
+            <select id="tardinessTrendFromSelect">${fromOptions}</select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">To</label>
+            <select id="tardinessTrendToSelect">${toOptions}</select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label">Team Lead</label>
+            <select id="tardinessTrendTeamLeadSelect">
+              <option value="">All Team Leads</option>
+              <option value="__unmatched__" ${tardinessTrendTeamLeadFilter==='__unmatched__'?'selected':''}>Unmatched / Not on Roster</option>
+              ${teamLeadFilterOptions}
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto; margin-top:18px;">
+          ${filteredEmployees.length ? `
+          <table style="table-layout:fixed; min-width:${tableMinWidth}px;">
+            <colgroup>
+              <col style="width:${colW.employee}px;">
+              <col style="width:${colW.teamLead}px;">
+              ${trend.months.map(()=>`<col style="width:${colW.month}px;">`).join('')}
+              <col style="width:${colW.total}px;">
+              <col style="width:${colW.trend}px;">
+              <col style="width:${colW.onsiteStatus}px;">
+              <col style="width:${colW.why}px;">
+              <col style="width:${colW.notes}px;">
+            </colgroup>
+            <thead><tr><th>Employee</th><th>Team Lead</th>${trend.months.map(m=>`<th style="padding:9px 6px;">${monthLabel(m).slice(0,3).toUpperCase()} '${m.slice(2,4)}</th>`).join('')}<th style="padding:9px 6px;">Total</th><th>Trend</th><th>Onsite Status</th><th>Why</th><th>Notes</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <p class="field-hint" style="margin-top:14px;">Sorted by total tardiness instances in the selected range, highest first. Hover a month\u2019s count or a Trend bar to see the actual late date(s) and minutes.</p>
+          <p class="field-hint" style="margin-top:8px;"><strong>Onsite Status</strong> is based on the employee\u2019s full attendance history: 1 instance of tardiness exceeding 10 minutes in the current work week, or 2+ instances in the same work week regardless of total minutes, \u2192 onsite for two weeks. 5 or more instances within any 30-day window \u2192 onsite for a month or until improvement is seen, with the lead recommending hybrid again afterward.</p>
+          <p class="field-hint" style="margin-top:8px;">Once flagged, the <strong>Onsite Start</strong> and <strong>Onsite End</strong> fields start blank \u2014 choose both to set the period; <strong>Save</strong> stays disabled until both are filled in. Once the End date passes, status <strong>automatically refreshes to OK</strong>; a new tardiness instance after that restarts counting from there. Use <strong>Mark as OK Now</strong> to end early, or <strong>Reopen</strong> to undo a resolved status.</p>
+          ` : emptyState('No agents match this filter', tardinessTrendTeamLeadFilter ? 'Try "All Team Leads" above, or a different From/To range.' : 'Try a wider From/To range above.', null, null)}
+        </div>
+      </div>
+    </div>`;
+  }
 }
 
 /* ---------------------- SHARED EMPTY STATE ---------------------- */
@@ -4852,6 +5336,118 @@ function attachViewHandlers(){
       });
     });
   }
+
+  if(currentView==='tardiness'){
+    document.querySelectorAll('[data-tardiness-tab]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        tardinessActiveTab = btn.dataset.tardinessTab;
+        render();
+      });
+    });
+    const tardFromSel = document.getElementById('tardinessTrendFromSelect');
+    if(tardFromSel){
+      tardFromSel.addEventListener('change', ()=>{
+        tardinessTrendFrom = tardFromSel.value;
+        render();
+      });
+    }
+    const tardToSel = document.getElementById('tardinessTrendToSelect');
+    if(tardToSel){
+      tardToSel.addEventListener('change', ()=>{
+        tardinessTrendTo = tardToSel.value;
+        render();
+      });
+    }
+    const tardTeamLeadSel = document.getElementById('tardinessTrendTeamLeadSelect');
+    if(tardTeamLeadSel){
+      tardTeamLeadSel.addEventListener('change', ()=>{
+        tardinessTrendTeamLeadFilter = tardTeamLeadSel.value;
+        render();
+      });
+    }
+    document.querySelectorAll('.tardiness-start-input, .tardiness-end-input').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const empName = inp.dataset.empName;
+        const startInput = document.querySelector(`.tardiness-start-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const endInput = document.querySelector(`.tardiness-end-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const saveBtn = document.querySelector(`.tardiness-save-btn[data-save-tardiness="${CSS.escape(empName)}"]`);
+        if(saveBtn) saveBtn.disabled = !(startInput && startInput.value && endInput && endInput.value);
+      });
+    });
+    document.querySelectorAll('[data-save-tardiness]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const empName = btn.dataset.saveTardiness;
+        const startInput = document.querySelector(`.tardiness-start-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const endInput = document.querySelector(`.tardiness-end-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const start = startInput ? startInput.value : '';
+        const end = endInput ? endInput.value : '';
+        if(!start || !end){ toast('Please set both an Onsite Start and End date.', true); return; }
+        if(end < start){ toast('Onsite End date can\u2019t be before the Start date.', true); return; }
+        btn.disabled = true;
+        btn.textContent = 'Saving\u2026';
+        STATE.tardinessPolicyOverrides = STATE.tardinessPolicyOverrides || {};
+        STATE.tardinessPolicyOverrides[empName] = { start, end, setAt: Date.now() };
+        STATE.deletedTardinessPolicyOverrideKeys = (STATE.deletedTardinessPolicyOverrideKeys||[]).filter(k=>k!==empName);
+        const ok = await saveState();
+        if(ok){
+          btn.textContent = 'Saved \u2713';
+          toast(`Onsite period saved \u2014 will auto-refresh to OK after ${fmtDate(end)}`);
+          setTimeout(()=>{ render(); }, 700);
+        } else {
+          btn.textContent = 'Retry Save';
+          btn.disabled = false;
+          toastRetry('Couldn\u2019t save the onsite period \u2014 tap Retry Save to try again.');
+        }
+      });
+    });
+    document.querySelectorAll('[data-end-tardiness-now]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const empName = btn.dataset.endTardinessNow;
+        if(!confirm(`Mark ${toTitleCaseName(empName)}\u2019s onsite requirement (tardiness) as completed today? Their status will reset to OK unless a new tardiness instance shows up after today.`)) return;
+        STATE.tardinessPolicyOverrides = STATE.tardinessPolicyOverrides || {};
+        const existing = STATE.tardinessPolicyOverrides[empName] || {};
+        const todayStr = new Date().toISOString().slice(0,10);
+        STATE.tardinessPolicyOverrides[empName] = { start: existing.start || todayStr, end: todayStr, setAt: Date.now() };
+        STATE.deletedTardinessPolicyOverrideKeys = (STATE.deletedTardinessPolicyOverrideKeys||[]).filter(k=>k!==empName);
+        await saveState();
+        render();
+        toast('Marked resolved \u2014 status reset to OK');
+      });
+    });
+    document.querySelectorAll('[data-reopen-tardiness-status]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const empName = btn.dataset.reopenTardinessStatus;
+        delete (STATE.tardinessPolicyOverrides||{})[empName];
+        STATE.deletedTardinessPolicyOverrideKeys = STATE.deletedTardinessPolicyOverrideKeys || [];
+        if(!STATE.deletedTardinessPolicyOverrideKeys.includes(empName)) STATE.deletedTardinessPolicyOverrideKeys.push(empName);
+        render();
+        const ok = await saveState();
+        if(ok){
+          toast('Reopened \u2014 status now reflects attendance on file again');
+        } else {
+          toastRetry('Reopened here, but the save failed \u2014 tap to retry so it stays reopened.');
+        }
+      });
+    });
+    document.querySelectorAll('.tardiness-note-input').forEach(ta=>{
+      ta.addEventListener('change', async ()=>{
+        const empName = ta.dataset.empName;
+        STATE.tardinessNotes = STATE.tardinessNotes || {};
+        STATE.deletedTardinessNoteKeys = STATE.deletedTardinessNoteKeys || [];
+        const text = ta.value;
+        if(text.trim()){
+          STATE.tardinessNotes[empName] = { text, updatedAt: Date.now() };
+          STATE.deletedTardinessNoteKeys = STATE.deletedTardinessNoteKeys.filter(k=>k!==empName);
+        } else {
+          delete STATE.tardinessNotes[empName];
+          if(!STATE.deletedTardinessNoteKeys.includes(empName)) STATE.deletedTardinessNoteKeys.push(empName);
+        }
+        const ok = await saveState();
+        if(ok) toast('Note saved');
+        else toastRetry('Note saved here, but the sync failed \u2014 tap to retry.');
+      });
+    });
+  }
 }
 
 function downloadBackup(){
@@ -4906,7 +5502,11 @@ function handleRestoreFile(e){
         attendancePolicyOverrides: parsed.attendancePolicyOverrides || {},
         attendanceNotes: parsed.attendanceNotes || {},
         deletedAttendancePolicyOverrideKeys: parsed.deletedAttendancePolicyOverrideKeys || [],
-        deletedAttendanceNoteKeys: parsed.deletedAttendanceNoteKeys || []
+        deletedAttendanceNoteKeys: parsed.deletedAttendanceNoteKeys || [],
+        tardinessPolicyOverrides: parsed.tardinessPolicyOverrides || {},
+        deletedTardinessPolicyOverrideKeys: parsed.deletedTardinessPolicyOverrideKeys || [],
+        tardinessNotes: parsed.tardinessNotes || {},
+        deletedTardinessNoteKeys: parsed.deletedTardinessNoteKeys || []
       };
       const ok = await saveState();
       if(ok){ toast('Backup restored'); render(); }
@@ -5168,7 +5768,11 @@ function renderLoadFailureScreen(){
           attendancePolicyOverrides: parsed.attendancePolicyOverrides || {},
           attendanceNotes: parsed.attendanceNotes || {},
           deletedAttendancePolicyOverrideKeys: parsed.deletedAttendancePolicyOverrideKeys || [],
-          deletedAttendanceNoteKeys: parsed.deletedAttendanceNoteKeys || []
+          deletedAttendanceNoteKeys: parsed.deletedAttendanceNoteKeys || [],
+          tardinessPolicyOverrides: parsed.tardinessPolicyOverrides || {},
+          deletedTardinessPolicyOverrideKeys: parsed.deletedTardinessPolicyOverrideKeys || [],
+          tardinessNotes: parsed.tardinessNotes || {},
+          deletedTardinessNoteKeys: parsed.deletedTardinessNoteKeys || []
         };
         const ok = await saveState();
         if(ok){
