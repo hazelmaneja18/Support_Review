@@ -2145,7 +2145,6 @@ function parseAttendanceWorkbook(arrayBuffer){
   const nameKey = findHeader('empname','employee name','emp name','agent name');
   const dateKey = findHeader('date1','date','login date','work date');
   const remarksKey = findHeader('remarks','remark','status','attendance status','dtr remarks');
-  const lateKey = findHeader('late','late minutes','tardiness','minutes late');
   const schedInKey = findHeader('schedin','sched in','scheduled in','sched time in','schedule in');
   const timeInKey = findHeader('timein','time in','actual time in','login time','actual in');
   const out = [];
@@ -2157,12 +2156,15 @@ function parseAttendanceWorkbook(arrayBuffer){
     const empName = nameKey ? String(row[nameKey]||'').trim() : '';
     const date = dateKey ? normalizeAttendanceDate(row[dateKey]) : null;
     if(!empName || !date) continue;
-    // Prefer computing lateness directly from SchedIn vs TimeIn \u2014 the Late
-    // column's own encoding varies by export and can come through wildly
-    // inflated, so it's only used as a fallback when Sched/Time In aren't
-    // both present and readable.
+    // Lateness comes ONLY from comparing SchedIn to TimeIn \u2014 the file's own
+    // Late column is not used at all, since its encoding isn't consistent
+    // and was producing wildly inflated values (close to 1440, a full day)
+    // whenever Sched/TimeIn happened to be blank for a row. If either side
+    // can't be read, that day simply isn't counted as late (0), rather than
+    // guessing from an unreliable source. A result over 10 hours is treated
+    // the same way, since that's not a plausible "late but still present" gap.
     let lateMinutes = (schedInKey && timeInKey) ? computeLateMinutesFromSchedule(row[schedInKey], row[timeInKey]) : null;
-    if(lateMinutes===null) lateMinutes = lateKey ? normalizeLateMinutes(row[lateKey]) : 0;
+    if(lateMinutes===null || lateMinutes>600) lateMinutes = 0;
     out.push({
       empName,
       date,
