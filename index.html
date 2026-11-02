@@ -4079,9 +4079,12 @@ function renderAttendanceTrendCard(){
     const existingOverride = (STATE.attendancePolicyOverrides||{})[emp.empName] || null;
     const policy = evaluateAttendancePolicy(fullHistoryByName.get(emp.empName), existingOverride);
     const policyBadgeClass = policy.level===3 ? 'red' : (policy.level===2 ? 'amber' : (policy.level===1 ? 'neutral' : 'green'));
-    const todayStr = new Date().toISOString().slice(0,10);
-    const periodStart = policy.onsitePeriod ? policy.onsitePeriod.start : todayStr;
-    const periodEnd = policy.onsitePeriod ? policy.onsitePeriod.end : (policy.monitorUntil || addDaysToDateStr(todayStr, 14));
+    // Only prefill the dates when editing an onsite period that's already set
+    // (level 1). When first setting one (level 2/3, nothing chosen yet), the
+    // fields start blank so the lead has to deliberately pick both dates
+    // rather than silently save whatever default happened to be there.
+    const periodStart = policy.onsitePeriod ? policy.onsitePeriod.start : '';
+    const periodEnd = policy.onsitePeriod ? policy.onsitePeriod.end : '';
     const onsiteForm = (policy.canOverride || policy.level===1) ? `
       <div style="margin-top:8px; display:flex; gap:6px; align-items:flex-end; flex-wrap:wrap;">
         <div>
@@ -4092,7 +4095,7 @@ function renderAttendanceTrendCard(){
           <label style="font-size:10px; display:block; color:var(--slate-soft); margin-bottom:2px;">Onsite End</label>
           <input type="date" class="onsite-end-input" data-emp-name="${esc(emp.empName)}" value="${periodEnd}" style="padding:4px 6px; font-size:11px; width:auto;">
         </div>
-        <button type="button" class="btn ghost sm" data-save-onsite="${esc(emp.empName)}">${policy.level===1?'Update':'Save'}</button>
+        <button type="button" class="btn ghost sm onsite-save-btn" data-save-onsite="${esc(emp.empName)}" ${(!periodStart || !periodEnd) ? 'disabled' : ''}>${policy.level===1?'Update':'Save'}</button>
       </div>` : '';
     const actionBtns = [];
     if(policy.level===1) actionBtns.push(`<button type="button" class="btn ghost sm" data-end-onsite-now="${esc(emp.empName)}">Mark as OK Now</button>`);
@@ -4159,7 +4162,7 @@ function renderAttendanceTrendCard(){
         <p class="field-hint" style="margin-top:14px;">Sorted by total absence occurrences in the selected range, highest first. Each bar in the Trend column is one month, left to right \u2014 taller and redder means more absence occurrences that month; hover a bar or a month\u2019s count to see the actual absence date(s).</p>
         <p class="field-hint" style="margin-top:8px;"><strong>Team Lead</strong> is matched automatically from the Agent Roster tab; it shows \u201cUnmatched\u201d if the name on the attendance file can\u2019t be confidently matched there yet. Use the <strong>Team Lead</strong> filter above to check just one lead\u2019s agents at a time.</p>
         <p class="field-hint" style="margin-top:8px;"><strong>Onsite Status</strong> is based on the employee\u2019s full attendance history, not just the months shown above: 2 absence instances within any 30-day window \u2192 onsite for two weeks (regardless of reason, unless proven emergency); 3 or more within any 30-day window \u2192 onsite until further notice, with the lead monitoring attendance for 60 days from the most recent absence before recommending hybrid again.</p>
-        <p class="field-hint" style="margin-top:8px;">Once flagged, set the <strong>Onsite Start</strong> and <strong>Onsite End</strong> dates (prefilled with a sensible default) and click <strong>Save</strong>. The status shows <span class="badge neutral" style="font-size:10px;">Onsite (In Effect)</span> until the End date; once that date is reached, it <strong>automatically refreshes to OK on its own</strong> \u2014 no need to click anything, it just takes effect the next time the page loads or new attendance data is uploaded. If a new absence shows up after the End date, the status automatically re-triggers and restarts counting from that newest absence. Use <strong>Mark as OK Now</strong> to end the onsite period early (e.g. the agent resigned), or <strong>Reopen</strong> to undo a resolved status if it was set by mistake.</p>
+        <p class="field-hint" style="margin-top:8px;">Once flagged, the <strong>Onsite Start</strong> and <strong>Onsite End</strong> fields start blank on purpose \u2014 choose both dates to set the actual period. <strong>Save</strong> stays disabled and grayed out until both are filled in, then shows <strong>Saving\u2026</strong> and <strong>Saved \u2713</strong> so you can tell it actually went through (or <strong>Retry Save</strong> if it couldn\u2019t reach the shared database). The status shows <span class="badge neutral" style="font-size:10px;">Onsite (In Effect)</span> until the End date; once that date is reached, it <strong>automatically refreshes to OK on its own</strong> \u2014 no need to click anything, it just takes effect the next time the page loads or new attendance data is uploaded. If a new absence shows up after the End date, the status automatically re-triggers and restarts counting from that newest absence. Use <strong>Mark as OK Now</strong> to end the onsite period early (e.g. the agent resigned), or <strong>Reopen</strong> to undo a resolved status if it was set by mistake.</p>
         <p class="field-hint" style="margin-top:8px;"><strong>Notes</strong> saves automatically as you type and stays on the employee\u2019s row \u2014 use it to log things like when the onsite requirement notice was sent and the dates covered.</p>
         ` : emptyState('No agents match this filter', attendanceTrendTeamLeadFilter ? 'Try "All Team Leads" above, or a different From/To range.' : 'Try a wider From/To range above.', null, null)}
       </div>
@@ -4762,6 +4765,19 @@ function attachViewHandlers(){
         render();
       });
     }
+    // The Save/Update button starts disabled whenever either date is blank
+    // (see renderAttendanceTrendCard), and toggles live as the lead fills
+    // them in \u2014 so it only becomes clickable once both dates are actually
+    // chosen, rather than saving silently on some default.
+    document.querySelectorAll('.onsite-start-input, .onsite-end-input').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const empName = inp.dataset.empName;
+        const startInput = document.querySelector(`.onsite-start-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const endInput = document.querySelector(`.onsite-end-input[data-emp-name="${CSS.escape(empName)}"]`);
+        const saveBtn = document.querySelector(`.onsite-save-btn[data-save-onsite="${CSS.escape(empName)}"]`);
+        if(saveBtn) saveBtn.disabled = !(startInput && startInput.value && endInput && endInput.value);
+      });
+    });
     document.querySelectorAll('[data-save-onsite]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const empName = btn.dataset.saveOnsite;
@@ -4771,12 +4787,21 @@ function attachViewHandlers(){
         const end = endInput ? endInput.value : '';
         if(!start || !end){ toast('Please set both an Onsite Start and End date.', true); return; }
         if(end < start){ toast('Onsite End date can\u2019t be before the Start date.', true); return; }
+        btn.disabled = true;
+        btn.textContent = 'Saving\u2026';
         STATE.attendancePolicyOverrides = STATE.attendancePolicyOverrides || {};
         STATE.attendancePolicyOverrides[empName] = { start, end, setAt: Date.now() };
         STATE.deletedAttendancePolicyOverrideKeys = (STATE.deletedAttendancePolicyOverrideKeys||[]).filter(k=>k!==empName);
-        await saveState();
-        render();
-        toast(`Onsite period saved \u2014 will auto-refresh to OK after ${fmtDate(end)}`);
+        const ok = await saveState();
+        if(ok){
+          btn.textContent = 'Saved \u2713';
+          toast(`Onsite period saved \u2014 will auto-refresh to OK after ${fmtDate(end)}`);
+          setTimeout(()=>{ render(); }, 700);
+        } else {
+          btn.textContent = 'Retry Save';
+          btn.disabled = false;
+          toastRetry('Couldn\u2019t save the onsite period \u2014 tap Retry Save to try again.');
+        }
       });
     });
     document.querySelectorAll('[data-end-onsite-now]').forEach(btn=>{
