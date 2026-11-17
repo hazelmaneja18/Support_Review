@@ -5898,7 +5898,7 @@ function startBackgroundSync(){
     const before = JSON.stringify(STATE);
     await syncNow();
     if(JSON.stringify(STATE) !== before) render();
-  }, 45000);
+  }, 300000); // every 5 minutes instead of every 45 seconds
 }
 init();
 </script>
