@@ -5895,6 +5895,13 @@ function startBackgroundSync(){
     if(!safeViews.includes(currentView)) return;
     if(currentView==='agentReviews' && appMode==='support') return;
     if(currentView==='new') return;
+    // Attendance logs can be thousands of rows riding along in the same
+    // single state blob as everything else, so every sync re-transfers them
+    // in full. Skip the passive background sync once there's a meaningful
+    // amount of attendance data on file \u2014 it still syncs immediately on any
+    // real save (upload, note, override) through saveState(), just not
+    // every few minutes while sitting idle doing nothing.
+    if((STATE.attendanceLogs||[]).length > 200) return;
     const before = JSON.stringify(STATE);
     await syncNow();
     if(JSON.stringify(STATE) !== before) render();
